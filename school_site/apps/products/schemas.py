@@ -1,9 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, HttpUrl
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
 from school_site.core.enums import UserRole
-from school_site.core.schemas import CreateBaseModel, UpdateBaseModel
+from school_site.core.schemas import(
+    CreateBaseModel, UpdateBaseModel, TimestampMixin, CursorPaginationResultSchema
+) 
 
 # ====== PHOTO SCHEMAS =======
 
@@ -14,15 +16,25 @@ class PhotoBaseSchema(BaseModel):
 class PhotoCreateSchema(CreateBaseModel, PhotoBaseSchema):
     pass
 
-class PhotoUpdateSchema(UpdateBaseModel, PhotoBaseSchema):
-    pass
+class PhotoCreateDBSchema(CreateBaseModel, PhotoBaseSchema):
+    product_id: UUID
+    path: str
 
-class PhotoReadSchema(PhotoBaseSchema):
+class PhotoUpdateSchema(PhotoBaseSchema):
+    id: Optional[UUID] = None
+
+class PhotoUpdateDBSchema(UpdateBaseModel, PhotoBaseSchema):
+    product_id: UUID
+
+class PhotoReadDBSchema(PhotoBaseSchema, TimestampMixin):
     id: UUID
+    path: str
 
     class Config:
         from_attributes = True
 
+class PhotoReadSchema(PhotoBaseSchema, TimestampMixin):
+    url: HttpUrl
 # --------------------------------
 
 class ProductBaseSchema(BaseModel):
@@ -39,21 +51,28 @@ class ProductCreateSchema(ProductCreateDBSchema):
 class ProductUpdateDBSchema(UpdateBaseModel, ProductBaseSchema):
     pass
 
-class ProductUpdateSchema(ProductUpdateDBSchema):
-    photo: Optional[PhotoCreateSchema] = None
+class ProductUpdateSchema(ProductBaseSchema):
+    photo: Optional[PhotoUpdateSchema] = None
 
 
-class ProductReadDBSchema(ProductBaseSchema):
+class ProductReadDBSchema(ProductBaseSchema, TimestampMixin):
     id: UUID
 
 
-class ProductReadSchema(ProductBaseSchema):
+class ProductWithPhotoDBReadSchema(ProductBaseSchema, TimestampMixin):
+    id: UUID
+    photo: Optional[PhotoReadDBSchema] = None
+
+class ProductReadSchema(ProductBaseSchema, TimestampMixin):
     id: UUID
     photo: Optional[PhotoReadSchema] = None
-
 
 
 class UserTokenDataReadSchema(BaseModel):
     user_id: UUID
     role: UserRole
     expiration: datetime
+
+
+class ProductCursorPaginationResultSchema(CursorPaginationResultSchema[ProductReadDBSchema]):
+    pass

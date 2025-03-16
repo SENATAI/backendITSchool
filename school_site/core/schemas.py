@@ -3,7 +3,7 @@
 """
 
 import uuid
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Optional, List
 
 from pydantic import AliasGenerator, BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
@@ -58,6 +58,18 @@ class PaginationResultSchema(BaseModel, Generic[T]):
     objects: list[T]
     count: int
 
+
+class CursorPaginationWithSearchSchema(BaseModel):
+    search: Optional[str] = None
+    search_by: Optional[list[str]] = None
+    cursor: Optional[uuid.UUID] = None
+    limit: int = 10
+
+
+class CursorPaginationResultSchema(BaseModel, Generic[T]):
+    data: List[T]          
+    next_cursor: Optional[uuid.UUID] = None  
+    
 
 class InputApiSchema(BaseModel):
     """

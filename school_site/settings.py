@@ -32,28 +32,17 @@ class Db(BaseModel):
         return f'{self.provider}://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}'
 
 
-class S3(BaseModel):
+
+class Minio(BaseModel):
     """
-    Настройки для S3.
+    Настройки Minio
     """
 
     endpoint: str
     access_key: str
     secret_key: str
-    port: int
-    bucket: str
     secure: bool = False
-
-
-class Storage(BaseModel):
-    """
-    Настройки для хранилища.
-    """
-
-    provider: Literal['local', 's3'] = 'local'
-
-    dir: str | None = path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'storage')
-    s3: S3 | None = None
+    
 
 
 class Cache(BaseModel):
@@ -117,13 +106,11 @@ class Settings(BaseSettings):
         return [x for x in v.split(',')]
 
     db: Db
-    #storage: Storage
-    #cache: Cache
+    minio: Minio
 
     jwt: JWT
     access_token: AccessToken
     refresh_token: RefreshToken
-    #jwt_cookie: JWTCookie
 
     model_config = SettingsConfigDict(
         env_file='.env',

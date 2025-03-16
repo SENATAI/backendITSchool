@@ -5,7 +5,7 @@ from typing import Self
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
 from school_site.apps.products.models import Product
 from school_site.apps.products.schemas import (
-    ProductCreateDBSchema, ProductReadDBSchema, ProductUpdateDBSchema, ProductReadSchema
+    ProductCreateDBSchema, ProductReadDBSchema, ProductUpdateDBSchema, ProductWithPhotoDBReadSchema
 )
 from school_site.core.utils.exceptions import ModelNotFoundException, SortingFieldNotFoundError
 
@@ -16,12 +16,12 @@ class ProductRepositoryProtocol(BaseRepositoryImpl[
     ProductCreateDBSchema,
     ProductUpdateDBSchema
 ]):
-    async def get_with_photo(self: Self, id: UUID) -> ProductReadSchema:
+    async def get_with_photo(self: Self, id: UUID) -> ProductWithPhotoDBReadSchema:
         ...
 
 
 class ProductRepository(ProductRepositoryProtocol):
-    async def get_with_photo(self: Self, id: UUID) -> ProductReadSchema:
+    async def get_with_photo(self: Self, id: UUID) -> ProductWithPhotoDBReadSchema:
         async with self.session as s, s.begin():
             statement = (
                 sa.select(self.model_type)
@@ -31,4 +31,4 @@ class ProductRepository(ProductRepositoryProtocol):
             model = (await s.execute(statement)).scalar_one_or_none()
             if model is None:
                 raise ModelNotFoundException(self.model_type, id)
-            return ProductReadSchema.model_validate(model, from_attributes=True)
+            return ProductWithPhotoDBReadSchema.model_validate(model, from_attributes=True)

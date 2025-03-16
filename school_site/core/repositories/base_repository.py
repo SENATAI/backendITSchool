@@ -1,7 +1,7 @@
 import contextlib
 import uuid
 from collections.abc import Iterable, Sequence
-from typing import Any, Generic, Protocol, Self, TypeVar, cast, get_args
+from typing import Any, Generic, Protocol, Self, TypeVar, cast, get_args, Optional
 
 import sqlalchemy as sa
 from pydantic import BaseModel
@@ -12,7 +12,8 @@ from sqlalchemy.sql.expression import func
 from school_site.core.db import Base
 from school_site.core.utils.exceptions import ModelNotFoundException, SortingFieldNotFoundError
 
-from ..schemas import CreateBaseModel, PaginationResultSchema, PaginationSchema, UpdateBaseModel
+from ..schemas import CreateBaseModel, PaginationResultSchema, PaginationSchema, UpdateBaseModel, \
+    CursorPaginationResultSchema
 
 ModelType = TypeVar('ModelType', bound=Base, covariant=True)
 ReadSchemaType = TypeVar('ReadSchemaType', bound=BaseModel)
@@ -34,6 +35,17 @@ class BaseRepositoryProtocol(Protocol[ModelType, ReadSchemaType, CreateSchemaTyp
         ...
 
     async def paginate(
+        self: Self,
+        search: str,
+        search_by: Iterable[str],
+        sorting: Iterable[str],
+        pagination: PaginationSchema,
+        user: Any,
+        policies: list[str],
+    ) -> PaginationResultSchema[ReadSchemaType]:
+        ...
+
+    async def cursor_paginate(
         self: Self,
         search: str,
         search_by: Iterable[str],
@@ -143,7 +155,41 @@ class BaseRepositoryImpl(Generic[ModelType, ReadSchemaType, CreateSchemaType, Up
             count_statement = statement.with_only_columns(func.count(self.model_type.id))
             count = (await s.execute(count_statement)).scalar_one()
             return PaginationResultSchema(count=count, objects=objects)
-
+    
+    async def cursor_paginate(
+        self: Self,
+        search: Optional[str],
+        search_by: Optional[Iterable[str]],
+        cursor: Optional[uuid.UUID],
+        limit: int,
+        sorting: Iterable[str]
+) -> CursorPaginationResultSchema[ReadSchemaType]:
+        async with self.session as s:
+            statement = sa.select(self.model_type)
+            
+            if search and search_by:
+                search_conditions = []
+                for field in search_by:
+                    column = getattr(self.model_type, field)
+                    search_conditions.append(column.ilike(f"%{search}%"))
+                statement = statement.where(sa.or_(*search_conditions))
+            
+            if cursor:
+                statement = statement.where(self.model_type.id > cursor)
+            
+            order_by_expr = self.get_order_by_expr(sorting)
+            statement = statement.order_by(*order_by_expr)
+            
+            statement = statement.limit(limit)
+            
+            models = (await s.execute(statement)).scalars().all()
+            
+            next_cursor = models[-1].id if models else None
+            return CursorPaginationResultSchema(
+                data=[self.read_schema_type.model_validate(m, from_attributes=True) for m in models],
+                next_cursor=next_cursor
+            )
+    
     async def create(self: Self, create_object: CreateSchemaType) -> ReadSchemaType:
         async with self.session as s, s.begin():
             statement = (
@@ -169,7 +215,10 @@ class BaseRepositoryImpl(Generic[ModelType, ReadSchemaType, CreateSchemaType, Up
                 .values(update_object.model_dump(exclude={'id'}, exclude_unset=True))
                 .returning(self.model_type)
             )
-            model = (await s.execute(statement)).scalar_one()
+            model = (await s.execute(statement)).scalar_one_or_none()
+            if model is None:
+                raise ModelNotFoundException(self.model_type, pk)
+
             return self.read_schema_type.model_validate(model, from_attributes=True)
 
     async def bulk_update(self, update_objects: list[UpdateSchemaType]) -> None:

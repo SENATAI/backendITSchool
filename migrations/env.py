@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from school_site.core.db import Base
+from school_site.core.models import CreationTimeMixin, TimestampMixin
 from school_site.settings import settings
 from school_site.apps.users.models import User, RefreshToken
 from school_site.apps.products.models import Product, Photo
