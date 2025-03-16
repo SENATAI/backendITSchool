@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie
+from fastapi import APIRouter, Depends, Response, Cookie
 from .schemas import LoginRequestSchema, UserReadSchema
 from .use_cases.login import LoginUseCaseProtocol
 from .use_cases.refresh import RefreshUseCaseProtocol
-from .depends import get_refresh_use_case
-from .depends import get_login_use_case
+from .use_cases.logout import LogoutUseCaseProtocol
+from .depends import get_login_use_case, get_refresh_use_case, get_logout_use_case
 from school_site.settings import settings
 
 
@@ -23,7 +23,7 @@ async def login(
         key="access_token",
         value=user_tokens_data.access_token.token,
         httponly=True,
-        secure=False,  # TODO: В продакшн с HTTPS
+        secure=False, # TODO: с HTTPS в проде
         samesite="lax",
         expires=settings.access_token.token_lifetime_minutes * 60,
         path="/"
@@ -33,7 +33,7 @@ async def login(
         key="refresh_token",
         value=user_tokens_data.refresh_token.token,
         httponly=True,
-        secure=False,  # TODO: В продакшн с HTTPS
+        secure=False, # TODO: с HTTPS в проде
         samesite="lax",
         expires=settings.refresh_token.token_lifetime_days * 24 * 60 * 60,
         path="/"
@@ -53,7 +53,7 @@ async def refresh_token(
         key="access_token",
         value=user_tokens_data.access_token.token,
         httponly=True,
-        secure=False,  # TODO: В продакшн с HTTPS
+        secure=False, # TODO: с HTTPS в проде
         samesite="lax",
         expires=settings.access_token.token_lifetime_minutes * 60,
         path="/"
@@ -63,10 +63,23 @@ async def refresh_token(
         key="refresh_token",
         value=user_tokens_data.refresh_token.token,
         httponly=True,
-        secure=False,  # TODO: В продакшн с HTTPS
+        secure=False, # TODO: с HTTPS в проде 
         samesite="lax",
         expires=settings.refresh_token.token_lifetime_days * 24 * 60 * 60,
         path="/"
     )
     
     return user_tokens_data.user
+
+@router.post("/logout", status_code=204)
+async def logout(
+    response: Response,
+    logout: LogoutUseCaseProtocol = Depends(get_logout_use_case),
+    refresh_token: str = Cookie(...),
+):
+    await logout(refresh_token)
+    
+    response.delete_cookie(key="access_token", path="/")
+    response.delete_cookie(key="refresh_token", path="/")
+    
+    return None

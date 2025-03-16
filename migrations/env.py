@@ -6,6 +6,7 @@ from sqlalchemy import engine_from_config, pool
 from school_site.core.db import Base
 from school_site.settings import settings
 from school_site.apps.users.models import User, RefreshToken
+from school_site.apps.products.models import Product, Photo
 
 if TYPE_CHECKING:
     from .utils import render_item

@@ -1,13 +1,13 @@
 import logging
 import hashlib
 import secrets
-from jose import JWTError, jwt
+from jose import jwt
 from typing import Protocol, Optional
 from uuid import UUID
 from datetime import datetime, timedelta, timezone
 from school_site.core.enums import UserRole
 from school_site.apps.users.schemas import (
-    UserTokenDataReadSchema, TokenReadSchema, RefreshTokenCreateDBSchema, RefreshTokenReadDBSchema
+    TokenReadSchema, RefreshTokenCreateDBSchema, RefreshTokenReadDBSchema
 )
 from school_site.apps.users.exceptions import InvalidTokenError
 from school_site.apps.users.repositories.refresh_tokens import RefreshTokenRepositoryProtocol
@@ -27,9 +27,6 @@ class TokenServiceProtocol(Protocol):
     async def verify_refresh_token(self, refresh_token: str) -> RefreshTokenReadDBSchema:
         ...
     
-    def decode_access_token(self, token: str) -> UserTokenDataReadSchema:
-        ...
-
     async def delete(self, id: UUID) -> bool:
         ...
 
@@ -115,32 +112,6 @@ class TokenService(TokenServiceProtocol):
         return db_refresh_token
 
     
-    def decode_access_token(self, token: str) -> UserTokenDataReadSchema:
-        logger.info("Decoding access token")
-        
-        try:
-            payload = jwt.decode(token, settings.secret_key, algorithms=[settings.jwt.token_algorithm])
-            user_id_str = payload.get("user_id")
-            role = payload.get("role")
-            exp = payload.get("exp")
-            
-            if user_id_str is None:
-                logger.error("Invalid token: missing user_id")
-                raise InvalidTokenError()
-            
-            try:
-                user_id = UUID(user_id_str)
-            except ValueError:
-                logger.error("Invalid token: user_id not a valid UUID")
-                raise InvalidTokenError()
-            
-            token_data = UserTokenDataReadSchema(user_id=user_id, role=UserRole(role), expiration=datetime.fromtimestamp(exp))
-            logger.info(f"Token decoded successfully for user: {user_id}")
-            
-            return token_data
-        
-        except JWTError:
-            logger.warning("Failed to decode token")
-            raise InvalidTokenError()
+    
         
     

@@ -10,6 +10,7 @@ from .services.tokens import TokenServiceProtocol, TokenService
 from .services.auth import AuthServiceProtocol, AuthService
 from .use_cases.login import LoginUseCaseProtocol, LoginUseCase
 from .use_cases.refresh import RefreshUseCaseProtocol, RefreshUseCase
+from .use_cases.logout import LogoutUseCaseProtocol, LogoutUseCase
 
 
 def __get_user_repository(
@@ -54,3 +55,7 @@ def get_login_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_serv
 
 def get_refresh_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service)) -> RefreshUseCaseProtocol:
     return RefreshUseCase(auth_service)
+
+
+def get_logout_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service)) -> LogoutUseCaseProtocol:
+    return LogoutUseCase(auth_service)

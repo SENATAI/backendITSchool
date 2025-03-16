@@ -14,6 +14,9 @@ class AuthServiceProtocol(Protocol):
     async def refresh(self, refresh_token: str) -> AuthReadSchema:
         ...
 
+    async def logout(self, refresh_token: str) -> None:
+        ...
+
 
 class AuthService(AuthServiceProtocol):
     def __init__(
@@ -63,3 +66,14 @@ class AuthService(AuthServiceProtocol):
         return AuthReadSchema(user=user,
                               access_token=access_token,
                               refresh_token=new_refresh_data)
+    
+    
+    async def logout(self, refresh_token: str) -> None:
+        db_token = await self.token_service.verify_refresh_token(refresh_token)
+        user_id = db_token.user_id
+        logger.info(f"Logout for user: {user_id}")
+        if db_token:
+            await self.token_service.delete(db_token.id)
+            logger.info(f"Refresh token removed for user: {user_id}")
+        
+        logger.info(f"Logout successful for user: {user_id}")

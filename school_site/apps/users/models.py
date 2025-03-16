@@ -1,4 +1,3 @@
-from datetime import datetime
 from uuid import uuid4
 from school_site.core.db import Base
 from school_site.core.models import CreationTimeMixin, TimestampMixin
