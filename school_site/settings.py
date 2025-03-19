@@ -3,7 +3,7 @@ from os import path
 from typing import Annotated, Literal, List
 
 from fastapi import Depends
-from pydantic import BaseModel, Json, field_validator
+from pydantic import BaseModel, Json, field_validator, HttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict, NoDecode
 
 __all__ = (
@@ -42,6 +42,7 @@ class Minio(BaseModel):
     access_key: str
     secret_key: str
     secure: bool = False
+    url: HttpUrl
     
 
 

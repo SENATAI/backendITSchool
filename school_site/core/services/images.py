@@ -6,6 +6,7 @@ import io
 from uuid import UUID
 from typing import Protocol, Optional
 from datetime import timedelta
+from school_site.settings import settings
 
 
 class ImageServiceProtocol(Protocol):
@@ -50,6 +51,8 @@ class MinioImageService(ImageServiceProtocol):
         )
         return True
     
+    import os
+
     async def get_url(self, path: str) -> str:
         url = await self._run_sync(
             self.client.presigned_get_object,
@@ -57,7 +60,15 @@ class MinioImageService(ImageServiceProtocol):
             path,
             timedelta(minutes=30)
         )
-        return url
+        
+        minio_public_url = settings.minio.url
+        
+        internal_url_parts = url.split('?', 1)
+        path_part = internal_url_parts[0].split('/', 3)[-1] if len(internal_url_parts[0].split('/', 3)) > 3 else ""
+        query_part = internal_url_parts[1] if len(internal_url_parts) > 1 else ""
+        
+        public_url = f"{minio_public_url}/{path_part}?{query_part}"
+        return public_url
     
 
     async def delete(self, path: str) -> bool:
