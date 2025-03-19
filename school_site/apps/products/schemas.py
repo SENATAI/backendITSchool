@@ -4,7 +4,7 @@ from datetime import datetime
 from uuid import UUID
 from school_site.core.enums import UserRole
 from school_site.core.schemas import(
-    CreateBaseModel, UpdateBaseModel, TimestampMixin, CursorPaginationResultSchema
+    CreateBaseModel, UpdateBaseModel, TimestampMixin, PaginationResultSchema
 ) 
 
 # ====== PHOTO SCHEMAS =======
@@ -34,6 +34,7 @@ class PhotoReadDBSchema(PhotoBaseSchema, TimestampMixin):
         from_attributes = True
 
 class PhotoReadSchema(PhotoBaseSchema, TimestampMixin):
+    id: UUID
     url: HttpUrl
 # --------------------------------
 
@@ -74,5 +75,9 @@ class UserTokenDataReadSchema(BaseModel):
     expiration: datetime
 
 
-class ProductCursorPaginationResultSchema(CursorPaginationResultSchema[ProductReadDBSchema]):
+class ProductDBPaginationResultSchema(PaginationResultSchema[ProductWithPhotoDBReadSchema]):
+    pass
+
+
+class ProductPaginationResultSchema(PaginationResultSchema[ProductReadSchema]):
     pass

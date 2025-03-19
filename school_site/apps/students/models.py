@@ -1,0 +1,20 @@
+from uuid import uuid4
+from sqlalchemy import Column, ForeignKey, Integer, CheckConstraint
+from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
+from sqlalchemy.orm import relationship
+from school_site.core.db import Base
+from school_site.core.models import TimestampMixin
+
+
+class Student(Base, TimestampMixin):
+    __tablename__ = "students"
+
+    id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
+    points = Column(Integer, nullable=False)
+
+    __table_args__ = (
+        CheckConstraint('points >= 0', name='positive_price_check'),
+    )
+    user_id = Column(PostgresUUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
+
+    user = relationship("User", back_populates="student", foreign_keys="[Student.user_id]")

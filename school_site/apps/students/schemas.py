@@ -1,0 +1,27 @@
+from pydantic import Field
+from uuid import UUID
+from school_site.core.schemas import(
+    CreateBaseModel, UpdateBaseModel, TimestampMixin, PaginationResultSchema
+) 
+
+
+class StudentBaseSchema(TimestampMixin):
+    user_id: UUID
+    points: int = Field(..., ge=0, description="Баллы студента, целое положительное число")
+
+
+class StudentCreateSchema(CreateBaseModel, StudentBaseSchema):
+    pass
+
+
+class StudentUpdateSchema(UpdateBaseModel, StudentBaseSchema):
+    pass
+
+
+class StudentReadSchema(StudentBaseSchema):
+    id: UUID
+    pass
+
+
+class StudentPaginationResultSchema(PaginationResultSchema[StudentReadSchema]):
+    pass

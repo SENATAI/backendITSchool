@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class AuthServiceProtocol:
+    async def decode_access_token(self, token: str) -> UserTokenDataReadSchema:
+        ...
     async def get_admin_user(self, token: str) -> UserTokenDataReadSchema:
         ...
 

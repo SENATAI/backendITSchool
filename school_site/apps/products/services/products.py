@@ -1,20 +1,23 @@
 from fastapi import UploadFile
+import asyncio 
 import logging
-from typing import Protocol, Optional
+from typing import Protocol, Optional, List
 from uuid import UUID
+from school_site.core.schemas import PaginationSchema
 from ..schemas import (
     ProductCreateSchema,
     ProductUpdateSchema,
     ProductUpdateDBSchema,
     ProductReadSchema,
-    ProductCursorPaginationResultSchema,
+    PhotoReadDBSchema,
+    ProductWithPhotoDBReadSchema,
+    ProductPaginationResultSchema,
     ProductCreateDBSchema,
     PhotoCreateSchema,
     PhotoUpdateSchema,
     ProductWithPhotoDBReadSchema,
     PhotoReadSchema
 )
-from school_site.core.schemas import CursorPaginationWithSearchSchema, CursorPaginationResultSchema
 from ..repositories.products import ProductRepositoryProtocol
 from .photos import PhotoServiceProtocol
 
@@ -34,7 +37,13 @@ class ProductServiceProtocol(Protocol):
     async def delete(self, product_id: UUID) -> bool:
         ...
 
-    async def list(self, pagination: CursorPaginationWithSearchSchema) -> ProductCursorPaginationResultSchema:
+    async def list(self, pagination: PaginationSchema) -> ProductPaginationResultSchema:
+        ...
+
+    async def paginate_available(self, pagination: PaginationSchema, max_price: int) -> ProductPaginationResultSchema:
+        ...
+
+    async def paginate_not_available(self, pagination: PaginationSchema, min_price: int) -> ProductPaginationResultSchema:
         ...
 
 
@@ -71,7 +80,17 @@ class ProductService(ProductServiceProtocol):
 
     async def get(self, product_id: UUID) -> ProductReadSchema:
         product = await self.product_repository.get_with_photo(product_id)
-        image_url = await self.photo_service.get_photo_url(product.photo.path)
+        photo_read = None
+        if product.photo:
+            image_url = await self.photo_service.get_photo_url(product.photo.path)
+            photo_read = PhotoReadSchema(
+                id=product.photo.id,
+                name=product.photo.name,
+                product_id=product.id,
+                url=image_url,
+                created_at=product.photo.created_at,
+                updated_at=product.photo.updated_at
+            )
         return ProductReadSchema(
             id=product.id,
             name=product.name,
@@ -79,13 +98,7 @@ class ProductService(ProductServiceProtocol):
             price=product.price,
             created_at=product.created_at,
             updated_at=product.updated_at,
-            photo=PhotoReadSchema(
-                name=product.photo.name,
-                product_id=product.id,
-                url=image_url,
-                created_at=product.photo.created_at,
-                updated_at=product.photo.updated_at
-            )
+            photo=photo_read
         )
 
 
@@ -115,6 +128,9 @@ class ProductService(ProductServiceProtocol):
                 image
             )
 
+        else:
+            return await self.get(product_id)
+        
         return ProductReadSchema(
             id=updated_product.id,
             name=updated_product.name,
@@ -129,11 +145,89 @@ class ProductService(ProductServiceProtocol):
         await self.photo_service.delete(product.photo.id)
         return await self.product_repository.delete(product_id)
     
-    async def list(self, pagination: CursorPaginationWithSearchSchema) -> ProductCursorPaginationResultSchema:
-        return await self.product_repository.cursor_paginate(
-            search=pagination.search,
-            search_by=pagination.search_by,
-            cursor=pagination.cursor,
-            limit=pagination.limit,
-            sorting=["created_at", "id"]
+    async def list(self, pagination: PaginationSchema) -> ProductPaginationResultSchema:
+        products_paginate = await self.product_repository.paginate(
+            search=None,
+            search_by=None,
+            user=None,
+            pagination=pagination,
+            sorting=["created_at", "id"],
+            policies=["can_view"]
         )
+        converted_products = await self._convert_products_path_to_url(products_paginate.objects)
+
+        converted_products_paginate = ProductPaginationResultSchema(objects=converted_products,
+                                                           count=products_paginate.count)
+        
+        return converted_products_paginate
+    
+    async def paginate_available(self, pagination: PaginationSchema, max_price: int) -> ProductPaginationResultSchema:
+        products_available = await self.product_repository.paginate_available(
+            search=None,
+            search_by=None,
+            user=None,
+            pagination=pagination,
+            max_price=max_price,
+            sorting=["created_at", "id"],
+            policies=["can_view"]
+        )
+        
+        converted_products_available = await self._convert_products_path_to_url(products_available.objects)
+
+        converted_products_available_paginate = ProductPaginationResultSchema(objects=converted_products_available,
+                                                                              count=products_available.count)
+        
+        return converted_products_available_paginate
+    
+
+    async def paginate_not_available(self, pagination: PaginationSchema, min_price: int) -> ProductPaginationResultSchema:
+        products_not_available = await self.product_repository.paginate_not_available(
+            search=None,
+            search_by=None,
+            user=None,
+            pagination=pagination,
+            min_price=min_price,
+            sorting=["created_at", "id"],
+            policies=["can_view"]
+        )
+        
+        converted_products_not_available = await self._convert_products_path_to_url(products_not_available.objects)
+
+        converted_products_not_available_paginate = ProductPaginationResultSchema(objects=converted_products_not_available,
+                                                                              count=products_not_available.count)
+        
+        return converted_products_not_available_paginate
+
+    async def _convert_products_path_to_url(
+    self, 
+    products: List[ProductWithPhotoDBReadSchema]
+) -> List[ProductReadSchema]:
+    
+        async def process_photo(photo: PhotoReadDBSchema) -> PhotoReadSchema:
+            if not photo:
+                return None
+            url = await self.photo_service.get_photo_url(photo.path)
+            return PhotoReadSchema(
+                id=photo.id,
+                name=photo.name,
+                product_id=photo.product_id,
+                url=url,
+                created_at=photo.created_at,
+                updated_at=photo.updated_at
+        )
+    
+        async def process_product(product: ProductWithPhotoDBReadSchema) -> ProductReadSchema:
+            photo = product.photo
+            conv_photo = await process_photo(photo) if photo else None
+            
+            return ProductReadSchema(
+                id=product.id,
+                name=product.name,
+                description=product.description,
+                price=product.price,
+                photo=conv_photo,
+                created_at=product.created_at,
+                updated_at=product.updated_at
+            )
+    
+        return await asyncio.gather(*[process_product(p) for p in products])

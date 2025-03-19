@@ -1,0 +1,1 @@
+from school_site.apps.students.models import Student

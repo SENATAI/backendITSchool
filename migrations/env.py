@@ -8,6 +8,7 @@ from school_site.core.models import CreationTimeMixin, TimestampMixin
 from school_site.settings import settings
 from school_site.apps.users.models import User, RefreshToken
 from school_site.apps.products.models import Product, Photo
+from school_site.apps.students.models import Student
 
 if TYPE_CHECKING:
     from .utils import render_item

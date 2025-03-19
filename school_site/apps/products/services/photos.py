@@ -1,13 +1,15 @@
 from fastapi import UploadFile
+import asyncio
 import logging
-from typing import Protocol, Optional
+from typing import Protocol, Optional, List, Optional
 from uuid import UUID, uuid4
 from ..schemas import (
     PhotoCreateSchema,
     PhotoCreateDBSchema,
     PhotoUpdateSchema,
     PhotoUpdateDBSchema,
-    PhotoReadSchema
+    PhotoReadSchema,
+    PhotoReadDBSchema
 )
 from ..repositories.photos import PhotoRepositoryProtocol
 from ....core.services.images import ImageServiceProtocol
@@ -70,8 +72,16 @@ class PhotoService(PhotoServiceProtocol):
     
 
     async def get(self, photo_id: UUID) -> PhotoReadSchema:
-        product = await self.photo_repository.get(photo_id)
-        return product
+        photo = await self.photo_repository.get(photo_id)
+        photo_url = await self.get_photo_url(photo.path)
+        return PhotoReadSchema(
+            id=photo.id,
+            name=photo.name,
+            product_id=photo.product_id,
+            url=photo_url,
+            created_at=photo.created_at,
+            updated_at=photo.updated_at
+        )
 
 
     async def update(self, photo_id: UUID, photo: PhotoUpdateSchema, image: UploadFile) -> PhotoReadSchema:

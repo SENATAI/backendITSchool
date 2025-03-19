@@ -13,7 +13,12 @@ from .use_cases.update_product import UpdateProductUseCaseProtocol, UpdateProduc
 from .use_cases.get_product import GetProductUseCaseProtocol, GetProductUseCase
 from .use_cases.delete_product import DeleteProductUseCaseProtocol, DeleteProductUseCase
 from .use_cases.list_product import GetListProductUseCaseProtocol, GetListProductUseCase
-
+from .use_cases.create_photo import CreatePhotoUseCaseProtocol, CreatePhotoUseCase
+from .use_cases.update_photo import UpdatePhotoUseCaseProtocol, UpdatePhotoUseCase
+from .use_cases.delete_photo import DeletePhotoUseCaseProtocol, DeletePhotoUseCase
+from .use_cases.get_photo import GetPhotoUseCaseProtocol, GetPhotoUseCase
+from .use_cases.list_available_products import GetAvailableListProductUseCaseProtocol, GetAvailableProductUseCase
+from .use_cases.list_not_available_products import GetNotAvailableListProductUseCaseProtocol, GetNotAvailableProductUseCase
 
 def get_product_image_service() -> ImageServiceProtocol:
     """Зависимость для работы с изображениями продуктов."""
@@ -72,6 +77,42 @@ def get_product_delete_use_case(auth_service: AuthServiceProtocol = Depends(get_
     DeleteProductUseCaseProtocol:
     return DeleteProductUseCase(auth_service, product_service)
 
+
 def get_product_get_list_use_case(product_service: ProductServiceProtocol = Depends(get_product_service)) -> \
     GetListProductUseCaseProtocol:
     return GetListProductUseCase(product_service)
+
+
+def get_available_products_use_case(product_service: ProductServiceProtocol = Depends(get_product_service)) -> \
+    GetAvailableListProductUseCaseProtocol:
+    return GetAvailableProductUseCase(product_service)
+
+
+def get_not_available_products_use_case(product_service: ProductServiceProtocol = Depends(get_product_service)) -> \
+    GetNotAvailableListProductUseCaseProtocol:
+    return GetNotAvailableProductUseCase(product_service)
+
+
+def get_photo_create_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service),
+                              photo_service: PhotoServiceProtocol = Depends(get_photo_service)) -> \
+                            CreatePhotoUseCaseProtocol:
+    return CreatePhotoUseCase(auth_service, photo_service)
+
+
+def get_photo_update_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service),
+                              photo_service: PhotoServiceProtocol = Depends(get_photo_service)) -> \
+                            UpdatePhotoUseCaseProtocol:
+    return UpdatePhotoUseCase(auth_service, photo_service)
+
+
+def get_photo_delete_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service),
+                              photo_service: PhotoServiceProtocol = Depends(get_photo_service)) -> \
+                            DeletePhotoUseCaseProtocol:
+    return DeletePhotoUseCase(auth_service, photo_service)
+
+
+def get_photo_get_use_case(photo_service: PhotoServiceProtocol = Depends(get_photo_service)) -> \
+                            GetPhotoUseCaseProtocol:
+    return GetPhotoUseCase(photo_service)
+
+

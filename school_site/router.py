@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from school_site.apps.users.router import router as users_router
 from school_site.apps.products.router import router as product_router
+from school_site.apps.students.router import router as student_router
 
 
 def apply_routes(app: FastAPI) -> FastAPI:
@@ -15,4 +16,5 @@ def apply_routes(app: FastAPI) -> FastAPI:
 
     app.include_router(users_router)
     app.include_router(product_router)
+    app.include_router(student_router)
     return app
