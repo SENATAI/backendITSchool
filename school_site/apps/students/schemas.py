@@ -3,6 +3,7 @@ from uuid import UUID
 from school_site.core.schemas import(
     CreateBaseModel, UpdateBaseModel, TimestampMixin, PaginationResultSchema
 ) 
+from school_site.apps.users.schemas import UserReadSchema
 
 
 class StudentBaseSchema(TimestampMixin):
@@ -20,8 +21,15 @@ class StudentUpdateSchema(UpdateBaseModel, StudentBaseSchema):
 
 class StudentReadSchema(StudentBaseSchema):
     id: UUID
-    pass
+
+
+class StudentReadWithUserSchema(StudentBaseSchema):
+    id: UUID
+    user: UserReadSchema
 
 
 class StudentPaginationResultSchema(PaginationResultSchema[StudentReadSchema]):
+    pass
+
+class StudentPaginationWithUserResultSchema(PaginationResultSchema[StudentReadWithUserSchema]):
     pass

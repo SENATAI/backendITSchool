@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, Cookie, Path, Query
 from uuid import UUID
 from .schemas import (
-    StudentReadSchema, StudentCreateSchema, StudentUpdateSchema, StudentPaginationResultSchema
+    StudentReadSchema, StudentCreateSchema, StudentUpdateSchema, StudentPaginationResultSchema,
+    StudentReadWithUserSchema, StudentPaginationWithUserResultSchema
 )
 from .use_cases.create_student import CreateStudentUseCaseProtocol
 from .use_cases.update_student import UpdateStudentUseCaseProtocol
@@ -44,14 +45,14 @@ async def delete_student(
     return None
 
 
-@router.get("/me", response_model=StudentReadSchema)
+@router.get("/me", response_model=StudentReadWithUserSchema)
 async def list_students(
     access_token: str = Cookie(...),
     get_me: GetMeStudentUseCaseProtocol = Depends(get_student_get_me_use_case)
 ):
     return await get_me(access_token)
 
-@router.get("/{student_id}", response_model=StudentReadSchema)
+@router.get("/{student_id}", response_model=StudentReadWithUserSchema)
 async def get_student(
     student_id: UUID = Path(...),
     access_token: str = Cookie(...),
@@ -60,7 +61,7 @@ async def get_student(
     return await get(access_token, student_id)
 
 
-@router.get("/", response_model=StudentPaginationResultSchema)
+@router.get("/", response_model=StudentPaginationWithUserResultSchema)
 async def list_students(
     access_token: str = Cookie(...),
     limit: int = Query(10, ge=1, le=100),

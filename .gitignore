@@ -13,4 +13,4 @@ wheels/
 .env
 
 # Alembic
-migrations/versions
+migrations/versions/*
