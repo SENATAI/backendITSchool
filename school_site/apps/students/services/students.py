@@ -48,11 +48,7 @@ class StudentService(StudentServiceProtocol):
         )
     
     async def update(self, student_id: UUID, student: StudentUpdateSchema) -> StudentReadSchema:
-        student_for_update = StudentUpdateSchema(
-            id=student_id,
-            points=student.points
-        )
-        return await self.student_repository.update(student_for_update)
+        return await self.student_repository.update(student)
     
     async def delete(self, student_id: UUID) -> bool:
         return await self.student_repository.delete(student_id)
