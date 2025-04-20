@@ -20,11 +20,19 @@ class UserCreateSchema(CreateBaseModel):
     role: UserRole
 
 
-class UserUpdateSchema(UpdateBaseModel):
+class PasswordChangeSchema(BaseModel):
+    old_password: str
+    new_password: str
+
+class UserUpdateDBSchema(UpdateBaseModel):
     username: str
     hash_password: str
     role: UserRole
 
+class UserUpdateSchema(UpdateBaseModel):
+    username: str
+    password: str
+    role: UserRole
 
 class UserReadSchema(BaseModel):
     id: UUID

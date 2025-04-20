@@ -1,15 +1,13 @@
 from fastapi import UploadFile
-import asyncio
 import logging
-from typing import Protocol, Optional, List, Optional
+from typing import Protocol, Optional
 from uuid import UUID, uuid4
 from ..schemas import (
     PhotoCreateSchema,
     PhotoCreateDBSchema,
     PhotoUpdateSchema,
     PhotoUpdateDBSchema,
-    PhotoReadSchema,
-    PhotoReadDBSchema
+    PhotoReadSchema
 )
 from ..repositories.photos import PhotoRepositoryProtocol
 from ....core.services.images import ImageServiceProtocol

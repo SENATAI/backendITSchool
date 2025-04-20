@@ -15,7 +15,6 @@ from ..schemas import (
     ProductCreateDBSchema,
     PhotoCreateSchema,
     PhotoUpdateSchema,
-    ProductWithPhotoDBReadSchema,
     PhotoReadSchema
 )
 from ..repositories.products import ProductRepositoryProtocol

@@ -1,5 +1,3 @@
-from fastapi import UploadFile
-from typing import Optional
 from uuid import UUID
 from school_site.core.use_cases import UseCaseProtocol 
 from ..services.products import PhotoServiceProtocol 

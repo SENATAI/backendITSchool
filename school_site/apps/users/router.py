@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, Response, Cookie
-from .schemas import LoginRequestSchema, UserReadSchema
+from .schemas import LoginRequestSchema, UserReadSchema, PasswordChangeSchema
 from .use_cases.login import LoginUseCaseProtocol
 from .use_cases.refresh import RefreshUseCaseProtocol
 from .use_cases.logout import LogoutUseCaseProtocol
-from .depends import get_login_use_case, get_refresh_use_case, get_logout_use_case
-from school_site.settings import settings
-
+from .use_cases.change_password import ChangePasswordUseCaseProtocol
+from .depends import get_login_use_case, get_refresh_use_case, get_logout_use_case, get_change_password_use_case
+from .utils.cookies import set_auth_cookies
 
 router = APIRouter(prefix='/api/users', tags=['Users'])
 
@@ -19,24 +19,10 @@ async def login(
         user_data.username, user_data.password
     )
     
-    response.set_cookie(
-        key="access_token",
-        value=user_tokens_data.access_token.token,
-        httponly=True,
-        secure=False, # TODO: с HTTPS в проде
-        samesite="lax",
-        expires=settings.access_token.token_lifetime_minutes * 60,
-        path="/"
-    )
-    
-    response.set_cookie(
-        key="refresh_token",
-        value=user_tokens_data.refresh_token.token,
-        httponly=True,
-        secure=False, # TODO: с HTTPS в проде
-        samesite="lax",
-        expires=settings.refresh_token.token_lifetime_days * 24 * 60 * 60,
-        path="/"
+    set_auth_cookies(
+        response, 
+        user_tokens_data.access_token.token, 
+        user_tokens_data.refresh_token.token
     )
     
     return user_tokens_data.user
@@ -49,24 +35,10 @@ async def refresh_token(
 ):
     user_tokens_data = await refresh_use_case(refresh_token)
     
-    response.set_cookie(
-        key="access_token",
-        value=user_tokens_data.access_token.token,
-        httponly=True,
-        secure=False, # TODO: с HTTPS в проде
-        samesite="lax",
-        expires=settings.access_token.token_lifetime_minutes * 60,
-        path="/"
-    )
-    
-    response.set_cookie(
-        key="refresh_token",
-        value=user_tokens_data.refresh_token.token,
-        httponly=True,
-        secure=False, # TODO: с HTTPS в проде 
-        samesite="lax",
-        expires=settings.refresh_token.token_lifetime_days * 24 * 60 * 60,
-        path="/"
+    set_auth_cookies(
+        response, 
+        user_tokens_data.access_token.token, 
+        user_tokens_data.refresh_token.token
     )
     
     return user_tokens_data.user
@@ -83,3 +55,23 @@ async def logout(
     response.delete_cookie(key="refresh_token", path="/")
     
     return None
+
+
+@router.post("/change-password", response_model=UserReadSchema, status_code=200)
+async def change_password(
+    response: Response,
+    password_data: PasswordChangeSchema,  
+    change_password_use_case: ChangePasswordUseCaseProtocol = Depends(get_change_password_use_case),
+    access_token: str = Cookie(...)
+):
+    """Смена пароля авторизованным пользователем"""
+    user_tokens_data = await change_password_use_case(
+        access_token, 
+        password_data
+    )
+    set_auth_cookies(
+        response, 
+        user_tokens_data.access_token.token, 
+        user_tokens_data.refresh_token.token
+    )
+    return user_tokens_data.user

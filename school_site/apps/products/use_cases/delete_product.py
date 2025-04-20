@@ -1,7 +1,8 @@
 from uuid import UUID
 from school_site.core.use_cases import UseCaseProtocol 
 from ..services.products import ProductServiceProtocol 
-from ..services.auth import AuthServiceProtocol
+from school_site.apps.users.services.tokens import TokenServiceProtocol 
+
 
 class DeleteProductUseCaseProtocol(UseCaseProtocol[None]):
     async def __call__(self, token: str, product_id: UUID) -> None:
@@ -9,7 +10,7 @@ class DeleteProductUseCaseProtocol(UseCaseProtocol[None]):
 
 
 class DeleteProductUseCase(DeleteProductUseCaseProtocol):
-    def __init__(self, auth_service: AuthServiceProtocol, product_service: ProductServiceProtocol):
+    def __init__(self, auth_service: TokenServiceProtocol, product_service: ProductServiceProtocol):
         self.auth_service = auth_service
         self.product_service = product_service
     

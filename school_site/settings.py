@@ -104,7 +104,7 @@ class Settings(BaseSettings):
     @field_validator('cors_origins', mode='before')
     @classmethod
     def decode_cors_origins(cls, v: str) -> List[str]:
-        return [x for x in v.split(',')]
+        return v.split(',')
 
     db: Db
     minio: Minio

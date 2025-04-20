@@ -69,10 +69,6 @@ class ProductReadSchema(ProductBaseSchema, TimestampMixin):
     photo: Optional[PhotoReadSchema] = None
 
 
-class UserTokenDataReadSchema(BaseModel):
-    user_id: UUID
-    role: UserRole
-    expiration: datetime
 
 
 class ProductDBPaginationResultSchema(PaginationResultSchema[ProductWithPhotoDBReadSchema]):

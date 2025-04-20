@@ -11,6 +11,7 @@ from .services.auth import AuthServiceProtocol, AuthService
 from .use_cases.login import LoginUseCaseProtocol, LoginUseCase
 from .use_cases.refresh import RefreshUseCaseProtocol, RefreshUseCase
 from .use_cases.logout import LogoutUseCaseProtocol, LogoutUseCase
+from .use_cases.change_password import ChangePasswordUseCaseProtocol, ChangePasswordUseCase
 
 
 def __get_user_repository(
@@ -59,3 +60,6 @@ def get_refresh_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_se
 
 def get_logout_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service)) -> LogoutUseCaseProtocol:
     return LogoutUseCase(auth_service)
+
+def get_change_password_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service)) -> ChangePasswordUseCaseProtocol:
+    return ChangePasswordUseCase(auth_service)

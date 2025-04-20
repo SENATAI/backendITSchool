@@ -3,11 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from school_site.core.db import get_async_session
 from school_site.core.services.images import ImageServiceProtocol
 from school_site.core.depends import get_image_service
+from school_site.apps.users.services.tokens import TokenServiceProtocol
+from school_site.apps.users.depends import  get_token_service
 from .repositories.products import ProductRepositoryProtocol, ProductRepository
 from .services.products import ProductServiceProtocol, ProductService
 from .repositories.photos import PhotoRepositoryProtocol, PhotoRepository
 from .services.photos import PhotoServiceProtocol, PhotoService
-from .services.auth import AuthServiceProtocol, AuthService
 from .use_cases.create_product import CreateProductUseCaseProtocol, CreateProductUseCase
 from .use_cases.update_product import UpdateProductUseCaseProtocol, UpdateProductUseCase
 from .use_cases.get_product import GetProductUseCaseProtocol, GetProductUseCase
@@ -51,17 +52,14 @@ def get_product_service(
     return ProductService(product_repository, photo_service)
     
 
-def get_auth_service() -> AuthServiceProtocol:
-    return AuthService()
 
-
-def get_product_create_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service), 
+def get_product_create_use_case(auth_service: TokenServiceProtocol = Depends(get_token_service), 
                                 product_service: ProductServiceProtocol = Depends(get_product_service)) -> \
         CreateProductUseCaseProtocol:
     return CreateProductUseCase(auth_service, product_service)
 
 
-def get_product_update_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service), 
+def get_product_update_use_case(auth_service: TokenServiceProtocol = Depends(get_token_service), 
                                 product_service: ProductServiceProtocol = Depends(get_product_service)) -> \
         UpdateProductUseCaseProtocol:
     return UpdateProductUseCase(auth_service, product_service)
@@ -72,7 +70,7 @@ def get_product_get_use_case(product_service: ProductServiceProtocol = Depends(g
     return GetProductUseCase(product_service)
     
 
-def get_product_delete_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service),
+def get_product_delete_use_case(auth_service: TokenServiceProtocol = Depends(get_token_service),
                                 product_service: ProductServiceProtocol = Depends(get_product_service)) -> \
     DeleteProductUseCaseProtocol:
     return DeleteProductUseCase(auth_service, product_service)
@@ -93,19 +91,19 @@ def get_not_available_products_use_case(product_service: ProductServiceProtocol 
     return GetNotAvailableProductUseCase(product_service)
 
 
-def get_photo_create_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service),
+def get_photo_create_use_case(auth_service: TokenServiceProtocol = Depends(get_token_service),
                               photo_service: PhotoServiceProtocol = Depends(get_photo_service)) -> \
                             CreatePhotoUseCaseProtocol:
     return CreatePhotoUseCase(auth_service, photo_service)
 
 
-def get_photo_update_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service),
+def get_photo_update_use_case(auth_service: TokenServiceProtocol = Depends(get_token_service),
                               photo_service: PhotoServiceProtocol = Depends(get_photo_service)) -> \
                             UpdatePhotoUseCaseProtocol:
     return UpdatePhotoUseCase(auth_service, photo_service)
 
 
-def get_photo_delete_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service),
+def get_photo_delete_use_case(auth_service: TokenServiceProtocol = Depends(get_token_service),
                               photo_service: PhotoServiceProtocol = Depends(get_photo_service)) -> \
                             DeletePhotoUseCaseProtocol:
     return DeletePhotoUseCase(auth_service, photo_service)

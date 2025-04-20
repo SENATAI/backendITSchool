@@ -4,7 +4,7 @@ from uuid import UUID
 import json
 from school_site.core.use_cases import UseCaseProtocol 
 from ..services.products import PhotoServiceProtocol 
-from ..services.auth import AuthServiceProtocol
+from school_site.apps.users.services.tokens import TokenServiceProtocol 
 from ..schemas import PhotoReadSchema, PhotoUpdateSchema
 
 class UpdatePhotoUseCaseProtocol(UseCaseProtocol[PhotoReadSchema]):
@@ -13,7 +13,7 @@ class UpdatePhotoUseCaseProtocol(UseCaseProtocol[PhotoReadSchema]):
 
 
 class UpdatePhotoUseCase(UpdatePhotoUseCaseProtocol):
-    def __init__(self, auth_service: AuthServiceProtocol, photo_service: PhotoServiceProtocol):
+    def __init__(self, auth_service: TokenServiceProtocol, photo_service: PhotoServiceProtocol):
         self.auth_service = auth_service
         self.photo_service = photo_service
     
