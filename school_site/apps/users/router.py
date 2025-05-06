@@ -57,7 +57,7 @@ async def logout(
     return None
 
 
-@router.post("/change-password", response_model=UserReadSchema, status_code=200)
+@router.post("/change_password", response_model=UserReadSchema, status_code=200)
 async def change_password(
     response: Response,
     password_data: PasswordChangeSchema,  

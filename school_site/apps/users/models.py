@@ -10,7 +10,13 @@ class User(Base, TimestampMixin):
     __tablename__ = "users"
     
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
+    first_name = Column(String, nullable=True)
+    surname = Column(String, nullable=True)
+    patronymic = Column(String, nullable=True)
+    
     username = Column(String, unique=True, index=True)
+    phone_number = Column(String(20), unique=True, index=True, nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=False)
     password_hash = Column(String)
     role = Column(Enum(UserRole))
     

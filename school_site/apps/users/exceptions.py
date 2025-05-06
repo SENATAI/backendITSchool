@@ -29,7 +29,7 @@ class UsernameNotExistsExceptions(ModelFieldNotFoundException):
             value=value,
             headers=headers,
         )
-
+ 
 class InvalidCredentialsError(CoreException):
     """
     Исключение, возникающее при неверных учетных данных (например, неверный пароль).

@@ -6,7 +6,6 @@ from .core.loggers import set_logging
 from .middleware import apply_middleware
 from .exceptions import apply_exceptions_handlers
 from .router import apply_routes
-from .settings import settings
 
 
 @asynccontextmanager

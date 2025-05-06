@@ -1,8 +1,8 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from school_site.core.db import get_async_session
-from school_site.apps.products.services.auth import AuthServiceProtocol
-from school_site.apps.products.depends import get_auth_service
+from school_site.apps.users.services.auth import TokenServiceProtocol
+from school_site.apps.users.depends import get_token_service
 from school_site.apps.users.depends import get_user_service
 from school_site.apps.users.services.users import UserServiceProtocol
 from .repositories.students import StudentRepositoryProtocol, StudentRepository
@@ -28,7 +28,7 @@ def get_students_services(student_repository: StudentRepositoryProtocol = Depend
     return StudentService(student_repository, user_service)
 
 
-def get_auth_admin_and_students_service(auth_service: AuthServiceProtocol = Depends(get_auth_service)) -> AuthAdminAndStudentServiceProtocol:
+def get_auth_admin_and_students_service(auth_service: TokenServiceProtocol = Depends(get_token_service)) -> AuthAdminAndStudentServiceProtocol:
     return AuthService(auth_service)
 
 

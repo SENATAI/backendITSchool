@@ -9,6 +9,8 @@ from school_site.settings import settings
 from school_site.apps.users.models import User, RefreshToken
 from school_site.apps.products.models import Product, Photo
 from school_site.apps.students.models import Student
+from school_site.apps.courses.models import Course
+from school_site.apps.news.models import News
 
 if TYPE_CHECKING:
     from .utils import render_item

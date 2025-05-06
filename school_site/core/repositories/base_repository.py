@@ -8,9 +8,10 @@ from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import func
+from sqlalchemy.exc import IntegrityError
 
 from school_site.core.db import Base
-from school_site.core.utils.exceptions import ModelNotFoundException, SortingFieldNotFoundError
+from school_site.core.utils.exceptions import ModelNotFoundException, SortingFieldNotFoundError, ModelAlreadyExistsError
 
 from ..schemas import CreateBaseModel, PaginationResultSchema, PaginationSchema, UpdateBaseModel, \
     CursorPaginationResultSchema
@@ -190,13 +191,21 @@ class BaseRepositoryImpl(Generic[ModelType, ReadSchemaType, CreateSchemaType, Up
                 next_cursor=next_cursor
             )
     
-    async def create(self: Self, create_object: CreateSchemaType) -> ReadSchemaType:
-        async with self.session as s, s.begin():
-            statement = (
-                sa.insert(self.model_type).values(**create_object.model_dump(exclude={'id'})).returning(self.model_type)
-            )
-            model = (await s.execute(statement)).scalar_one()
-            return self.read_schema_type.model_validate(model, from_attributes=True)
+    async def create(self, create_object: CreateSchemaType) -> ReadSchemaType:
+        """Create single record"""
+        try:
+            async with self.session as s, s.begin():
+                stmt = (
+                    sa.insert(self.model_type)
+                    .values(**create_object.model_dump(exclude={'id'}))
+                    .returning(self.model_type)
+                )
+                model = (await s.execute(stmt)).scalar_one()
+                return self.read_schema_type.model_validate(model, from_attributes=True)
+        except IntegrityError as e:
+            if "unique constraint" in str(e).lower() or "duplicate key" in str(e).lower():
+                raise ModelAlreadyExistsError(self.model_type, create_object, "duplicate key")
+            raise
 
     async def bulk_create(self, create_objects: list[CreateSchemaType]) -> list[ReadSchemaType]:
         if len(create_objects) == 0:
@@ -207,19 +216,25 @@ class BaseRepositoryImpl(Generic[ModelType, ReadSchemaType, CreateSchemaType, Up
             return [self.read_schema_type.model_validate(model, from_attributes=True) for model in models]
 
     async def update(self: Self, update_object: UpdateSchemaType) -> ReadSchemaType:
-        async with self.session as s, s.begin():
-            pk = update_object.id
-            statement = (
-                sa.update(self.model_type)
-                .where(self.model_type.id == pk)
-                .values(update_object.model_dump(exclude={'id'}, exclude_unset=True))
-                .returning(self.model_type)
-            )
-            model = (await s.execute(statement)).scalar_one_or_none()
-            if model is None:
-                raise ModelNotFoundException(self.model_type, pk)
+        try:
+            async with self.session as s, s.begin():
+                pk = update_object.id
+                statement = (
+                    sa.update(self.model_type)
+                    .where(self.model_type.id == pk)
+                    .values(update_object.model_dump(exclude={'id'}, exclude_unset=True))
+                    .returning(self.model_type)
+                )
+                model = (await s.execute(statement)).scalar_one_or_none()
+                if model is None:
+                    raise ModelNotFoundException(self.model_type, pk)
 
-            return self.read_schema_type.model_validate(model, from_attributes=True)
+                return self.read_schema_type.model_validate(model, from_attributes=True)
+        except IntegrityError as e:
+            if "unique constraint" in str(e).lower() or "duplicate key" in str(e).lower():
+                raise ModelAlreadyExistsError(self.model_type, update_object, "duplicate key")
+            raise
+
 
     async def bulk_update(self, update_objects: list[UpdateSchemaType]) -> None:
         if len(update_objects) == 0:

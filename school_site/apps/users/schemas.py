@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, field_validator
+import re
+from typing import Optional
 from uuid import UUID
 from datetime import datetime
 from school_site.core.schemas import CreateBaseModel, UpdateBaseModel
@@ -8,43 +10,62 @@ class LoginRequestSchema(BaseModel):
     username: str
     password: str
 
-class RegisterRequestSchema(BaseModel):
-    username: str
-    password: str
-    role: str
-
-
-class UserCreateSchema(CreateBaseModel):
-    username: str
-    password_hash: str
-    role: UserRole
-
 
 class PasswordChangeSchema(BaseModel):
     old_password: str
     new_password: str
 
-class UserUpdateDBSchema(UpdateBaseModel):
-    username: str
-    hash_password: str
-    role: UserRole
-
-class UserUpdateSchema(UpdateBaseModel):
-    username: str
-    password: str
-    role: UserRole
-
-class UserReadSchema(BaseModel):
-    id: UUID
-    username: str
-    role: UserRole
-
-
-class UserReadDBSchema(BaseModel):
-    id: UUID
-    username: str
+class PasswordSchema(BaseModel):
     password_hash: str
+
+class PhoneValidatedMixin(BaseModel):
+    phone_number: str
+
+    @field_validator('phone_number')
+    @classmethod
+    def validate_phone(cls, v: str) -> str:
+        pattern = r"^\+?[0-9]{10,15}$"
+        if not re.match(pattern, v):
+            raise ValueError("Неверный формат номера телефона. Пример: +79991234567")
+        return v
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class UserInfoMixin(BaseModel):
+    first_name: Optional[str]
+    surname: Optional[str]
+    patronymic: Optional[str]
+    email: EmailStr
     role: UserRole
+    username: str
+
+
+
+class RegisterRequestSchema(PhoneValidatedMixin, UserInfoMixin):
+    password: str
+
+
+class UserCreateSchema(PhoneValidatedMixin, UserInfoMixin, CreateBaseModel):
+    password_hash: str
+
+
+class UserUpdateDBSchema(PhoneValidatedMixin, UserInfoMixin, UpdateBaseModel):
+    password_hash: str
+
+
+class UserUpdateSchema(PhoneValidatedMixin, UserInfoMixin, UpdateBaseModel):
+    password: str
+
+
+class UserReadSchema(PhoneValidatedMixin, UserInfoMixin):
+    id: UUID
+
+
+class UserReadDBSchema(PhoneValidatedMixin, UserInfoMixin):
+    id: UUID
+    password_hash: str
 
 
 class UserTokenDataReadSchema(BaseModel):

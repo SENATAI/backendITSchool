@@ -10,7 +10,7 @@ from school_site.apps.users.services.passwords import PasswordServiceProtocol
 from school_site.apps.users.exceptions import (
     UsernameAlreadyExistsError, InvalidCredentialsError, UsernameNotExistsExceptions
 )
-from school_site.core.enums import UserRole
+from ..schemas import PasswordSchema
 
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,8 @@ class UserServiceProtocol(Protocol):
     async def update_user(self: Self, user: UserUpdateSchema) -> UserReadSchema:
         ...
 
+    async def change_password(self: Self, record_id: UUID, new_password: str) -> UserReadSchema:
+        ...
 
 class UserService(UserServiceProtocol):
     def __init__(
@@ -53,11 +55,16 @@ class UserService(UserServiceProtocol):
             logger.error(f"User with username {user.username} already exists")
             raise UsernameAlreadyExistsError()
         
-        password = self.password_service.get_password_hash(user.password)
+        password_hash = self.password_service.get_password_hash(user.password)
         user_create = UserCreateSchema(
+            first_name=user.first_name,
+            surname=user.surname,
+            patronymic=user.patronymic,
+            email=user.email,
+            phone_number=user.phone_number,
             username=user.username,
-            password_hash=password,
-            role=UserRole(user.role)
+            password_hash=password_hash,
+            role=user.role
         )
         new_user = await self.user_repository.create(user_create)
         
@@ -65,15 +72,27 @@ class UserService(UserServiceProtocol):
         return UserReadSchema(**new_user.model_dump(exclude={'password_hash'}))
     
     async def update_user(self: Self, user: UserUpdateSchema) -> UserReadSchema:
-        hash_password = self.password_service.get_password_hash(user.password)
         db_user = UserUpdateDBSchema(
-            id=user.id,
+            first_name=user.first_name,
+            surname=user.surname,
+            patronymic=user.patronymic,
+            email=user.email,
+            phone_number=user.phone_number,
             username=user.username,
-            hash_password=hash_password,
             role=user.role
         )
         updated_user = await self.user_repository.update(db_user)
-        return updated_user
+        return UserReadSchema(**updated_user.model_dump(exclude={'password_hash'}))
+
+    
+    async def change_password(self: Self, record_id: UUID, new_password: str) -> UserReadSchema:
+        password_hash = self.password_service.get_password_hash(new_password)
+        password_schema = PasswordSchema(
+            password_hash=password_hash
+        )
+        updated_user =  await self.user_repository.change_password(record_id, password_schema)
+        return UserReadSchema(**updated_user.model_dump(exclude={'password_hash'}))
+
     
     async def get_user_by_id(self: Self, user_id: UUID) -> UserReadSchema:
         logger.info(f"Fetching user with id: {user_id}")

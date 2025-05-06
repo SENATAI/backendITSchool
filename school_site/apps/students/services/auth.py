@@ -1,20 +1,20 @@
 import logging
-from school_site.apps.products.services.auth import AuthServiceProtocol as AuthAdminServiceProtocol
+from school_site.apps.users.services.auth import TokenServiceProtocol
 from school_site.core.utils.exceptions import PermissionDeniedError
-from school_site.apps.products.schemas import UserTokenDataReadSchema
+from school_site.apps.users.schemas import UserTokenDataReadSchema
 from school_site.core.enums import UserRole
 
 
 logger = logging.getLogger(__name__)
 
 
-class AuthAdminAndStudentServiceProtocol(AuthAdminServiceProtocol):
+class AuthAdminAndStudentServiceProtocol(TokenServiceProtocol):
     async def get_student_user(self, token: str) -> UserTokenDataReadSchema:
         ...
 
 
 class AuthService(AuthAdminAndStudentServiceProtocol):
-    def __init__(self, auth_admin_service: AuthAdminServiceProtocol):
+    def __init__(self, auth_admin_service: TokenServiceProtocol):
         self.auth_admin_service = auth_admin_service
 
     async def decode_access_token(self, token: str) -> UserTokenDataReadSchema:

@@ -2,7 +2,7 @@ import logging
 from typing import Protocol, Self
 from uuid import UUID
 from school_site.core.enums import UserRole
-from ..schemas import AuthReadSchema, PasswordChangeSchema, UserUpdateSchema
+from ..schemas import AuthReadSchema, PasswordChangeSchema
 from .users import UserServiceProtocol
 from .tokens import TokenServiceProtocol
 
@@ -33,14 +33,9 @@ class AuthService(AuthServiceProtocol):
     
     async def change_password(self: Self, access_token: str, password: PasswordChangeSchema) -> AuthReadSchema:
         user_data = await self.token_service.decode_access_token(access_token)
-        user = await self.user_service.authenticate_user_by_id(user_data.user_id, password.old_password)
-        user_for_update = UserUpdateSchema(
-            id=user.id,
-            username=user.username,
-            password=password.new_password,
-            role=user.role
-        )
-        updated_user = await self.user_service.update_user(user_for_update)
+        await self.user_service.authenticate_user_by_id(user_data.user_id, password.old_password)
+        updated_user = await self.user_service.change_password(user_data.user_id, password.new_password)
+        await self.token_service.delete_all_by_user_id(updated_user.id)
         new_access_token, new_refresh_data = await self._create_tokens(updated_user.id, updated_user.role)
 
         return AuthReadSchema(user=updated_user,
