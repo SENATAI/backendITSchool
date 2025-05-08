@@ -18,3 +18,4 @@ class Student(Base, TimestampMixin):
     user_id = Column(PostgresUUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
 
     user = relationship("User", back_populates="student", foreign_keys="[Student.user_id]")
+    groups = relationship("Group", secondary="group_student", back_populates="students")

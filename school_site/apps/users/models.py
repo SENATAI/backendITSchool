@@ -21,8 +21,8 @@ class User(Base, TimestampMixin):
     role = Column(Enum(UserRole))
     
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
-
-    student = relationship("Student", back_populates="user", uselist=False)  
+    student = relationship("Student", back_populates="user", uselist=False)
+    groups = relationship("Group", back_populates="teacher")
 
 class RefreshToken(Base, CreationTimeMixin):
     __tablename__ = "refresh_tokens"
