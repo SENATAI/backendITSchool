@@ -15,4 +15,4 @@ logger = logging.getLogger(__name__)
 # class GroupTeachersServiceProtocol(Protocol):
 
 
-# class GroupTeachersService(GroupTeachersServiceProtocol):
+# class GroupTeachersService(GroupTeachersServiceProtocol): # так же, как students, но пока вместо teachers у нас users; нужно создать apps/teachers
