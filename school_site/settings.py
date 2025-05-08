@@ -54,6 +54,12 @@ class Cache(BaseModel):
     prefix: str = 'boiler-plate'
 
 
+class EmailService(BaseModel):
+    url: HttpUrl
+    token_algorithm: str
+    token_lifetime_minutes: int
+    secret_key: str
+
 class JWT(BaseModel):
     """
     Настройки JWT токена.
@@ -100,6 +106,7 @@ class Settings(BaseSettings):
     secret_key: str
     cors_origins: Annotated[List[str], NoDecode] 
     
+    email_service: EmailService
 
     @field_validator('cors_origins', mode='before')
     @classmethod
