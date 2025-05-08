@@ -12,7 +12,11 @@ from .use_cases.login import LoginUseCaseProtocol, LoginUseCase
 from .use_cases.refresh import RefreshUseCaseProtocol, RefreshUseCase
 from .use_cases.logout import LogoutUseCaseProtocol, LogoutUseCase
 from .use_cases.change_password import ChangePasswordUseCaseProtocol, ChangePasswordUseCase
-
+from .use_cases.create_user import CreateUserUseCase, CreateUserUseCaseProtocol
+from .use_cases.get_all_users import GetAllUsersUseCase, GetAllUsersUseCaseProtocol
+from .use_cases.get_user_by_id import GetUserByIdUseCase, GetUserByIdUseCaseProtocol
+from .use_cases.update_user import UpdateUserUseCase, UpdateUserUseCaseProtocol
+from .use_cases.delete_user import DeleteUserUseCase, DeleteUserUseCaseProtocol
 
 def __get_user_repository(
         session: AsyncSession = Depends(get_async_session)
@@ -63,3 +67,19 @@ def get_logout_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_ser
 
 def get_change_password_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service)) -> ChangePasswordUseCaseProtocol:
     return ChangePasswordUseCase(auth_service)
+
+def get_create_user_use_case(user_service: UserServiceProtocol = Depends(get_user_service)) -> CreateUserUseCaseProtocol:
+    return CreateUserUseCase(user_service)
+
+def get_all_users_use_case(user_service: UserServiceProtocol = Depends(get_user_service)) -> GetAllUsersUseCaseProtocol:
+    return GetAllUsersUseCase(user_service)
+
+def get_get_user_by_id_use_case(user_service: UserServiceProtocol = Depends(get_user_service)) -> GetUserByIdUseCaseProtocol:
+    return GetUserByIdUseCase(user_service)
+
+def get_update_user_use_case(user_service: UserServiceProtocol = Depends(get_user_service)) -> UpdateUserUseCaseProtocol:
+    return UpdateUserUseCase(user_service)
+
+def get_delete_user_use_case(user_service: UserServiceProtocol = Depends(get_user_service)) -> DeleteUserUseCaseProtocol:
+    return DeleteUserUseCase(user_service)
+

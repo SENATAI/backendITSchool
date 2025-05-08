@@ -1,5 +1,5 @@
 import logging
-from typing import Protocol, Self
+from typing import Protocol, Self, List
 from uuid import UUID
 from school_site.apps.users.schemas import(
     UserCreateSchema, UserReadSchema, RegisterRequestSchema, UserReadDBSchema,
@@ -36,6 +36,12 @@ class UserServiceProtocol(Protocol):
         ...
 
     async def change_password(self: Self, record_id: UUID, new_password: str) -> UserReadSchema:
+        ...
+
+    async def get_all_users(self: Self) -> List[UserReadSchema]:
+        ...
+
+    async def delete_user(self:Self, user_id: UUID) -> bool:
         ...
 
 class UserService(UserServiceProtocol):
@@ -135,3 +141,18 @@ class UserService(UserServiceProtocol):
         logger.info(f"Authentication successful for user: {user_id}")
         return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
     
+    async def get_all_users(self: Self) -> List[UserReadSchema]:
+        logger.info(f"Fetching all users")
+
+        users = await self.user_repository.get_all()
+        return [UserReadSchema(**user.model_dump(exclude={'password_hash'})) for user in users]
+    
+    async def delete_user(self: Self, user_id: UUID) -> bool:
+        logger.info(f"Deleting user with id: {user_id}")
+        
+        await self.user_repository.delete(user_id)
+        
+        logger.info(f"Successfully deleted user with id: {user_id}")
+        return True
+
+
