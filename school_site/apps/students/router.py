@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Cookie, Path, Query
 from uuid import UUID
 from .schemas import (
-    StudentReadSchema, StudentCreateSchema, StudentUpdateSchema, StudentPaginationResultSchema,
+    StudentReadSchema, StudentCreateSchema, StudentUpdateSchema,
     StudentReadWithUserSchema, StudentPaginationWithUserResultSchema
 )
 from .use_cases.create_student import CreateStudentUseCaseProtocol
