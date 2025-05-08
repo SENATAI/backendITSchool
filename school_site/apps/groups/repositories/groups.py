@@ -1,16 +1,18 @@
 import sqlalchemy as sa
 from sqlalchemy.sql.expression import func
 from collections.abc import Iterable
-from typing import Self
+from typing import Self, List
+from uuid import UUID
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
 from school_site.core.schemas import PaginationSchema
-from ..models import Group
+from ..models import Group, group_student
 from ..schemas import (
     GroupCreateDBSchema,
     GroupReadDBSchema,
     GroupUpdateDBSchema,
     GroupDBPaginationResultSchema,
-    GroupReadDBHeadSchema
+    GroupReadDBHeadSchema,
+    GroupAddStudentsDBSchema
 )
 
 
@@ -27,6 +29,12 @@ class GroupRepositoryProtocol(BaseRepositoryImpl[
         sorting: Iterable[str],
         pagination: PaginationSchema
     ) -> GroupDBPaginationResultSchema:
+        ...
+
+    async def add_students(self, group_id: UUID, students: GroupAddStudentsDBSchema) -> None:
+        ...
+
+    async def delete_student(self, group_id: UUID, student_id: UUID) -> None:
         ...
 
 
@@ -65,4 +73,25 @@ class GroupRepository(GroupRepositoryProtocol):
                     GroupReadDBHeadSchema(id=id, name=name)
                     for id, name in results
                 ]
-            ) 
+            )
+
+    async def add_students(self, group_id: UUID, students: GroupAddStudentsDBSchema) -> None:
+        async with self.session as s:
+            for student_id in students.students_id:
+                statement = sa.insert(group_student).values(
+                    group_id=group_id,
+                    student_id=student_id
+                )
+                await s.execute(statement)
+            await s.commit()
+
+    async def delete_student(self, group_id: UUID, student_id: UUID) -> None:
+        async with self.session as s:
+            statement = sa.delete(group_student).where(
+                sa.and_(
+                    group_student.c.group_id == group_id,
+                    group_student.c.student_id == student_id
+                )
+            )
+            await s.execute(statement)
+            await s.commit() 

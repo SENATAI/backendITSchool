@@ -5,11 +5,17 @@ from .use_cases.update_group import UpdateGroupUseCaseProtocol
 from .use_cases.get_group import GetGroupUseCaseProtocol
 from .use_cases.delete_group import DeleteGroupUseCaseProtocol
 from .use_cases.list_groups import GetListGroupsUseCaseProtocol
+from .use_cases.add_students import AddStudentsUseCaseProtocol
+from .use_cases.delete_student import DeleteStudentUseCaseProtocol
 from .depends import (
     get_group_create_use_case, get_group_update_use_case, get_group_get_use_case,
-    get_group_delete_use_case, get_group_get_list_use_case
+    get_group_delete_use_case, get_group_get_list_use_case,
+    get_add_students_use_case, get_delete_student_use_case
 )
-from .schemas import GroupReadSchema, GroupPaginationResultSchema, GroupCreateSchema, GroupUpdateSchema
+from .schemas import (
+    GroupReadSchema, GroupPaginationResultSchema, GroupCreateSchema, 
+    GroupUpdateSchema, GroupAddStudentsSchema
+)
 
 router = APIRouter(prefix='/api/groups', tags=['Groups'])
 
@@ -58,4 +64,24 @@ async def delete_group(
     delete: DeleteGroupUseCaseProtocol = Depends(get_group_delete_use_case)
 ):
     await delete(group_id)
+    return None
+
+
+@router.post("/{group_id}/students/", status_code=200)
+async def add_students(
+    students: GroupAddStudentsSchema,
+    group_id: UUID = Path(...),
+    add: AddStudentsUseCaseProtocol = Depends(get_add_students_use_case)
+):
+    await add(group_id, students)
+    return None
+
+
+@router.delete("/{group_id}/students/{student_id}", status_code=204)
+async def delete_student(
+    group_id: UUID = Path(...),
+    student_id: UUID = Path(...),
+    delete: DeleteStudentUseCaseProtocol = Depends(get_delete_student_use_case)
+):
+    await delete(group_id, student_id)
     return None

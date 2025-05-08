@@ -11,6 +11,7 @@ from school_site.apps.products.models import Product, Photo
 from school_site.apps.students.models import Student
 from school_site.apps.courses.models import Course
 from school_site.apps.news.models import News
+from school_site.apps.groups.models import Group
 
 if TYPE_CHECKING:
     from .utils import render_item
