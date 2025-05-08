@@ -55,3 +55,23 @@ class GroupPaginationResultSchema(PaginationResultSchema[GroupReadHeadSchema]):
 
 class GroupDBPaginationResultSchema(PaginationResultSchema[GroupReadDBHeadSchema]):
     pass
+
+
+# ====== GROUP STUDENTS SCHEMAS =======
+
+class GroupAddStudentsSchema(BaseModel):
+    students_id: list[UUID] = Field(..., description="Список ID студентов для добавления в группу")
+
+
+class GroupAddStudentsDBSchema(GroupAddStudentsSchema):
+    pass
+
+
+# ====== GROUP TEACHER SCHEMAS =======
+
+class GroupAddTeacherSchema(BaseModel):
+    teacher_id: UUID = Field(..., description="ID преподавателя для добавления в группу")
+
+
+class GroupAddTeacherDBSchema(GroupAddTeacherSchema):
+    pass

@@ -5,7 +5,6 @@ from sqlalchemy.orm import relationship
 from school_site.core.db import Base
 from school_site.core.models import TimestampMixin
 
-# Промежуточная таблица для связи многие-ко-многим
 group_student = Table(
     "group_student",
     Base.metadata,
