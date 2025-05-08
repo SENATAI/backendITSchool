@@ -18,6 +18,8 @@ class UserRepositoryProtocol(BaseRepositoryImpl[
     async def change_password(self: Self, record_id: UUID, password: PasswordSchema) -> UserReadDBSchema:
         ...
 
+    async def get_by_email(self: Self, email: str) -> Optional[UserReadDBSchema]:
+       ...
 
 class UserRepository(UserRepositoryProtocol):
     async def get_by_username(self: Self, username: str) -> Optional[UserReadDBSchema]:
@@ -40,4 +42,12 @@ class UserRepository(UserRepositoryProtocol):
             if user is None:
                 raise ModelNotFoundException(self.model_type, record_id)
 
+            return self.read_schema_type.model_validate(user, from_attributes=True)
+        
+    async def get_by_email(self: Self, email: str) -> Optional[UserReadDBSchema]:
+        async with self.session as session:
+            stmt = sa.select(self.model_type).where(self.model_type.email == email)
+            user = (await session.execute(stmt)).scalar_one_or_none()
+            if user is None:
+                return None
             return self.read_schema_type.model_validate(user, from_attributes=True)

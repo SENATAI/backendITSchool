@@ -101,3 +101,25 @@ class AuthReadSchema(BaseModel):
     user: UserReadSchema
     access_token: TokenReadSchema
     refresh_token: TokenReadSchema
+
+
+class UserResetSchema(BaseModel):
+    email: EmailStr
+
+class ResetTokenSchema(BaseModel):
+    token: str
+    hours: int
+
+class ResetTokenBaseSchema(BaseModel):
+    user_id: UUID
+    token_hash: str
+    expires_at: datetime
+
+class ResetTokenCreateSchema(CreateBaseModel, ResetTokenBaseSchema):
+    pass
+
+class ResetTokenUpdateSchema(UpdateBaseModel, ResetTokenBaseSchema):
+    pass
+
+class ResetTokenReadSchema(ResetTokenBaseSchema):
+    id: UUID
