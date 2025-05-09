@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Response, Cookie
 from typing import List
 from uuid import UUID
-from .schemas import LoginRequestSchema, UserReadSchema, PasswordChangeSchema, RegisterRequestSchema, UserUpdateSchema
+from .schemas import LoginRequestSchema, UserReadSchema, PasswordChangeSchema, RegisterRequestSchema, UserUpdateRequestSchema
 from .use_cases.login import LoginUseCaseProtocol
 from .use_cases.refresh import RefreshUseCaseProtocol
 from .use_cases.logout import LogoutUseCaseProtocol
@@ -108,7 +108,7 @@ async def get_user_by_id(
 @router.put("/{user_id}", response_model=UserReadSchema, status_code=200)
 async def update_user2(
     user_id: UUID, 
-    user_data: UserUpdateSchema,
+    user_data: UserUpdateRequestSchema,
     update_user_use_case: UpdateUserUseCaseProtocol = Depends(get_update_user_use_case)
 ):
     return await update_user_use_case(user_id, user_data)
