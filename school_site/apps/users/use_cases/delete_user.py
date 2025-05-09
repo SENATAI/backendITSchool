@@ -12,5 +12,5 @@ class DeleteUserUseCase(DeleteUserUseCaseProtocol):
     def __init__(self: Self, user_service: UserServiceProtocol):
         self.user_service = user_service
 
-    async def __call__(self: Self, user_id: UUID) -> List[UserReadSchema]:
+    async def __call__(self: Self, user_id: UUID) -> bool:
         return await self.user_service.delete_user(user_id)
