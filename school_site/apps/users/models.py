@@ -2,7 +2,7 @@ from uuid import uuid4
 from school_site.core.db import Base
 from school_site.core.models import CreationTimeMixin, TimestampMixin
 from school_site.core.enums import UserRole
-from sqlalchemy import Column, ForeignKey, String, Enum, Integer, Boolean, DateTime
+from sqlalchemy import Column, ForeignKey, String, Enum, DateTime
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import relationship
 
