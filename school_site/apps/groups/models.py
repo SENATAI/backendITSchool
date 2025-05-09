@@ -18,8 +18,7 @@ class Group(Base, TimestampMixin):
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     name = Column(String, unique=True, nullable=False)
     description = Column(String, nullable=False)
-    teacher_id = Column(PostgresUUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    teacher_id = Column(PostgresUUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
-    # Связи
     teacher = relationship("User", back_populates="groups")
     students = relationship("Student", secondary=group_student, back_populates="groups")
