@@ -31,5 +31,4 @@ class GroupStudentService(GroupStudentServiceProtocol):
         await self.group_service.add_students(group_id, students)
 
     async def delete_student(self, group_id: UUID, student_id: UUID) -> None:
-        await self.student_service.get(student_id)
         await self.group_service.delete_student(group_id, student_id)

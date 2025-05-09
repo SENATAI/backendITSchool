@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-from typing import Optional
 from uuid import UUID
 from school_site.core.schemas import (
     CreateBaseModel, UpdateBaseModel, TimestampMixin, PaginationResultSchema
