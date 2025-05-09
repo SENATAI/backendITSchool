@@ -2,6 +2,7 @@ import argparse
 import asyncio
 from contextlib import asynccontextmanager
 from passlib.context import CryptContext
+from uuid import UUID
 
 from school_site.core.db import get_async_session  
 from school_site.apps.users.services.users import UserService  
@@ -11,6 +12,9 @@ from school_site.core.enums import UserRole
 from school_site.apps.students.schemas import StudentCreateSchema
 from school_site.apps.students.repositories.students import StudentRepository
 from school_site.apps.users.services.passwords import PasswordService 
+from school_site.apps.groups.services.groups import GroupService
+from school_site.apps.groups.repositories.groups import GroupRepository
+from school_site.apps.groups.schemas import GroupAddStudentsSchema
 
 
 @asynccontextmanager
@@ -33,32 +37,45 @@ async def main():
     parser.add_argument("--email", required=True, help="Email пользователя")
     parser.add_argument("--phone_number", required=True, help="Телефонный номер пользователя")
     parser.add_argument("--points", required=False, help="Очки пользователя", default=0)
+    parser.add_argument("--group_id", required=False, help="ID группы для добавления студента", default=None)
 
     args = parser.parse_args()
 
     async with get_session() as session:
+        # Создание пользователя
         user_repository = UserRepository(session)
         password_service = PasswordService(CryptContext(schemes=["bcrypt"], deprecated="auto"))
         user_service = UserService(user_repository, password_service)
-        user_data = RegisterRequestSchema(username=args.username, 
-                                          password=args.password, 
-                                          role=args.role,
-                                          first_name=args.first_name,
-                                          surname=args.surname,
-                                          patronymic=args.patronymic,
-                                          email=args.email,
-                                          phone_number=args.phone_number)
+        user_data = RegisterRequestSchema(
+            username=args.username, 
+            password=args.password, 
+            role=args.role,
+            first_name=args.first_name,
+            surname=args.surname,
+            patronymic=args.patronymic,
+            email=args.email,
+            phone_number=args.phone_number
+        )
         new_user = await user_service.create_user(user_data)
+        print(f"Пользователь создан: {new_user}")
+
+        # Если пользователь - студент, создаем запись студента
         if new_user.role == UserRole.STUDENT:
             st_repo = StudentRepository(session)
             st_schema = StudentCreateSchema(
                 user_id=new_user.id,
                 points=int(args.points)
             )
-            new_st = await st_repo.create(st_schema) 
-            print(f"Студент создан: {new_st}")
+            new_student = await st_repo.create(st_schema)
+            print(f"Студент создан: {new_student}")
 
-        print(f"Пользователь создан: {new_user}")
+            # Если указан ID группы, добавляем студента в группу
+            if args.group_id:
+                group_repository = GroupRepository(session)
+                group_service = GroupService(group_repository)
+                students_data = GroupAddStudentsSchema(students_id=[new_student.id])
+                await group_service.add_students(UUID(args.group_id), students_data)
+                print(f"Студент добавлен в группу с ID: {args.group_id}")
 
 if __name__ == "__main__":
     asyncio.run(main())

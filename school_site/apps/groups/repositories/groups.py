@@ -78,9 +78,11 @@ class GroupRepository(GroupRepositoryProtocol):
     async def add_students(self, group_id: UUID, students: GroupAddStudentsDBSchema) -> None:
         async with self.session as s:
             for student_id in students.students_id:
-                statement = sa.insert(group_student).values(
+                statement = sa.dialects.postgresql.insert(group_student).values(
                     group_id=group_id,
                     student_id=student_id
+                ).on_conflict_do_nothing(
+                    index_elements=['group_id', 'student_id']
                 )
                 await s.execute(statement)
             await s.commit()

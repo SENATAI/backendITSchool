@@ -4,12 +4,14 @@ from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import relationship
 from school_site.core.db import Base
 from school_site.core.models import TimestampMixin
+import sqlalchemy as sa
 
 group_student = Table(
     "group_student",
     Base.metadata,
     Column("group_id", PostgresUUID(as_uuid=True), ForeignKey("groups.id", ondelete="CASCADE")),
     Column("student_id", PostgresUUID(as_uuid=True), ForeignKey("students.id", ondelete="CASCADE")),
+    sa.UniqueConstraint('group_id', 'student_id', name='uq_group_student')
 )
 
 class Group(Base, TimestampMixin):
