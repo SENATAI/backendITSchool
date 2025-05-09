@@ -21,6 +21,9 @@ class UserRepositoryProtocol(BaseRepositoryImpl[
     async def get_by_email(self: Self, email: str) -> Optional[UserReadDBSchema]:
        ...
 
+    async def update_password_by_id(self: Self, record_id: UUID, password: PasswordSchema) -> UserReadDBSchema:
+        ...
+
 class UserRepository(UserRepositoryProtocol):
     async def get_by_username(self: Self, username: str) -> Optional[UserReadDBSchema]:
         async with self.session as session:

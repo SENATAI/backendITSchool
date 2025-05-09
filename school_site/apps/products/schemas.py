@@ -1,8 +1,6 @@
 from pydantic import BaseModel, Field, HttpUrl
 from typing import Optional
-from datetime import datetime
 from uuid import UUID
-from school_site.core.enums import UserRole
 from school_site.core.schemas import(
     CreateBaseModel, UpdateBaseModel, TimestampMixin, PaginationResultSchema
 ) 
