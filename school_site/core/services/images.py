@@ -60,11 +60,11 @@ class MinioImageService(ImageServiceProtocol):
             self.bucket_name,
             path,
             timedelta(minutes=30)
-        )
-        
+        )        
         new_url = original_url.replace("http://minio:9000", f"http://{settings.frontend_url}/minio")
         
-        logger.info(f"URL: {new_url}")
+        logger.debug(f"URL file: {new_url}")
+
         return new_url
         
 

@@ -1,10 +1,12 @@
+from fastapi import Request
+from typing import Optional
 from pydantic import BaseModel, EmailStr, field_validator
 import re
-from typing import Optional
 from uuid import UUID
 from datetime import datetime
 from school_site.core.schemas import CreateBaseModel, UpdateBaseModel
 from school_site.core.enums import UserRole
+from .exceptions import InvalidTokenError
 
 class LoginRequestSchema(BaseModel):
     username: str
@@ -106,6 +108,10 @@ class AuthReadSchema(BaseModel):
 class UserResetSchema(BaseModel):
     email: EmailStr
 
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
 class ResetTokenSchema(BaseModel):
     token: str
     hours: int
@@ -123,3 +129,15 @@ class ResetTokenUpdateSchema(UpdateBaseModel, ResetTokenBaseSchema):
 
 class ResetTokenReadSchema(ResetTokenBaseSchema):
     id: UUID
+
+class CookieTokenSchema:
+    def __init__(self, cookie_name: str, auto_error: bool = True):
+        self.cookie_name = cookie_name
+        self.auto_error = auto_error
+
+    async def __call__(self, request: Request) -> Optional[str]:
+        token = request.cookies.get(self.cookie_name)
+        if not token and self.auto_error:
+            raise InvalidTokenError()
+        return token
+    
