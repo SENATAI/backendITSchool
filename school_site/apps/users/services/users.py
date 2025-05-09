@@ -3,7 +3,7 @@ from typing import Protocol, Self, List
 from uuid import UUID
 from school_site.apps.users.schemas import(
     UserCreateSchema, UserReadSchema, RegisterRequestSchema, UserReadDBSchema,
-    UserUpdateSchema, UserUpdateDBSchema, UserUpdateRequestSchema
+    UserUpdateSchema, UserUpdateDBSchema, UserUpdateRequestSchema, UserUpdateNoPasswordSchema, UserUpdateDBNoPasswordHashSchema
 ) 
 from school_site.apps.users.repositories.users import UserRepositoryProtocol
 from school_site.apps.users.services.passwords import PasswordServiceProtocol
@@ -94,21 +94,13 @@ class UserService(UserServiceProtocol):
         return UserReadSchema(**updated_user.model_dump(exclude={'password_hash'}))
 
     async def update_user2(self: Self, url_user_id: UUID, user_data: UserUpdateRequestSchema) -> UserReadSchema:
-        logger.info(f"Fetching user with id {url_user_id}")
-        existing_user = await self.user_repository.get(url_user_id)
 
-        update_data = UserUpdateSchema(
+        update_data = UserUpdateNoPasswordSchema(
             id=url_user_id,
             **user_data.model_dump()
         )
-
-        password_hash = None
-        if hasattr(update_data, 'password') and update_data.password:
-            password_hash = self.password_service.get_password_hash(update_data.password)
-        else:
-            password_hash = existing_user.password_hash
-    
-        db_user = UserUpdateDBSchema(
+        
+        db_user = UserUpdateDBNoPasswordHashSchema(
             id=url_user_id,
             first_name=update_data.first_name,
             surname=update_data.surname,
@@ -117,7 +109,7 @@ class UserService(UserServiceProtocol):
             phone_number=update_data.phone_number,
             username=update_data.username,
             role=update_data.role,
-            password_hash=password_hash  
+            #password_hash=existing_user.password_hash  
         )
     
         updated_user = await self.user_repository.update(db_user)

@@ -103,4 +103,10 @@ class AuthReadSchema(BaseModel):
     refresh_token: TokenReadSchema
 
 class UserUpdateRequestSchema(PhoneValidatedMixin, UserInfoMixin, BaseModel):  
-    password: str | None = None
+    ...
+
+class UserUpdateNoPasswordSchema(PhoneValidatedMixin, UserInfoMixin, UpdateBaseModel):
+   ...
+
+class UserUpdateDBNoPasswordHashSchema(PhoneValidatedMixin, UserInfoMixin, UpdateBaseModel):
+    ...
