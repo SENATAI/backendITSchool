@@ -4,6 +4,7 @@ from passlib.context import CryptContext
 from school_site.core.db import get_async_session
 from school_site.apps.emails.depends import get_email_client
 from school_site.apps.emails.clients.emails import EmailClientProtocol
+from .schemas import CookieTokenSchema
 from .repositories.users import UserRepositoryProtocol, UserRepository
 from .repositories.refresh_tokens import RefreshTokenRepositoryProtocol, RefreshTokenRepository
 from .repositories.reset_tokens import ResetTokenRepositoryProtocol, ResetTokenRepository
@@ -88,3 +89,6 @@ def get_reset_password_service(user_service: UserServiceProtocol = Depends(get_u
 def get_reset_password_use_case(reset_password_service: ResetPasswordServiceProtocol = Depends(get_reset_password_service)) -> \
     ResetPasswordUseCaseProtocol:
     return ResetPasswordUseCase(reset_password_service)
+
+access_token_schema = CookieTokenSchema(cookie_name="access_token")
+refresh_token_schema = CookieTokenSchema(cookie_name="refresh_token")

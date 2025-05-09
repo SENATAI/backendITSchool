@@ -1,3 +1,5 @@
+from fastapi import Request
+from typing import Optional
 from pydantic import BaseModel, EmailStr, field_validator
 import re
 from typing import Optional
@@ -5,6 +7,7 @@ from uuid import UUID
 from datetime import datetime
 from school_site.core.schemas import CreateBaseModel, UpdateBaseModel
 from school_site.core.enums import UserRole
+from school_site.core.utils.exceptions import PermissionDeniedError
 
 class LoginRequestSchema(BaseModel):
     username: str
@@ -123,3 +126,15 @@ class ResetTokenUpdateSchema(UpdateBaseModel, ResetTokenBaseSchema):
 
 class ResetTokenReadSchema(ResetTokenBaseSchema):
     id: UUID
+
+class CookieTokenSchema:
+    def __init__(self, cookie_name: str, auto_error: bool = True):
+        self.cookie_name = cookie_name
+        self.auto_error = auto_error
+
+    async def __call__(self, request: Request) -> Optional[str]:
+        token = request.cookies.get(self.cookie_name)
+        if not token and self.auto_error:
+            raise PermissionDeniedError()
+        return token
+    
