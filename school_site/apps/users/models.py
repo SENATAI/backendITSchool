@@ -2,7 +2,7 @@ from uuid import uuid4
 from school_site.core.db import Base
 from school_site.core.models import CreationTimeMixin, TimestampMixin
 from school_site.core.enums import UserRole
-from sqlalchemy import Column, ForeignKey, String, Enum
+from sqlalchemy import Column, ForeignKey, String, Enum, DateTime
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import relationship
 
@@ -32,3 +32,12 @@ class RefreshToken(Base, CreationTimeMixin):
     hashed_refresh_token = Column(String, index=True)
     
     user = relationship("User", back_populates="refresh_tokens")
+
+
+class PasswordResetTokens(Base, CreationTimeMixin):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id = Column(PostgresUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
+    token_hash = Column(String(128), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
