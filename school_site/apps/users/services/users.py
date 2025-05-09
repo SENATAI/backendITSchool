@@ -44,6 +44,9 @@ class UserServiceProtocol(Protocol):
     async def delete_user(self:Self, user_id: UUID) -> bool:
         ...
 
+    async def update_user2(self: Self, user: UserUpdateSchema) -> UserReadSchema:
+        ...
+
 class UserService(UserServiceProtocol):
     def __init__(
         self: Self,
@@ -90,6 +93,31 @@ class UserService(UserServiceProtocol):
         updated_user = await self.user_repository.update(db_user)
         return UserReadSchema(**updated_user.model_dump(exclude={'password_hash'}))
 
+    async def update_user2(self: Self, user_id: UUID, user_data: UserUpdateSchema) -> UserReadSchema:
+        
+        logger.info(f"Fetching user with id {user_id}")
+        existing_user = await self.user_repository.get(user_id)
+
+        password_hash = None
+        if hasattr(user_data, 'password') and user_data.password:
+            password_hash = self.password_service.get_password_hash(user_data.password)
+        else:
+            password_hash = existing_user.password_hash
+    
+        db_user = UserUpdateDBSchema(
+            id=user_id,
+            first_name=user_data.first_name,
+            surname=user_data.surname,
+            patronymic=user_data.patronymic,
+            email=user_data.email,
+            phone_number=user_data.phone_number,
+            username=user_data.username,
+            role=user_data.role,
+            password_hash=password_hash  
+        )
+    
+        updated_user = await self.user_repository.update(db_user)
+        return UserReadSchema(**updated_user.model_dump(exclude={'password_hash'}))
     
     async def change_password(self: Self, record_id: UUID, new_password: str) -> UserReadSchema:
         password_hash = self.password_service.get_password_hash(new_password)

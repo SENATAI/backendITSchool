@@ -106,7 +106,7 @@ async def get_user_by_id(
     return await get_user_by_id_use_case(user_id)
 
 @router.put("/{user_id}", response_model=UserReadSchema, status_code=200)
-async def update_user(
+async def update_user2(
     user_id: UUID, 
     user_data: UserUpdateSchema,
     update_user_use_case: UpdateUserUseCaseProtocol = Depends(get_update_user_use_case)

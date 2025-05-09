@@ -13,4 +13,4 @@ class UpdateUserUseCase(UpdateUserUseCaseProtocol):
         self.user_service = user_service
 
     async def __call__(self: Self, user_id: UUID, user_data: UserUpdateSchema) -> UserReadSchema:
-        return await self.user_service.update_user(user_id, user_data)
+        return await self.user_service.update_user2(user_id, user_data)
