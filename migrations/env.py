@@ -6,7 +6,7 @@ from sqlalchemy import engine_from_config, pool
 from school_site.core.db import Base
 from school_site.core.models import CreationTimeMixin, TimestampMixin
 from school_site.settings import settings
-from school_site.apps.users.models import User, RefreshToken
+from school_site.apps.users.models import User, RefreshToken, PasswordResetTokens
 from school_site.apps.products.models import Product, Photo
 from school_site.apps.students.models import Student
 from school_site.apps.courses.models import Course

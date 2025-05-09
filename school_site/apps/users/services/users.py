@@ -1,5 +1,5 @@
 import logging
-from typing import Protocol, Self
+from typing import Protocol, Self, Optional
 from uuid import UUID
 from school_site.apps.users.schemas import(
     UserCreateSchema, UserReadSchema, RegisterRequestSchema, UserReadDBSchema,
@@ -36,6 +36,9 @@ class UserServiceProtocol(Protocol):
         ...
 
     async def change_password(self: Self, record_id: UUID, new_password: str) -> UserReadSchema:
+        ...
+
+    async def get_by_email_or_none(self: Self, email: str) -> Optional[UserReadDBSchema]:
         ...
 
 class UserService(UserServiceProtocol):
@@ -134,4 +137,11 @@ class UserService(UserServiceProtocol):
         
         logger.info(f"Authentication successful for user: {user_id}")
         return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
+    
+    async def get_by_email_or_none(self: Self, email: str) -> Optional[UserReadDBSchema]:
+        user = await self.user_repository.get_by_email(email)
+        if not user:
+            return None
+        return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
+
     

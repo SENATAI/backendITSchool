@@ -1,10 +1,14 @@
 from fastapi import APIRouter, Depends, Response, Cookie
-from .schemas import LoginRequestSchema, UserReadSchema, PasswordChangeSchema
+from .schemas import LoginRequestSchema, UserReadSchema, PasswordChangeSchema, UserResetSchema
 from .use_cases.login import LoginUseCaseProtocol
 from .use_cases.refresh import RefreshUseCaseProtocol
 from .use_cases.logout import LogoutUseCaseProtocol
 from .use_cases.change_password import ChangePasswordUseCaseProtocol
-from .depends import get_login_use_case, get_refresh_use_case, get_logout_use_case, get_change_password_use_case
+from .use_cases.reset_password import ResetPasswordUseCaseProtocol
+from .depends import (
+    get_login_use_case, get_refresh_use_case, get_logout_use_case, get_change_password_use_case,
+    get_reset_password_use_case
+)
 from .utils.cookies import set_auth_cookies
 
 router = APIRouter(prefix='/api/users', tags=['Users'])
@@ -75,3 +79,13 @@ async def change_password(
         user_tokens_data.refresh_token.token
     )
     return user_tokens_data.user
+
+
+@router.post("/reset_password", status_code=204)
+async def reset_password(
+    user: UserResetSchema,
+    reset_password_use_case: ResetPasswordUseCaseProtocol = Depends(get_reset_password_use_case)
+):
+    await reset_password_use_case(user)
+    
+    return None

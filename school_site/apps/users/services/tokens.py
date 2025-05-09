@@ -4,8 +4,10 @@ import secrets
 from jose import jwt, JWTError
 from typing import Protocol, Optional, Self
 from uuid import UUID
-from ..schemas import UserTokenDataReadSchema
-from datetime import datetime, timedelta, timezone
+from ..schemas import UserTokenDataReadSchema, ResetTokenSchema, ResetTokenCreateSchema
+from .passwords import PasswordServiceProtocol
+from ..repositories.reset_tokens import ResetTokenRepositoryProtocol
+from datetime import datetime, timedelta, timezone, UTC
 from school_site.core.enums import UserRole
 from school_site.apps.users.schemas import (
     TokenReadSchema, RefreshTokenCreateDBSchema, RefreshTokenReadDBSchema
@@ -41,6 +43,8 @@ class TokenServiceProtocol(Protocol):
     async def decode_access_token(self: Self, token: str) -> UserTokenDataReadSchema:
         ...
 
+    async def generate_reset_token(self: Self) -> str:
+        ...
 
 class TokenService(TokenServiceProtocol):
     def __init__(
@@ -173,3 +177,30 @@ class TokenService(TokenServiceProtocol):
             logger.error("User is not an admin")
             raise PermissionDeniedError()
         return user_data
+    
+class ResetPasswordTokenServiceProtocol(Protocol):
+    async def generate_reset_token(self: Self, user_id: int) -> ResetTokenSchema:
+        ...
+
+class ResetPasswordTokenService(ResetPasswordTokenServiceProtocol):
+    def __init__(self: Self, password_reset_repository: ResetTokenRepositoryProtocol,
+                  password_service: PasswordServiceProtocol):
+        self.password_reset_repository = password_reset_repository
+        self.password_service = password_service
+    
+    async def generate_reset_token(self: Self, user_id: int) -> ResetTokenSchema:
+        TIME = settings.reset_token.token_lifetime_hours
+        token = secrets.token_urlsafe(32)
+        hashed_token = self.password_service.get_password_hash(token)
+        expires_at = datetime.now(UTC) + timedelta(hours=TIME)
+        token_to_create = ResetTokenCreateSchema(
+            user_id=user_id,
+            token_hash=hashed_token,
+            expires_at=expires_at
+        )
+        await self.password_reset_repository.create(token_to_create)
+        reset_schema = ResetTokenSchema(
+            token=token,
+            hours=TIME
+        )
+        return reset_schema

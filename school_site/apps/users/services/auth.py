@@ -2,9 +2,13 @@ import logging
 from typing import Protocol, Self
 from uuid import UUID
 from school_site.core.enums import UserRole
-from ..schemas import AuthReadSchema, PasswordChangeSchema
+from ..texts import HTML_EMAIL_BODY_TEMPLATE, HTML_EMAIL_SUBJECT_TEMPLATE
+from ..schemas import AuthReadSchema, PasswordChangeSchema, UserResetSchema, UserReadSchema, ResetTokenSchema
 from .users import UserServiceProtocol
-from .tokens import TokenServiceProtocol
+from .tokens import TokenServiceProtocol, ResetPasswordTokenServiceProtocol
+from school_site.apps.emails.clients.emails import EmailClientProtocol
+from school_site.apps.emails.schemas import EmailRequestDTO
+from school_site.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +25,11 @@ class AuthServiceProtocol(Protocol):
 
     async def change_password(self: Self, access_token: str, password: PasswordChangeSchema) -> AuthReadSchema:
         ...
-
 class AuthService(AuthServiceProtocol):
     def __init__(
         self: Self,
         user_service: UserServiceProtocol,
-        token_service: TokenServiceProtocol
+        token_service: TokenServiceProtocol,
     ):
         self.user_service = user_service
         self.token_service = token_service
@@ -97,3 +100,51 @@ class AuthService(AuthServiceProtocol):
             logger.info(f"Refresh token removed for user: {user_id}")
         
         logger.info(f"Logout successful for user: {user_id}")
+
+    
+    
+
+class ResetPasswordServiceProtocol(Protocol):
+    async def reset_password(self: Self, user: UserResetSchema) -> bool:
+        ...
+
+
+class ResetPasswordService(ResetPasswordServiceProtocol):
+    def __init__(self: Self, user_service: UserServiceProtocol,
+                 mail_sender: EmailClientProtocol,
+                reset_password_token_service: ResetPasswordTokenServiceProtocol):
+        self.user_service = user_service
+        self.reset_password_token_service = reset_password_token_service
+        self.mail_sender = mail_sender
+
+    async def reset_password(self: Self, user: UserResetSchema) -> bool:
+        logger.info(f"Resetting password for user: {user.email}")
+        user_data = await self.user_service.get_by_email_or_none(user.email)
+        if user_data:
+            token = await self.reset_password_token_service.generate_reset_token(user_data.id)
+            message = self._generate_email_message(user_data, token)
+            print(message)
+            await self.mail_sender.send_email(message)
+        return True
+
+    def _generate_email_message(self: Self, user: UserReadSchema, token: ResetTokenSchema) -> str:
+        name = user.first_name or user.username
+        
+        body =  HTML_EMAIL_BODY_TEMPLATE.format(
+            name=name,
+            url=settings.frontend_url,
+            token=token.token,
+            duration=token.hours
+        )
+
+        subject = HTML_EMAIL_SUBJECT_TEMPLATE.strip()
+
+        return EmailRequestDTO(
+            to_email=user.email,
+            body=body,
+            subject=subject
+        )
+
+
+
+
