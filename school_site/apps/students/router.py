@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Cookie, Path, Query
+from fastapi import APIRouter, Depends, Path, Query
 from uuid import UUID
 from .schemas import (
     StudentReadSchema, StudentCreateSchema, StudentUpdateSchema,

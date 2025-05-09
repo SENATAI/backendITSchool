@@ -2,7 +2,6 @@ from fastapi import Request
 from typing import Optional
 from pydantic import BaseModel, EmailStr, field_validator
 import re
-from typing import Optional
 from uuid import UUID
 from datetime import datetime
 from school_site.core.schemas import CreateBaseModel, UpdateBaseModel
