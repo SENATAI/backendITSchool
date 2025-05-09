@@ -6,7 +6,7 @@ from uuid import UUID
 from datetime import datetime
 from school_site.core.schemas import CreateBaseModel, UpdateBaseModel
 from school_site.core.enums import UserRole
-from school_site.core.utils.exceptions import PermissionDeniedError
+from .exceptions import InvalidTokenError
 
 class LoginRequestSchema(BaseModel):
     username: str
@@ -108,6 +108,10 @@ class AuthReadSchema(BaseModel):
 class UserResetSchema(BaseModel):
     email: EmailStr
 
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
 class ResetTokenSchema(BaseModel):
     token: str
     hours: int
@@ -134,6 +138,6 @@ class CookieTokenSchema:
     async def __call__(self, request: Request) -> Optional[str]:
         token = request.cookies.get(self.cookie_name)
         if not token and self.auto_error:
-            raise PermissionDeniedError()
+            raise InvalidTokenError()
         return token
     

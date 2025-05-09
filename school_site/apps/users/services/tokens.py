@@ -2,15 +2,17 @@ import logging
 import hashlib
 import secrets
 from jose import jwt, JWTError
-from typing import Protocol, Optional, Self
+from typing import Protocol, Optional, Self, List
 from uuid import UUID
+from ..exceptions import TokenNotFoundError
 from ..schemas import UserTokenDataReadSchema, ResetTokenSchema, ResetTokenCreateSchema
 from .passwords import PasswordServiceProtocol
 from ..repositories.reset_tokens import ResetTokenRepositoryProtocol
 from datetime import datetime, timedelta, timezone, UTC
 from school_site.core.enums import UserRole
 from school_site.apps.users.schemas import (
-    TokenReadSchema, RefreshTokenCreateDBSchema, RefreshTokenReadDBSchema
+    TokenReadSchema, RefreshTokenCreateDBSchema, RefreshTokenReadDBSchema,
+    ResetTokenReadSchema
 )
 from school_site.core.utils.exceptions import PermissionDeniedError
 from school_site.apps.users.exceptions import InvalidTokenError
@@ -182,6 +184,18 @@ class ResetPasswordTokenServiceProtocol(Protocol):
     async def generate_reset_token(self: Self, user_id: int) -> ResetTokenSchema:
         ...
 
+    async def get_all(self: Self) -> List[ResetTokenReadSchema]:
+        ...
+
+    async def get_by_token(self: Self, token: str) -> ResetTokenReadSchema:
+        ...
+
+    async def delete(self: Self, id: UUID) -> bool:
+        ...
+
+    async def delete_all_expired_tokens(self: Self) -> bool:
+        ...
+
 class ResetPasswordTokenService(ResetPasswordTokenServiceProtocol):
     def __init__(self: Self, password_reset_repository: ResetTokenRepositoryProtocol,
                   password_service: PasswordServiceProtocol):
@@ -204,3 +218,22 @@ class ResetPasswordTokenService(ResetPasswordTokenServiceProtocol):
             hours=TIME
         )
         return reset_schema
+    
+    async def get_all(self: Self) -> List[ResetTokenReadSchema]:
+        return await self.password_reset_repository.get_all()
+    
+    async def get_by_token(self: Self, token: str) -> ResetTokenReadSchema:
+        db_tokens = await self.get_all()
+        for db_token in db_tokens:
+            if self.password_service.verify_password(token, db_token.token_hash):
+                if db_token.expires_at < datetime.now(UTC):
+                    await self.password_reset_repository.delete(db_token.id)
+                    raise TokenNotFoundError(value=token)                    
+                return db_token
+        raise TokenNotFoundError(value=token)
+
+    async def delete(self: Self, id: UUID) -> bool:
+        return await self.password_reset_repository.delete(id)
+    
+    async def delete_all_expired_tokens(self: Self) -> bool:
+        return await self.password_reset_repository.delete_all_expired_tokens()

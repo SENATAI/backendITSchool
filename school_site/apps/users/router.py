@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, Response
-from .schemas import LoginRequestSchema, UserReadSchema, PasswordChangeSchema, UserResetSchema
+from .schemas import LoginRequestSchema, UserReadSchema, PasswordChangeSchema, UserResetSchema, ResetPasswordRequest
 from .use_cases.login import LoginUseCaseProtocol
 from .use_cases.refresh import RefreshUseCaseProtocol
 from .use_cases.logout import LogoutUseCaseProtocol
 from .use_cases.change_password import ChangePasswordUseCaseProtocol
 from .use_cases.reset_password import ResetPasswordUseCaseProtocol
+from .use_cases.confirm_reset_password import ConfirmResetPasswordUseCaseProtocol
 from .depends import (
     get_login_use_case, get_refresh_use_case, get_logout_use_case, get_change_password_use_case,
-    get_reset_password_use_case, access_token_schema, refresh_token_schema
+    get_reset_password_use_case, get_confirm_reset_password_use_case, access_token_schema, refresh_token_schema
 )
 from .utils.cookies import set_auth_cookies
 
@@ -89,3 +90,18 @@ async def reset_password(
     await reset_password_use_case(user)
     
     return None
+
+@router.post("/confirm_reset_password", status_code=200)
+async def confirm_reset_password(
+    response: Response,
+    passsword_request: ResetPasswordRequest,
+    reset_password_use_case: ConfirmResetPasswordUseCaseProtocol = Depends(get_confirm_reset_password_use_case)
+):
+    user_tokens_data =  await reset_password_use_case(passsword_request)
+
+    set_auth_cookies(
+        response, 
+        user_tokens_data.access_token.token, 
+        user_tokens_data.refresh_token.token
+    )
+    return user_tokens_data.user
