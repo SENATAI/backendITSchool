@@ -19,7 +19,7 @@ class GroupCreateDBSchema(CreateBaseModel, GroupBaseSchema):
     pass
 
 
-class GroupUpdateSchema(UpdateBaseModel, GroupBaseSchema):
+class GroupUpdateSchema(GroupBaseSchema):
     pass
 
 

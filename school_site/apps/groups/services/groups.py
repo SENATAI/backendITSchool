@@ -5,12 +5,11 @@ from school_site.core.schemas import PaginationSchema
 from ..schemas import (
     GroupCreateSchema,
     GroupUpdateSchema,
+    GroupUpdateDBSchema,
     GroupReadSchema,
     GroupReadHeadSchema,
     GroupPaginationResultSchema,
-    GroupCreateDBSchema,
-    GroupAddStudentsSchema,
-    GroupAddStudentsDBSchema
+    GroupCreateDBSchema
 )
 from ..repositories.groups import GroupRepositoryProtocol
 
@@ -32,12 +31,6 @@ class GroupServiceProtocol(Protocol):
         ...
 
     async def list(self, pagination: PaginationSchema) -> GroupPaginationResultSchema:
-        ...
-
-    async def add_students(self, group_id: UUID, students: GroupAddStudentsSchema) -> None:
-        ...
-
-    async def delete_student(self, group_id: UUID, student_id: UUID) -> None:
         ...
 
 
@@ -66,7 +59,12 @@ class GroupService(GroupServiceProtocol):
         )
 
     async def update(self, group_id: UUID, group: GroupUpdateSchema) -> GroupReadSchema:
-        updated_group = await self.group_repository.update(group)
+        group_db = GroupUpdateDBSchema(
+            id=group_id,
+            name=group.name,
+            description=group.description
+        )
+        updated_group = await self.group_repository.update(group_db)
         return GroupReadSchema(
             id=updated_group.id,
             name=updated_group.name,
@@ -86,13 +84,4 @@ class GroupService(GroupServiceProtocol):
         return GroupPaginationResultSchema(
             objects=[GroupReadHeadSchema(id=g.id, name=g.name) for g in groups_paginate.objects],
             count=groups_paginate.count
-        )
-
-    async def add_students(self, group_id: UUID, students: GroupAddStudentsSchema) -> None:
-        await self.get(group_id)
-        students_db = GroupAddStudentsDBSchema(students_id=students.students_id)
-        await self.group_repository.add_students(group_id, students_db)
-
-    async def delete_student(self, group_id: UUID, student_id: UUID) -> None:
-        await self.get(group_id)
-        await self.group_repository.delete_student(group_id, student_id) 
+        ) 

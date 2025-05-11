@@ -2,6 +2,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from school_site.core.db import get_async_session
 from .repositories.groups import GroupRepositoryProtocol, GroupRepository
+from .repositories.group_students import GroupStudentsRepositoryProtocol, GroupStudentsRepository
 from .services.groups import GroupServiceProtocol, GroupService
 from .services.students import GroupStudentServiceProtocol, GroupStudentService
 from .use_cases.create_group import CreateGroupUseCaseProtocol, CreateGroupUseCase
@@ -19,19 +20,21 @@ def __get_group_repository(
 ) -> GroupRepositoryProtocol:
     return GroupRepository(session)
 
+def __get_group_students_repository(
+        session: AsyncSession = Depends(get_async_session)
+) -> GroupStudentsRepositoryProtocol:
+    return GroupStudentsRepository(session)
+
 def get_group_service(
         group_repository: GroupRepositoryProtocol = Depends(__get_group_repository)
 ) -> GroupServiceProtocol:
     return GroupService(group_repository)
 
-def get_student_service(
-        group_service: GroupServiceProtocol = Depends(get_group_service),
-        student_service: StudentServiceProtocol = Depends(get_students_services)
+def get_group_student_service(
+    group_students_repository: GroupStudentsRepositoryProtocol = Depends(__get_group_students_repository),
+    student_service: StudentServiceProtocol = Depends(get_students_services)
 ) -> GroupStudentServiceProtocol:
-    return GroupStudentService(
-        group_service=group_service,
-        student_service=student_service
-    )
+    return GroupStudentService(group_students_repository, student_service)
 
 def get_group_create_use_case(
         group_service: GroupServiceProtocol = Depends(get_group_service)
@@ -59,11 +62,11 @@ def get_group_get_list_use_case(
     return GetListGroupsUseCase(group_service)
 
 def get_add_students_use_case(
-        student_service: GroupStudentServiceProtocol = Depends(get_student_service)
+        student_service: GroupStudentServiceProtocol = Depends(get_group_student_service)
 ) -> AddStudentsUseCaseProtocol:
     return AddStudentsUseCase(student_service)
 
 def get_delete_student_use_case(
-        student_service: GroupStudentServiceProtocol = Depends(get_student_service)
+        student_service: GroupStudentServiceProtocol = Depends(get_group_student_service)
 ) -> DeleteStudentUseCaseProtocol:
     return DeleteStudentUseCase(student_service)

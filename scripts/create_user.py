@@ -3,7 +3,6 @@ import asyncio
 from contextlib import asynccontextmanager
 from passlib.context import CryptContext
 from uuid import UUID
-
 from school_site.core.db import get_async_session  
 from school_site.apps.users.services.users import UserService  
 from school_site.apps.users.repositories.users import UserRepository
@@ -12,8 +11,9 @@ from school_site.core.enums import UserRole
 from school_site.apps.students.schemas import StudentCreateSchema
 from school_site.apps.students.repositories.students import StudentRepository
 from school_site.apps.users.services.passwords import PasswordService 
-from school_site.apps.groups.services.groups import GroupService
-from school_site.apps.groups.repositories.groups import GroupRepository
+from school_site.apps.groups.services.students import GroupStudentService
+from school_site.apps.groups.repositories.group_students import GroupStudentsRepository
+from school_site.apps.students.services.students import StudentService
 from school_site.apps.groups.schemas import GroupAddStudentsSchema
 
 
@@ -71,10 +71,11 @@ async def main():
 
             # Если указан ID группы, добавляем студента в группу
             if args.group_id:
-                group_repository = GroupRepository(session)
-                group_service = GroupService(group_repository)
+                group_students_repository = GroupStudentsRepository(session)
+                student_service = StudentService(st_repo)
+                group_student_service = GroupStudentService(group_students_repository, student_service)
                 students_data = GroupAddStudentsSchema(students_id=[new_student.id])
-                await group_service.add_students(UUID(args.group_id), students_data)
+                await group_student_service.add_students(UUID(args.group_id), students_data)
                 print(f"Студент добавлен в группу с ID: {args.group_id}")
 
 if __name__ == "__main__":
