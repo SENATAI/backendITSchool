@@ -12,6 +12,15 @@ from school_site.apps.students.models import Student
 from school_site.apps.courses.models import Course
 from school_site.apps.news.models import News
 
+#--------------------------------------------------------------------------
+import asyncio
+import sys
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+#--------------------------------------------------------------------------
+
 if TYPE_CHECKING:
     from .utils import render_item
 else:

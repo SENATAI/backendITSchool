@@ -104,6 +104,14 @@ class AuthReadSchema(BaseModel):
     access_token: TokenReadSchema
     refresh_token: TokenReadSchema
 
+class UserUpdateRequestSchema(PhoneValidatedMixin, UserInfoMixin, BaseModel):  
+    ...
+
+class UserUpdateNoPasswordSchema(PhoneValidatedMixin, UserInfoMixin, UpdateBaseModel):
+   ...
+
+class UserUpdateDBNoPasswordHashSchema(PhoneValidatedMixin, UserInfoMixin, UpdateBaseModel):
+    ...
 
 class UserResetSchema(BaseModel):
     email: EmailStr
@@ -140,4 +148,3 @@ class CookieTokenSchema:
         if not token and self.auto_error:
             raise InvalidTokenError()
         return token
-    
