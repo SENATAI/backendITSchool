@@ -140,6 +140,8 @@ class ResetPasswordService(ResetPasswordServiceProtocol):
             message = self._generate_email_message(user_data, token)
             logger.info(f"Reset password email sent to user: {user.email}")
             await self.mail_sender.send_email(message)
+        else:
+            logger.warning(f"User with email: {user.email} does not exist. Not sent message to email")
         return True
 
     async def confirm_reset_password(self: Self, passwordResetSchema: ResetPasswordRequest) -> AuthReadSchema:

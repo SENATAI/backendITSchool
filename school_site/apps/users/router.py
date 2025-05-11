@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, Response, Cookie
+from fastapi import APIRouter, Depends, Response
 from typing import List
 from uuid import UUID
-from .schemas import LoginRequestSchema, UserReadSchema, PasswordChangeSchema, RegisterRequestSchema, UserUpdateRequestSchema
-from fastapi import APIRouter, Depends, Response
-from .schemas import LoginRequestSchema, UserReadSchema, PasswordChangeSchema, UserResetSchema, ResetPasswordRequest
+from .schemas import (
+    LoginRequestSchema, UserReadSchema, PasswordChangeSchema, RegisterRequestSchema, 
+    UserUpdateRequestSchema, UserResetSchema, ResetPasswordRequest
+)
 from .use_cases.login import LoginUseCaseProtocol
 from .use_cases.refresh import RefreshUseCaseProtocol
 from .use_cases.logout import LogoutUseCaseProtocol
@@ -13,13 +14,14 @@ from .use_cases.get_all_users import GetAllUsersUseCaseProtocol
 from .use_cases.get_user_by_id import GetUserByIdUseCaseProtocol
 from .use_cases.update_user import UpdateUserUseCaseProtocol
 from .use_cases.delete_user import DeleteUserUseCaseProtocol
-from .depends import get_login_use_case, get_refresh_use_case, get_logout_use_case, get_change_password_use_case, get_create_user_use_case, get_all_users_use_case, get_get_user_by_id_use_case, get_update_user_use_case, get_delete_user_use_case
+from .depends import (
+    get_login_use_case, get_refresh_use_case, get_logout_use_case, get_change_password_use_case, 
+    get_create_user_use_case, get_all_users_use_case, get_get_user_by_id_use_case, get_update_user_use_case, 
+    get_delete_user_use_case, get_reset_password_use_case, get_confirm_reset_password_use_case, 
+    access_token_schema, refresh_token_schema
+)
 from .use_cases.reset_password import ResetPasswordUseCaseProtocol
 from .use_cases.confirm_reset_password import ConfirmResetPasswordUseCaseProtocol
-from .depends import (
-    get_login_use_case, get_refresh_use_case, get_logout_use_case, get_change_password_use_case,
-    get_reset_password_use_case, get_confirm_reset_password_use_case, access_token_schema, refresh_token_schema
-)
 from .utils.cookies import set_auth_cookies
 
 router = APIRouter(prefix='/api/users', tags=['Users'])
@@ -113,7 +115,7 @@ async def get_user_by_id(
     return await get_user_by_id_use_case(user_id)
 
 @router.put("/{user_id}", response_model=UserReadSchema, status_code=200)
-async def update_user2(
+async def update_user(
     user_id: UUID, 
     user_data: UserUpdateRequestSchema,
     update_user_use_case: UpdateUserUseCaseProtocol = Depends(get_update_user_use_case)

@@ -44,7 +44,7 @@ class UserServiceProtocol(Protocol):
     async def delete_user(self:Self, user_id: UUID) -> bool:
         ...
 
-    async def update_user2(self: Self, url_user_id: UUID, user_data: UserUpdateRequestSchema) -> UserReadSchema:
+    async def update_user_by_router(self: Self, url_user_id: UUID, user_data: UserUpdateRequestSchema) -> UserReadSchema:
       ...
 
     async def get_by_email_or_none(self: Self, email: str) -> Optional[UserReadDBSchema]:
@@ -96,7 +96,7 @@ class UserService(UserServiceProtocol):
         updated_user = await self.user_repository.update(db_user)
         return UserReadSchema(**updated_user.model_dump(exclude={'password_hash'}))
 
-    async def update_user2(self: Self, url_user_id: UUID, user_data: UserUpdateRequestSchema) -> UserReadSchema:
+    async def update_user_by_router(self: Self, url_user_id: UUID, user_data: UserUpdateRequestSchema) -> UserReadSchema:
 
         update_data = UserUpdateNoPasswordSchema(
             id=url_user_id,
@@ -168,7 +168,7 @@ class UserService(UserServiceProtocol):
         return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
     
     async def get_all_users(self: Self) -> List[UserReadSchema]:
-        logger.info(f"Fetching all users")
+        logger.info("Fetching all users")
 
         users = await self.user_repository.get_all()
         return [UserReadSchema(**user.model_dump(exclude={'password_hash'})) for user in users]
