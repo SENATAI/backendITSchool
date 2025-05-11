@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, Response
-from typing import List
+from fastapi import APIRouter, Depends, Response, Query
+from typing import List, Optional
 from uuid import UUID
 from .schemas import (
     LoginRequestSchema, UserReadSchema, PasswordChangeSchema, RegisterRequestSchema, 
@@ -23,6 +23,8 @@ from .depends import (
 from .use_cases.reset_password import ResetPasswordUseCaseProtocol
 from .use_cases.confirm_reset_password import ConfirmResetPasswordUseCaseProtocol
 from .utils.cookies import set_auth_cookies
+from school_site.core.enums import UserRole
+
 
 router = APIRouter(prefix='/api/users', tags=['Users'])
 
@@ -96,38 +98,46 @@ async def change_password(
 @router.post("/", response_model=UserReadSchema, status_code=201)
 async def create_user(
     user_data: RegisterRequestSchema,
+    access_token: str = Depends(access_token_schema),
     create_user_use_case: CreateUserUseCaseProtocol = Depends(get_create_user_use_case)
 ):
-    return await create_user_use_case(user_data)
+    return await create_user_use_case(access_token, user_data)
     
 
 @router.get("/", response_model=List[UserReadSchema], status_code=200)
 async def get_all_users(
+    access_token: str = Depends(access_token_schema),
+    role: Optional[UserRole] = Query(None),
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     get_all_users_use_case: GetAllUsersUseCaseProtocol = Depends(get_all_users_use_case)
 ):
-    return await get_all_users_use_case()
+    return await get_all_users_use_case(access_token, role, limit, offset)
 
 @router.get("/{user_id}", response_model=UserReadSchema, status_code=200)
 async def get_user_by_id(
     user_id: UUID,
+    acess_token: str = Depends(access_token_schema),
     get_user_by_id_use_case: GetUserByIdUseCaseProtocol = Depends(get_get_user_by_id_use_case)
 ):
-    return await get_user_by_id_use_case(user_id)
+    return await get_user_by_id_use_case(acess_token, user_id)
 
 @router.put("/{user_id}", response_model=UserReadSchema, status_code=200)
 async def update_user(
     user_id: UUID, 
     user_data: UserUpdateRequestSchema,
+    access_token: str = Depends(access_token_schema),
     update_user_use_case: UpdateUserUseCaseProtocol = Depends(get_update_user_use_case)
 ):
-    return await update_user_use_case(user_id, user_data)
+    return await update_user_use_case(access_token, user_id, user_data)
 
 @router.delete("/{user_id}", status_code=204)
 async def delete_user(
     user_id: UUID,
+    access_token: str = Depends(access_token_schema),
     delete_user_use_case: DeleteUserUseCaseProtocol = Depends(get_delete_user_use_case)
 ):
-    await delete_user_use_case(user_id)
+    await delete_user_use_case(access_token, user_id)
     return None
 
 @router.post("/reset_password", status_code=204)

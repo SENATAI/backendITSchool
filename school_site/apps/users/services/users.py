@@ -11,6 +11,7 @@ from school_site.apps.users.exceptions import (
     UsernameAlreadyExistsError, InvalidCredentialsError, UsernameNotExistsExceptions
 )
 from ..schemas import PasswordSchema
+from school_site.core.enums import UserRole
 
 
 logger = logging.getLogger(__name__)
@@ -167,10 +168,10 @@ class UserService(UserServiceProtocol):
         logger.info(f"Authentication successful for user: {user_id}")
         return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
     
-    async def get_all_users(self: Self) -> List[UserReadSchema]:
+    async def get_all_users(self: Self, role: Optional[UserRole] = None, limit: int = 10, offset: int = 0) -> List[UserReadSchema]:
         logger.info("Fetching all users")
 
-        users = await self.user_repository.get_all()
+        users = await self.user_repository.get_all(role=role, limit=limit, offset=offset)
         return [UserReadSchema(**user.model_dump(exclude={'password_hash'})) for user in users]
     
     async def delete_user(self: Self, user_id: UUID) -> bool:

@@ -2,10 +2,11 @@ import logging
 from typing import Protocol, Self
 from uuid import UUID
 from school_site.core.enums import UserRole
+from school_site.core.utils.exceptions import PermissionDeniedError
 from ..texts import HTML_EMAIL_BODY_TEMPLATE, HTML_EMAIL_SUBJECT_TEMPLATE
 from ..schemas import (
     AuthReadSchema, PasswordChangeSchema, UserResetSchema, UserReadSchema, 
-    ResetTokenSchema, ResetPasswordRequest
+    ResetTokenSchema, ResetPasswordRequest, UserTokenDataReadSchema
 )
 from .users import UserServiceProtocol
 from .tokens import TokenServiceProtocol, ResetPasswordTokenServiceProtocol
@@ -30,6 +31,15 @@ class AuthServiceProtocol(Protocol):
         ...
 
     async def reset_password_via_token(self: Self, user_id: UUID, new_password: str) -> AuthReadSchema:
+        ...
+
+    async def get_admin_user(self: Self, token: str) -> UserTokenDataReadSchema:
+        ...
+
+    async def get_super_admin_user(self: Self, token: str) -> UserTokenDataReadSchema:
+        ...
+
+    async def decode_acess_token(self: Self, token: str) -> UserTokenDataReadSchema:
         ...
 
 class AuthService(AuthServiceProtocol):
@@ -110,7 +120,21 @@ class AuthService(AuthServiceProtocol):
             logger.info(f"Refresh token removed for user: {user_id}")
         
         logger.info(f"Logout successful for user: {user_id}")
+    
+    async def decode_acess_token(self: Self, token: str) -> UserTokenDataReadSchema:
+        return await self.token_service.get_admin_user(token)
 
+    async def get_admin_user(self: Self, token: str) -> UserTokenDataReadSchema:
+        user_data = await self.decode_acess_token(token)
+        if user_data.role not in {UserRole.ADMIN, UserRole.SUPERADMIN}:
+            raise PermissionDeniedError()
+        return user_data
+        
+    async def get_super_admin_user(self: Self, token: str) -> UserTokenDataReadSchema:
+        user_data = await self.decode_acess_token(token)
+        if user_data.role != UserRole.SUPERADMIN:
+            raise PermissionDeniedError()
+        return user_data
     
     
 

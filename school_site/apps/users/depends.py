@@ -59,7 +59,6 @@ def get_auth_service(user_service: UserServiceProtocol = Depends(get_user_servic
                      token_service: TokenServiceProtocol = Depends(get_token_service)) -> AuthServiceProtocol:
     return AuthService(user_service, token_service)
 
-
 def get_login_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service)) -> LoginUseCaseProtocol:
     return LoginUseCase(auth_service)
 
@@ -74,20 +73,20 @@ def get_logout_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_ser
 def get_change_password_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service)) -> ChangePasswordUseCaseProtocol:
     return ChangePasswordUseCase(auth_service)
 
-def get_create_user_use_case(user_service: UserServiceProtocol = Depends(get_user_service)) -> CreateUserUseCaseProtocol:
-    return CreateUserUseCase(user_service)
+def get_create_user_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service), user_service: UserServiceProtocol = Depends(get_user_service)) -> CreateUserUseCaseProtocol:
+    return CreateUserUseCase(auth_service, user_service)
 
-def get_all_users_use_case(user_service: UserServiceProtocol = Depends(get_user_service)) -> GetAllUsersUseCaseProtocol:
-    return GetAllUsersUseCase(user_service)
+def get_all_users_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service), user_service: UserServiceProtocol = Depends(get_user_service)) -> GetAllUsersUseCaseProtocol:
+    return GetAllUsersUseCase(auth_service, user_service)
 
-def get_get_user_by_id_use_case(user_service: UserServiceProtocol = Depends(get_user_service)) -> GetUserByIdUseCaseProtocol:
-    return GetUserByIdUseCase(user_service)
+def get_get_user_by_id_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service), user_service: UserServiceProtocol = Depends(get_user_service)) -> GetUserByIdUseCaseProtocol:
+    return GetUserByIdUseCase(auth_service, user_service)
 
-def get_update_user_use_case(user_service: UserServiceProtocol = Depends(get_user_service)) -> UpdateUserUseCaseProtocol:
-    return UpdateUserUseCase(user_service)
+def get_update_user_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service), user_service: UserServiceProtocol = Depends(get_user_service)) -> UpdateUserUseCaseProtocol:
+    return UpdateUserUseCase(auth_service, user_service)
 
-def get_delete_user_use_case(user_service: UserServiceProtocol = Depends(get_user_service)) -> DeleteUserUseCaseProtocol:
-    return DeleteUserUseCase(user_service)
+def get_delete_user_use_case(auth_service: AuthServiceProtocol = Depends(get_auth_service), user_service: UserServiceProtocol = Depends(get_user_service)) -> DeleteUserUseCaseProtocol:
+    return DeleteUserUseCase(auth_service, user_service)
 
 def get_reset_password_token_service(token_repository: ResetTokenRepositoryProtocol = Depends(__get_reset_password_repository),
                                      password_service: PasswordServiceProtocol = Depends(get_password_service)
