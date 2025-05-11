@@ -1,9 +1,8 @@
 import os
-from os import path
 from typing import Annotated, Literal, List
 
 from fastapi import Depends
-from pydantic import BaseModel, Json, field_validator, HttpUrl
+from pydantic import BaseModel, field_validator, HttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict, NoDecode
 
 __all__ = (
@@ -54,6 +53,17 @@ class Cache(BaseModel):
     prefix: str = 'boiler-plate'
 
 
+class EmailService(BaseModel):
+    url: HttpUrl
+    token_algorithm: str
+    token_lifetime_minutes: int
+    secret_key: str
+
+
+class ResetToken(BaseModel):
+    token_lifetime_hours: int
+
+
 class JWT(BaseModel):
     """
     Настройки JWT токена.
@@ -95,11 +105,15 @@ class Settings(BaseSettings):
 
     debug: bool
     base_url: str
+    frontend_url: str
     base_dir: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     secret_key: str
     cors_origins: Annotated[List[str], NoDecode] 
     
+    email_service: EmailService
+
+    reset_token: ResetToken
 
     @field_validator('cors_origins', mode='before')
     @classmethod

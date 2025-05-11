@@ -1,5 +1,5 @@
 import logging
-from typing import Protocol, Self, List
+from typing import Protocol, Self, List, Optional
 from uuid import UUID
 from school_site.apps.users.schemas import(
     UserCreateSchema, UserReadSchema, RegisterRequestSchema, UserReadDBSchema,
@@ -45,7 +45,10 @@ class UserServiceProtocol(Protocol):
         ...
 
     async def update_user2(self: Self, url_user_id: UUID, user_data: UserUpdateRequestSchema) -> UserReadSchema:
-        ...
+      ...
+
+    async def get_by_email_or_none(self: Self, email: str) -> Optional[UserReadDBSchema]:
+      ...
 
 class UserService(UserServiceProtocol):
     def __init__(
@@ -109,7 +112,6 @@ class UserService(UserServiceProtocol):
             phone_number=update_data.phone_number,
             username=update_data.username,
             role=update_data.role,
-            #password_hash=existing_user.password_hash  
         )
     
         updated_user = await self.user_repository.update(db_user)
@@ -179,4 +181,8 @@ class UserService(UserServiceProtocol):
         logger.info(f"Successfully deleted user with id: {user_id}")
         return True
 
-
+    async def get_by_email_or_none(self: Self, email: str) -> Optional[UserReadDBSchema]:
+        user = await self.user_repository.get_by_email(email)
+        if not user:
+            return None
+        return UserReadSchema(**user.model_dump(exclude={'password_hash'}))

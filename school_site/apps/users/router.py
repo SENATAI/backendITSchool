@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, Response, Cookie
 from typing import List
 from uuid import UUID
 from .schemas import LoginRequestSchema, UserReadSchema, PasswordChangeSchema, RegisterRequestSchema, UserUpdateRequestSchema
+from fastapi import APIRouter, Depends, Response
+from .schemas import LoginRequestSchema, UserReadSchema, PasswordChangeSchema, UserResetSchema, ResetPasswordRequest
 from .use_cases.login import LoginUseCaseProtocol
 from .use_cases.refresh import RefreshUseCaseProtocol
 from .use_cases.logout import LogoutUseCaseProtocol
@@ -12,6 +14,12 @@ from .use_cases.get_user_by_id import GetUserByIdUseCaseProtocol
 from .use_cases.update_user import UpdateUserUseCaseProtocol
 from .use_cases.delete_user import DeleteUserUseCaseProtocol
 from .depends import get_login_use_case, get_refresh_use_case, get_logout_use_case, get_change_password_use_case, get_create_user_use_case, get_all_users_use_case, get_get_user_by_id_use_case, get_update_user_use_case, get_delete_user_use_case
+from .use_cases.reset_password import ResetPasswordUseCaseProtocol
+from .use_cases.confirm_reset_password import ConfirmResetPasswordUseCaseProtocol
+from .depends import (
+    get_login_use_case, get_refresh_use_case, get_logout_use_case, get_change_password_use_case,
+    get_reset_password_use_case, get_confirm_reset_password_use_case, access_token_schema, refresh_token_schema
+)
 from .utils.cookies import set_auth_cookies
 
 router = APIRouter(prefix='/api/users', tags=['Users'])
@@ -38,7 +46,7 @@ async def login(
 async def refresh_token(
     response: Response,
     refresh_use_case: RefreshUseCaseProtocol = Depends(get_refresh_use_case),
-    refresh_token: str = Cookie(...)
+    refresh_token: str = Depends(refresh_token_schema)
 ):
     user_tokens_data = await refresh_use_case(refresh_token)
     
@@ -54,7 +62,7 @@ async def refresh_token(
 async def logout(
     response: Response,
     logout: LogoutUseCaseProtocol = Depends(get_logout_use_case),
-    refresh_token: str = Cookie(...),
+    refresh_token: str = Depends(refresh_token_schema),
 ):
     await logout(refresh_token)
     
@@ -69,7 +77,7 @@ async def change_password(
     response: Response,
     password_data: PasswordChangeSchema,  
     change_password_use_case: ChangePasswordUseCaseProtocol = Depends(get_change_password_use_case),
-    access_token: str = Cookie(...)
+    access_token: str = Depends(access_token_schema)
 ):
     """Смена пароля авторизованным пользователем"""
     user_tokens_data = await change_password_use_case(
@@ -82,7 +90,6 @@ async def change_password(
         user_tokens_data.refresh_token.token
     )
     return user_tokens_data.user
-
 
 @router.post("/", response_model=UserReadSchema, status_code=201)
 async def create_user(
@@ -120,3 +127,27 @@ async def delete_user(
 ):
     await delete_user_use_case(user_id)
     return None
+
+@router.post("/reset_password", status_code=204)
+async def reset_password(
+    user: UserResetSchema,
+    reset_password_use_case: ResetPasswordUseCaseProtocol = Depends(get_reset_password_use_case)
+):
+    await reset_password_use_case(user)
+    
+    return None
+
+@router.post("/confirm_reset_password", status_code=200)
+async def confirm_reset_password(
+    response: Response,
+    passsword_request: ResetPasswordRequest,
+    reset_password_use_case: ConfirmResetPasswordUseCaseProtocol = Depends(get_confirm_reset_password_use_case)
+):
+    user_tokens_data =  await reset_password_use_case(passsword_request)
+
+    set_auth_cookies(
+        response, 
+        user_tokens_data.access_token.token, 
+        user_tokens_data.refresh_token.token
+    )
+    return user_tokens_data.user
