@@ -2,6 +2,4 @@ uv run python -m scripts.create_user --username ab --password 12 --role administ
 
 uv run python -m scripts.create_user --username a --password 12 --role student --first_name Pavel --surname Kozhinov --patronymic Sergeevich --email pavel.seko4@gmail.com --phone_number +79642501606 --points 200
 
-# Для добавления в группу:
-
-uv run python -m scripts.create_user --username a --password 12 --role student --first_name Pavel --surname Kozhinov --patronymic Sergeevich --email pavel.seko4@gmail.com --phone_number +79642501606 --points 200 --group_id 123e4567-e89b-12d3-a456-426614174000
+ uv run python -m scripts.create_user --username adavvc --password 12 --role teacher --first_name Pavel --surname Kozhinov --patronymic Sergeevich --email p12113avel.seko6@gmail.com --phone_number +79648701406
