@@ -20,7 +20,7 @@ class EmailClient(EmailClientProtocol):
         
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                settings.email_service.url,
+                str(settings.email_service.url),
                 json=email_dto.model_dump(),
                 headers={
                     "Authorization": f"Bearer {token}"

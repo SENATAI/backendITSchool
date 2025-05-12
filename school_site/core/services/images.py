@@ -6,6 +6,7 @@ import io
 from typing import Protocol
 from datetime import timedelta
 import logging
+from school_site.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -59,11 +60,11 @@ class MinioImageService(ImageServiceProtocol):
             self.bucket_name,
             path,
             timedelta(minutes=30)
-        )
+        )        
+        new_url = original_url.replace("http://minio:9000", f"http://{settings.frontend_url}/minio")
         
-        new_url = original_url.replace("http://minio:9000", "http://localhost/minio")
-        
-        logger.info(f"URL: {new_url}")
+        logger.debug(f"URL file: {new_url}")
+
         return new_url
         
 

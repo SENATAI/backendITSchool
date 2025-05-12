@@ -1,9 +1,9 @@
 import logging
-from typing import Protocol, Self
+from typing import Protocol, Self, List, Optional
 from uuid import UUID
 from school_site.apps.users.schemas import(
     UserCreateSchema, UserReadSchema, RegisterRequestSchema, UserReadDBSchema,
-    UserUpdateSchema, UserUpdateDBSchema
+    UserUpdateSchema, UserUpdateDBSchema, UserUpdateRequestSchema, UserUpdateNoPasswordSchema, UserUpdateDBNoPasswordHashSchema
 ) 
 from school_site.apps.users.repositories.users import UserRepositoryProtocol
 from school_site.apps.users.services.passwords import PasswordServiceProtocol
@@ -37,6 +37,18 @@ class UserServiceProtocol(Protocol):
 
     async def change_password(self: Self, record_id: UUID, new_password: str) -> UserReadSchema:
         ...
+
+    async def get_all_users(self: Self) -> List[UserReadSchema]:
+        ...
+
+    async def delete_user(self:Self, user_id: UUID) -> bool:
+        ...
+
+    async def update_user_by_router(self: Self, url_user_id: UUID, user_data: UserUpdateRequestSchema) -> UserReadSchema:
+      ...
+
+    async def get_by_email_or_none(self: Self, email: str) -> Optional[UserReadDBSchema]:
+      ...
 
 class UserService(UserServiceProtocol):
     def __init__(
@@ -84,7 +96,27 @@ class UserService(UserServiceProtocol):
         updated_user = await self.user_repository.update(db_user)
         return UserReadSchema(**updated_user.model_dump(exclude={'password_hash'}))
 
+    async def update_user_by_router(self: Self, url_user_id: UUID, user_data: UserUpdateRequestSchema) -> UserReadSchema:
+
+        update_data = UserUpdateNoPasswordSchema(
+            id=url_user_id,
+            **user_data.model_dump()
+        )
+        
+        db_user = UserUpdateDBNoPasswordHashSchema(
+            id=url_user_id,
+            first_name=update_data.first_name,
+            surname=update_data.surname,
+            patronymic=update_data.patronymic,
+            email=update_data.email,
+            phone_number=update_data.phone_number,
+            username=update_data.username,
+            role=update_data.role,
+        )
     
+        updated_user = await self.user_repository.update(db_user)
+        return UserReadSchema(**updated_user.model_dump(exclude={'password_hash'}))
+
     async def change_password(self: Self, record_id: UUID, new_password: str) -> UserReadSchema:
         password_hash = self.password_service.get_password_hash(new_password)
         password_schema = PasswordSchema(
@@ -135,3 +167,22 @@ class UserService(UserServiceProtocol):
         logger.info(f"Authentication successful for user: {user_id}")
         return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
     
+    async def get_all_users(self: Self) -> List[UserReadSchema]:
+        logger.info("Fetching all users")
+
+        users = await self.user_repository.get_all()
+        return [UserReadSchema(**user.model_dump(exclude={'password_hash'})) for user in users]
+    
+    async def delete_user(self: Self, user_id: UUID) -> bool:
+        logger.info(f"Deleting user with id: {user_id}")
+        
+        await self.user_repository.delete(user_id)
+        
+        logger.info(f"Successfully deleted user with id: {user_id}")
+        return True
+
+    async def get_by_email_or_none(self: Self, email: str) -> Optional[UserReadDBSchema]:
+        user = await self.user_repository.get_by_email(email)
+        if not user:
+            return None
+        return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
