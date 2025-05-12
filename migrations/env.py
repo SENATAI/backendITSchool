@@ -9,8 +9,10 @@ from school_site.settings import settings
 from school_site.apps.users.models import User, RefreshToken, PasswordResetTokens
 from school_site.apps.products.models import Product, Photo
 from school_site.apps.students.models import Student
+from school_site.apps.teachers.models import Teacher
 from school_site.apps.courses.models import Course
 from school_site.apps.news.models import News
+from school_site.apps.groups.models import Group
 
 #--------------------------------------------------------------------------
 import asyncio
