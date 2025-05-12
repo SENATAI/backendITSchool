@@ -122,7 +122,7 @@ class AuthService(AuthServiceProtocol):
         logger.info(f"Logout successful for user: {user_id}")
     
     async def decode_acess_token(self: Self, token: str) -> UserTokenDataReadSchema:
-        return await self.token_service.get_admin_user(token)
+        return await self.token_service.decode_access_token(token)
 
     async def get_admin_user(self: Self, token: str) -> UserTokenDataReadSchema:
         user_data = await self.decode_acess_token(token)

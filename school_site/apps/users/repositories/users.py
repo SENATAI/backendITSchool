@@ -1,10 +1,11 @@
 import sqlalchemy as sa
 from uuid import UUID
-from typing import Self, Optional
+from typing import Self, Optional, List
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
 from school_site.core.utils.exceptions import ModelNotFoundException
 from school_site.apps.users.models import User
-from school_site.apps.users.schemas import UserReadDBSchema, UserCreateSchema, UserUpdateDBSchema, PasswordSchema
+from school_site.apps.users.schemas import UserReadDBSchema, UserCreateSchema, UserUpdateDBSchema, PasswordSchema, UserReadSchema
+from school_site.core.enums import UserRole
 
 class UserRepositoryProtocol(BaseRepositoryImpl[
     User,
@@ -22,6 +23,8 @@ class UserRepositoryProtocol(BaseRepositoryImpl[
        ...
 
     async def update_password_by_id(self: Self, record_id: UUID, password: PasswordSchema) -> UserReadDBSchema:
+        ...
+    async def get_all(self: Self, role: UserRole, limit: int, offset: int) -> List[UserReadSchema]:
         ...
 
 class UserRepository(UserRepositoryProtocol):
@@ -54,3 +57,17 @@ class UserRepository(UserRepositoryProtocol):
             if user is None:
                 return None
             return self.read_schema_type.model_validate(user, from_attributes=True)
+        
+    async def get_all(self: Self, role: UserRole, limit: int, offset: int) -> List[UserReadSchema]:
+        async with self.session as session:
+            stmt = sa.select(self.model_type)
+
+            if role:
+                stmt = stmt.where(self.model_type.role == role)
+
+            models = (
+                (await session.execute(stmt.limit(limit).offset(offset)))
+                .scalars()
+                .all()
+                )
+            return [UserReadSchema.model_validate(model, from_attributes=True) for model in models]

@@ -1,7 +1,7 @@
 import argparse
 import asyncio
+import sys
 from contextlib import asynccontextmanager
-
 from school_site.core.db import get_async_session  
 from school_site.apps.users.services.users import UserService  
 from school_site.apps.users.repositories.users import UserRepository
@@ -10,6 +10,9 @@ from school_site.core.enums import UserRole
 from school_site.apps.students.schemas import StudentCreateSchema
 from school_site.apps.students.repositories.students import StudentRepository
 from school_site.apps.users.services.passwords import PasswordService 
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 @asynccontextmanager

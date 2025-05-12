@@ -6,6 +6,8 @@ from school_site.apps.users.services.auth import AuthServiceProtocol
 from school_site.core.enums import UserRole
 from school_site.core.utils.exceptions import PermissionDeniedError
 
+
+
 class CreateUserUseCaseProtocol(UseCaseProtocol[UserReadSchema]):
     async def __call__(self: Self, user_data: RegisterRequestSchema) -> UserReadSchema:
         ...
