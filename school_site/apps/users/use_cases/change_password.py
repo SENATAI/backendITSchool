@@ -14,4 +14,4 @@ class ChangePasswordUseCase(ChangePasswordUseCaseProtocol):
         self.auth_service = auth_service
     
     async def __call__(self: Self, access_token: str, password: PasswordChangeSchema) -> AuthReadSchema:
-        return await self.auth_service.change_password_authenticated(access_token, password)
+        return await self.auth_service.change_password(access_token, password)

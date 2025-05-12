@@ -59,7 +59,7 @@ class RefreshTokenRepository(RefreshTokenRepositoryProtocol):
             return self.read_schema_type.model_validate(token, from_attributes=True)
     
     async def delete_all_by_user_id(self: Self, user_id: UUID) -> bool:
-        async with self.session as session, session.begin():
+        async with self.session as session:
             stmt = sa.delete(self.model_type).where(
                 self.model_type.user_id == user_id
             )

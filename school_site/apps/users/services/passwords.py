@@ -1,6 +1,6 @@
 import logging
 from typing import Protocol
-import bcrypt
+from passlib.context import CryptContext
 
 logger = logging.getLogger(__name__)
 
@@ -13,20 +13,14 @@ class PasswordServiceProtocol(Protocol):
 
 
 class PasswordService(PasswordServiceProtocol):
+    def __init__(self, pwd_context: CryptContext):
+        self.pwd_context = pwd_context
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         logger.info("Verifying password")
-        password_bytes = plain_password.encode('utf-8')
-        hashed_password_bytes = hashed_password.encode('utf-8')
-        is_valid = bcrypt.checkpw(password_bytes, hashed_password_bytes)
-        logger.info(f"Password verification {'succeeded' if is_valid else 'failed'}")
-        return is_valid 
+        return self.pwd_context.verify(plain_password, hashed_password)
     
     def get_password_hash(self, password: str) -> str:
         logger.info("Generating password hash")
-        pwd_bytes = password.encode('utf-8')
-        salt = bcrypt.gensalt()
-        hashed_password = bcrypt.hashpw(pwd_bytes, salt)
-        logger.info("Password hashed successfully")
-        return hashed_password.decode('utf-8')
+        return self.pwd_context.hash(password)
 

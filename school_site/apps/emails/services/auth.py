@@ -1,27 +1,20 @@
 from typing import Protocol, Self
 from jose import jwt
 from datetime import datetime, UTC, timedelta
-from school_site.settings import settings
-
-
-MINUTES_TIME = settings.email_service.token_lifetime_minutes
-ALGORITHM = settings.email_service.token_algorithm
-SECRET_KEY = settings.email_service.secret_key
-TRUE_SETTINGS_TOKEN = {
-    "iss": "main-service", 
-    "permissions": ["send:email"]
-}
+from settings import settings
 
 class InternalTokenServiceProtocol(Protocol):
-    def generate_internal_token(self: Self) -> str:
+    async def generate_internal_token(self: Self) -> str:
         ...
 
 class InternalTokenService(InternalTokenServiceProtocol):
-    def generate_internal_token(self: Self) -> str:
-        
+    async def generate_internal_token(self: Self) -> str:
+        MINUTES_TIME = settings.email_service.token_lifetime_minutes
+        ALGORITHM = settings.email_service.token_algorithm
+        SECRET_KEY = settings.email_service.secret_key
         payload = {
-            "iss": TRUE_SETTINGS_TOKEN["iss"],
-            "permissions": TRUE_SETTINGS_TOKEN["permissions"],
+            "iss": "main-service", 
+            "permissions": ["send:email"],
             "exp": datetime.now(UTC) + timedelta(minutes=MINUTES_TIME)
         }
         

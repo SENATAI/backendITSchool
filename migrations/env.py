@@ -6,22 +6,13 @@ from sqlalchemy import engine_from_config, pool
 from school_site.core.db import Base
 from school_site.core.models import CreationTimeMixin, TimestampMixin
 from school_site.settings import settings
-from school_site.apps.users.models import User, RefreshToken, PasswordResetTokens
+from school_site.apps.users.models import User, RefreshToken
 from school_site.apps.products.models import Product, Photo
 from school_site.apps.students.models import Student
 from school_site.apps.teachers.models import Teacher
 from school_site.apps.courses.models import Course
 from school_site.apps.news.models import News
 from school_site.apps.groups.models import Group
-
-#--------------------------------------------------------------------------
-import asyncio
-import sys
-
-if sys.platform == "win32":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
-#--------------------------------------------------------------------------
 
 if TYPE_CHECKING:
     from .utils import render_item

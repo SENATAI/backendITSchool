@@ -2,7 +2,7 @@ from uuid import UUID
 from typing import Protocol
 from school_site.core.schemas import PaginationSchema
 from ..repositories.students import StudentRepositoryProtocol
-from ..schemas import StudentCreateSchema, StudentReadSchema, StudentUpdateSchema, \
+from ..schemas import StudentCreateSchema, StudentReadSchema, StudentUpdateSchema, StudentPaginationResultSchema, \
     StudentReadWithUserSchema, StudentPaginationWithUserResultSchema
 from ..exceptions import StudentNotExistsExceptions
 from school_site.apps.users.services.users import UserServiceProtocol

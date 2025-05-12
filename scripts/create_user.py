@@ -46,7 +46,7 @@ async def main():
     async with get_session() as session:
         # Создание пользователя
         user_repository = UserRepository(session)
-        password_service = PasswordService()
+        password_service = PasswordService(CryptContext(schemes=["bcrypt"], deprecated="auto"))
         user_service = UserService(user_repository, password_service)
         user_data = RegisterRequestSchema(
             username=args.username, 
