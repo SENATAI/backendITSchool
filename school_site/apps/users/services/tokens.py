@@ -175,7 +175,7 @@ class TokenService(TokenServiceProtocol):
 
     async def get_admin_user(self: Self, access_token: str) -> UserTokenDataReadSchema:
         user_data = await self.decode_access_token(access_token)
-        if user_data.role != UserRole.ADMIN or user_data.role != UserRole.SUPERADMIN:
+        if user_data.role != UserRole.ADMIN and user_data.role != UserRole.SUPERADMIN:
             logger.error("User is not an admin")
             raise PermissionDeniedError()
         return user_data
