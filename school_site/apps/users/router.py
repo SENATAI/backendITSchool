@@ -18,10 +18,11 @@ from .depends import (
     get_login_use_case, get_refresh_use_case, get_logout_use_case, get_change_password_use_case, 
     get_create_user_use_case, get_all_users_use_case, get_get_user_by_id_use_case, get_update_user_use_case, 
     get_delete_user_use_case, get_reset_password_use_case, get_confirm_reset_password_use_case, 
-    access_token_schema, refresh_token_schema
+    get_me_by_user_id_use_case, access_token_schema, refresh_token_schema
 )
 from .use_cases.reset_password import ResetPasswordUseCaseProtocol
 from .use_cases.confirm_reset_password import ConfirmResetPasswordUseCaseProtocol
+from .use_cases.get_me import GetMeByUserIdUseCaseProtocol
 from .utils.cookies import set_auth_cookies
 
 router = APIRouter(prefix='/api/users', tags=['Users'])
@@ -93,6 +94,13 @@ async def change_password(
     )
     return user_tokens_data.user
 
+@router.get("/get_me", status_code=200)
+async def get_me(
+    get_me_by_user_id_use_case: GetMeByUserIdUseCaseProtocol = Depends(get_me_by_user_id_use_case),
+    access_token: str = Depends(access_token_schema)
+):
+    return await get_me_by_user_id_use_case(access_token)
+
 @router.post("/", response_model=UserReadSchema, status_code=201)
 async def create_user(
     user_data: RegisterRequestSchema,
@@ -153,3 +161,4 @@ async def confirm_reset_password(
         user_tokens_data.refresh_token.token
     )
     return user_tokens_data.user
+

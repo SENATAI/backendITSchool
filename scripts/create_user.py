@@ -1,7 +1,6 @@
 import argparse
 import asyncio
 from contextlib import asynccontextmanager
-from passlib.context import CryptContext
 from uuid import UUID
 from school_site.apps.teachers.repositories.teachers import TeacherRepository
 from school_site.apps.teachers.schemas import TeacherCreateSchema
