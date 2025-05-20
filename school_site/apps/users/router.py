@@ -94,7 +94,7 @@ async def change_password(
     )
     return user_tokens_data.user
 
-@router.get("/get_me", status_code=200)
+@router.get("/me", status_code=200)
 async def get_me(
     get_me_by_user_id_use_case: GetMeByUserIdUseCaseProtocol = Depends(get_me_by_user_id_use_case),
     access_token: str = Depends(access_token_schema)
