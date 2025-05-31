@@ -12,7 +12,7 @@ class UserRepositoryProtocol(BaseRepositoryImpl[
     UserCreateSchema,
     UserUpdateDBSchema
 ]):
-    async def get_by_username(self: Self, username: str) -> Optional[UserReadDBSchema]:
+    async def get_by_username(self: Self, username: int) -> Optional[UserReadDBSchema]:
         ...
 
     async def change_password(self: Self, record_id: UUID, password: PasswordSchema) -> UserReadDBSchema:
@@ -25,7 +25,7 @@ class UserRepositoryProtocol(BaseRepositoryImpl[
         ...
 
 class UserRepository(UserRepositoryProtocol):
-    async def get_by_username(self: Self, username: str) -> Optional[UserReadDBSchema]:
+    async def get_by_username(self: Self, username: int) -> Optional[UserReadDBSchema]:
         async with self.session as session:
             stmt = sa.select(self.model_type).where(self.model_type.username == username)
             user = (await session.execute(stmt)).scalar_one_or_none()
