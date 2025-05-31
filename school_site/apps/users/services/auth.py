@@ -55,7 +55,7 @@ class AuthService(AuthServiceProtocol):
                               access_token=new_access_token,
                               refresh_token=new_refresh_data)
     
-    async def login(self: Self, username: str, password: str) -> AuthReadSchema:
+    async def login(self: Self, username: int, password: str) -> AuthReadSchema:
         logger.info(f"Login attempt for user: {username}")
         
         user = await self.user_service.authenticate_user(username, password)
@@ -132,17 +132,22 @@ class ResetPasswordService(ResetPasswordServiceProtocol):
         self.mail_sender = mail_sender
         self.auth_service = auth_service
 
+
     async def reset_password(self: Self, user: UserResetSchema) -> bool:
         logger.info(f"Resetting password for user: {user.email}")
-        user_data = await self.user_service.get_by_email_or_none(user.email)
+        user_data = await self.user_service.get_user_by_username(user.username)
         if user_data:
-            token = await self.reset_password_token_service.generate_reset_token(user_data.id)
-            message = self._generate_email_message(user_data, token)
-            logger.info(f"Reset password email sent to user: {user.email}")
-            await self.mail_sender.send_email(message)
+            if user_data.email == user.email:
+                token = await self.reset_password_token_service.generate_reset_token(user_data.id)
+                message = self._generate_email_message(user_data, token)
+                logger.info(f"Reset password email sent to user: {user.email}")
+                await self.mail_sender.send_email(message)
+            else:
+                logger.warning(f"Input email: {user.email} does not match with email in database: {user_data.email}")
         else:
-            logger.warning(f"User with email: {user.email} does not exist. Not sent message to email")
+            logger.warning(f"User with username: {user.username} does not exist. Not sent message to email")
         return True
+
 
     async def confirm_reset_password(self: Self, passwordResetSchema: ResetPasswordRequest) -> AuthReadSchema:
         logger.debug(f"Confirming password reset for user: {passwordResetSchema.token}")
@@ -151,6 +156,7 @@ class ResetPasswordService(ResetPasswordServiceProtocol):
         new_user = await self.auth_service.reset_password_via_token(token_data.user_id, passwordResetSchema.new_password)
         await self.reset_password_token_service.delete(token_data.id)
         return new_user
+
 
     def _generate_email_message(self: Self, user: UserReadSchema, token: ResetTokenSchema) -> str:
         name = user.first_name or user.username
@@ -169,7 +175,3 @@ class ResetPasswordService(ResetPasswordServiceProtocol):
             body=body,
             subject=subject
         )
-
-
-
-

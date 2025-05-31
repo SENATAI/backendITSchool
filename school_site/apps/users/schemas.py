@@ -9,7 +9,7 @@ from school_site.core.enums import UserRole
 from .exceptions import InvalidTokenError
 
 class LoginRequestSchema(BaseModel):
-    username: str
+    username: int
     password: str
 
 
@@ -41,7 +41,7 @@ class UserInfoMixin(BaseModel):
     patronymic: Optional[str]
     email: EmailStr
     role: UserRole
-    username: str
+    username: int
 
 
 
@@ -114,6 +114,7 @@ class UserUpdateDBNoPasswordHashSchema(PhoneValidatedMixin, UserInfoMixin, Updat
     ...
 
 class UserResetSchema(BaseModel):
+    username: int
     email: EmailStr
 
 class ResetPasswordRequest(BaseModel):
