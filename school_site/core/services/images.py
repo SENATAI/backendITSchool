@@ -11,24 +11,19 @@ from school_site.settings import settings
 logger = logging.getLogger(__name__)
 
 
-class ImageServiceProtocol(Protocol):
-    async def upload(self, path: str, image: UploadFile) -> bool:
+class FileServiceProtocol(Protocol):
+    async def upload(self, path: str, file: UploadFile) -> bool:
         ...
     
     async def get_url(self, path: str) -> str:
          ...
     
-    # async def get_product_images(self, product_id: int, skip: int = 0, limit: int = 20) -> List[Dict[str, Any]]:
-    #     ...
-    
-    # async def get_all_images(self, skip: int = 0, limit: int = 20) -> List[Dict[str, Any]]:
-    #     ...
         
-    async def delete(self, image_id: str) -> bool:
+    async def delete(self, file_id: str) -> bool:
          ...
 
 
-class MinioImageService(ImageServiceProtocol):
+class MinioFileService(FileServiceProtocol):
     def __init__(self, minio_client: Minio, bucket_name: str):
         self.client = minio_client
         self.bucket_name = bucket_name
@@ -41,15 +36,15 @@ class MinioImageService(ImageServiceProtocol):
         except S3Error as e:
             raise Exception(f"Failed to create bucket: {e}")
         
-    async def upload(self, path: str, image: UploadFile) -> bool:
-        image_data = await image.read()
+    async def upload(self, path: str, file: UploadFile) -> bool:
+        file_data = await file.read()
         await self._run_sync(
             self.client.put_object,
             self.bucket_name,
             path,
-            io.BytesIO(image_data),
-            len(image_data),
-            image.content_type
+            io.BytesIO(file_data),
+            len(file_data),
+            file.content_type
         )
         return True
     
@@ -62,8 +57,6 @@ class MinioImageService(ImageServiceProtocol):
             timedelta(minutes=30)
         )        
         new_url = original_url.replace("http://minio:9000", f"http://{settings.frontend_url}/minio")
-        
-        logger.debug(f"URL file: {new_url}")
 
         return new_url
         
