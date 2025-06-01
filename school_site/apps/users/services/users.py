@@ -80,7 +80,6 @@ class UserService(UserServiceProtocol):
             patronymic=user.patronymic,
             email=user.email,
             phone_number=user.phone_number,
-            username=user.username,
             password_hash=password_hash,
             role=user.role
         )
@@ -96,7 +95,6 @@ class UserService(UserServiceProtocol):
             patronymic=user.patronymic,
             email=user.email,
             phone_number=user.phone_number,
-            username=user.username,
             role=user.role
         )
         updated_user = await self.user_repository.update(db_user)
@@ -116,7 +114,6 @@ class UserService(UserServiceProtocol):
             patronymic=update_data.patronymic,
             email=update_data.email,
             phone_number=update_data.phone_number,
-            username=update_data.username,
             role=update_data.role,
         )
     

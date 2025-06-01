@@ -41,7 +41,6 @@ class UserInfoMixin(BaseModel):
     patronymic: Optional[str]
     email: EmailStr
     role: UserRole
-    username: int
 
 
 
@@ -63,11 +62,13 @@ class UserUpdateSchema(PhoneValidatedMixin, UserInfoMixin, UpdateBaseModel):
 
 class UserReadSchema(PhoneValidatedMixin, UserInfoMixin):
     id: UUID
+    username: int
 
 
 class UserReadDBSchema(PhoneValidatedMixin, UserInfoMixin):
     id: UUID
     password_hash: str
+    username: int
 
 
 class UserTokenDataReadSchema(BaseModel):
