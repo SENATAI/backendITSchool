@@ -17,7 +17,7 @@ from .depends import (
 )
 from .schemas import (
     GroupReadSchema, GroupPaginationResultSchema, GroupCreateSchema, 
-    GroupUpdateSchema, GroupAddStudentsSchema, GroupAddTeacherSchema
+    GroupUpdateSchema, GroupAddStudentsSchema, GroupAddTeacherSchema, GroupReadStudentsSchema, GroupReadTeacherSchema
 )
 
 router = APIRouter(prefix='/api/groups', tags=['Groups'])
@@ -70,14 +70,14 @@ async def delete_group(
     return None
 
 
-@router.post("/{group_id}/students/", status_code=200)
+@router.post("/{group_id}/students/", response_model=GroupReadStudentsSchema, status_code=200)
 async def add_students(
     students: GroupAddStudentsSchema,
     group_id: UUID = Path(...),
     add: AddStudentsUseCaseProtocol = Depends(get_add_students_use_case)
 ):
-    await add(group_id, students)
-    return None
+    updated_group = await add(group_id, students)
+    return updated_group
 
 
 @router.delete("/{group_id}/students/{student_id}", status_code=204)
@@ -90,20 +90,21 @@ async def delete_student(
     return None
 
 
-@router.post("/{group_id}/teacher/", status_code=200)
+@router.post("/{group_id}/teacher/{teacher_id}", response_model=GroupReadTeacherSchema, status_code=200)
 async def add_teacher(
-    teacher: GroupAddTeacherSchema,
     group_id: UUID = Path(...),
+    teacher_id: UUID = Path(...),
     add: AddTeacherUseCaseProtocol = Depends(get_add_teacher_use_case)
 ):
-    await add(group_id, teacher)
-    return None
+    updated_group = await add(group_id, teacher_id)
+    return updated_group
 
 
-@router.delete("/{group_id}/teacher/", status_code=204)
+@router.delete("/{group_id}/teacher/{teacher_id}", status_code=204)
 async def delete_teacher(
     group_id: UUID = Path(...),
+    teacher_id: UUID = Path(...),
     delete: DeleteTeacherUseCaseProtocol = Depends(get_delete_teacher_use_case)
 ):
-    await delete(group_id)
+    await delete(group_id, teacher_id)
     return None

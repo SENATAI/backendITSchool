@@ -1,6 +1,6 @@
 from uuid import UUID
 from school_site.core.use_cases import UseCaseProtocol
-from ..services.students import GroupStudentServiceProtocol
+from ..services.group_students import GroupStudentServiceProtocol
 
 
 class DeleteStudentUseCaseProtocol(UseCaseProtocol[None]):

@@ -2,14 +2,23 @@ import sqlalchemy as sa
 from uuid import UUID
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
 from ..models import Group
-from ..schemas import GroupAddTeacherDBSchema
+from ..schemas import (
+    GroupAddTeacherDBSchema,
+    GroupReadTeacherDBSchema,
+    GroupUpdateTeacherDBSchema
+)
 
 
-class GroupTeachersRepositoryProtocol(BaseRepositoryImpl):
-    async def add_teacher(self, group_id: UUID, teacher: GroupAddTeacherDBSchema) -> None:
+class GroupTeachersRepositoryProtocol(BaseRepositoryImpl[
+    Group, 
+    GroupAddTeacherDBSchema,
+    GroupReadTeacherDBSchema,
+    GroupUpdateTeacherDBSchema
+]):
+    async def add_teacher(self, group_id: UUID, teacher_id: UUID) -> None:
         ...
 
-    async def delete_teacher(self, group_id: UUID) -> None:
+    async def delete_teacher(self, group_id: UUID, teacher_id: UUID) -> bool:
         ...
 
     async def has_teacher(self, group_id: UUID) -> bool:
@@ -17,23 +26,25 @@ class GroupTeachersRepositoryProtocol(BaseRepositoryImpl):
 
 
 class GroupTeachersRepository(GroupTeachersRepositoryProtocol):
-    async def add_teacher(self, group_id: UUID, teacher: GroupAddTeacherDBSchema) -> None:
+    async def add_teacher(self, group_id: UUID, teacher_id: UUID) -> None:
         async with self.session as s, s.begin():
             statement = sa.update(Group).where(
                 Group.id == group_id
             ).values(
-                teacher_id=teacher.teacher_id
+                teacher_id=teacher_id
             )
             await s.execute(statement)
 
-    async def delete_teacher(self, group_id: UUID) -> None:
+    async def delete_teacher(self, group_id: UUID, teacher_id: UUID) -> bool:
         async with self.session as s, s.begin():
             statement = sa.update(Group).where(
-                Group.id == group_id
+                Group.id == group_id,
+                Group.teacher_id == teacher_id
             ).values(
                 teacher_id=None
             )
             await s.execute(statement)
+            return True
 
     async def has_teacher(self, group_id: UUID) -> bool:
         async with self.session as s:

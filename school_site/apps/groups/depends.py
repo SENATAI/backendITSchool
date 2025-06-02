@@ -4,7 +4,7 @@ from school_site.core.db import get_async_session
 from .repositories.groups import GroupRepositoryProtocol, GroupRepository
 from .repositories.group_students import GroupStudentsRepositoryProtocol, GroupStudentsRepository
 from .services.groups import GroupServiceProtocol, GroupService
-from .services.students import GroupStudentServiceProtocol, GroupStudentService
+from .services.group_students import GroupStudentServiceProtocol, GroupStudentService
 from .use_cases.create_group import CreateGroupUseCaseProtocol, CreateGroupUseCase
 from .use_cases.update_group import UpdateGroupUseCaseProtocol, UpdateGroupUseCase
 from .use_cases.get_group import GetGroupUseCaseProtocol, GetGroupUseCase
@@ -15,7 +15,7 @@ from .use_cases.delete_student import DeleteStudentUseCaseProtocol, DeleteStuden
 from school_site.apps.students.services.students import StudentServiceProtocol
 from school_site.apps.students.depends import get_students_services
 from .repositories.group_teachers import GroupTeachersRepositoryProtocol, GroupTeachersRepository
-from .services.teachers import GroupTeacherServiceProtocol, GroupTeacherService
+from .services.group_teachers import GroupTeacherServiceProtocol, GroupTeacherService
 from .use_cases.add_teacher import AddTeacherUseCaseProtocol, AddTeacherUseCase
 from .use_cases.delete_teacher import DeleteTeacherUseCaseProtocol, DeleteTeacherUseCase
 from school_site.apps.teachers.services.teachers import TeacherServiceProtocol
