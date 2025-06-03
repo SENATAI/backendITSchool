@@ -13,15 +13,18 @@ class Course(Base, TimestampMixin):
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     name = Column(String, unique=True, nullable=False)
     photo = relationship("Photo", back_populates="course_photo", uselist=False, cascade="all, delete-orphan")
-
+    photo_id = Column(PostgresUUID(as_uuid=True), ForeignKey("photo_courses.id"))
     description = Column(String, nullable=False)
     age_category = Column(Enum(AgeCategory), nullable=False)
     price = Column(Integer, nullable=True)
     author_name = Column(String, nullable=True)
+    lessons = relationship("Lesson", back_populates="course")
+    students = relationship("CourseStudent", back_populates="course")
 
     __table_args__ = (
         CheckConstraint("price IS NULL OR price >= 0", name="positive_price_check"),
     )
+
 
 class Photo(Base, TimestampMixin, FileMixin):
     __tablename__ = "photo_courses"
@@ -47,6 +50,7 @@ class Lesson(Base, TimestampMixin):
     student_material = relationship("LessonHtmlFile", foreign_keys=[student_material_id])
     homework = relationship("LessonHtmlFile", foreign_keys=[homework_id])
 
+
 class LessonHtmlFile(Base, TimestampMixin, FileMixin):
     __tablename__ = "lesson_html_files"
 
@@ -64,6 +68,7 @@ class Comment(Base):
         nullable=False
     )
     teacher = relationship("Teacher", back_populates="comments")
+
 
 class Homework(Base):
     __tablename__ = "homeworks"
@@ -86,6 +91,7 @@ class FileHomework(FileMixin, Base):
     homework_id = Column(PostgresUUID(as_uuid=True), ForeignKey("homeworks.id"), unique=True)
 
     homework = relationship("Homework", back_populates="file_homework")
+
 
 class LessonGroup(Base):
     __tablename__ = "lesson_groups"
