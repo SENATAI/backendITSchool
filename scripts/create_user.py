@@ -29,7 +29,6 @@ async def get_session():
 
 async def main():
     parser = argparse.ArgumentParser(description="Создание нового пользователя")
-    parser.add_argument("--username", required=True, help="Имя пользователя")
     parser.add_argument("--password", required=True, help="Пароль пользователя")
     parser.add_argument("--role", required=True, help="Роль пользователя")
     parser.add_argument("--first_name", required=False, help="Имя пользователя", default=None)
@@ -48,7 +47,6 @@ async def main():
         password_service = PasswordService()
         user_service = UserService(user_repository, password_service)
         user_data = RegisterRequestSchema(
-            username=args.username, 
             password=args.password, 
             role=args.role,
             first_name=args.first_name,

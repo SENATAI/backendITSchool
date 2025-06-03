@@ -66,12 +66,6 @@ class UserService(UserServiceProtocol):
         self.password_service = password_service
     
     async def create_user(self: Self, user: RegisterRequestSchema) -> UserReadSchema:
-        logger.info(f"Creating user with username: {user.username}")
-        
-        existing_user = await self._get_user_by_username(user.username)
-        if existing_user:
-            logger.error(f"User with username {user.username} already exists")
-            raise UsernameAlreadyExistsError()
         
         password_hash = self.password_service.get_password_hash(user.password)
         user_create = UserCreateSchema(
@@ -156,7 +150,7 @@ class UserService(UserServiceProtocol):
     async def authenticate_user(self: Self, username: str, password: str) -> UserReadSchema:
         logger.info(f"Authenticating user: {username}")
         
-        user = await self.get_user_by_username(username)
+        user = await self._get_user_by_username(username)
         
         if not self.password_service.verify_password(password, user.password_hash):
             logger.error(f"Authentication failed: Invalid password for user {username}")
