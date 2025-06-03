@@ -1,7 +1,7 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from school_site.core.db import get_async_session
-from school_site.core.services.images import ImageServiceProtocol
+from school_site.core.services.images import FileServiceProtocol
 from school_site.core.depends import get_image_service
 from school_site.apps.users.services.tokens import TokenServiceProtocol
 from school_site.apps.users.depends import  get_token_service
@@ -21,7 +21,7 @@ from .use_cases.get_photo import GetPhotoUseCaseProtocol, GetPhotoUseCase
 from .use_cases.list_available_products import GetAvailableListProductUseCaseProtocol, GetAvailableProductUseCase
 from .use_cases.list_not_available_products import GetNotAvailableListProductUseCaseProtocol, GetNotAvailableProductUseCase
 
-def get_product_image_service() -> ImageServiceProtocol:
+def get_product_image_service() -> FileServiceProtocol:
     """Зависимость для работы с изображениями продуктов."""
     return get_image_service("product-images")
 
@@ -40,7 +40,7 @@ def __get_product_repository(
 
 def get_photo_service(
         photo_repository: PhotoRepositoryProtocol = Depends(__get_photo_repository),
-        image_service: ImageServiceProtocol = Depends(get_product_image_service)
+        image_service: FileServiceProtocol = Depends(get_product_image_service)
 ) -> PhotoServiceProtocol:
     return PhotoService(photo_repository, image_service)
 

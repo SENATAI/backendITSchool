@@ -1,7 +1,6 @@
 import argparse
 import asyncio
 from contextlib import asynccontextmanager
-from passlib.context import CryptContext
 from uuid import UUID
 from school_site.apps.teachers.repositories.teachers import TeacherRepository
 from school_site.apps.teachers.schemas import TeacherCreateSchema
@@ -46,7 +45,7 @@ async def main():
     async with get_session() as session:
         # Создание пользователя
         user_repository = UserRepository(session)
-        password_service = PasswordService(CryptContext(schemes=["bcrypt"], deprecated="auto"))
+        password_service = PasswordService()
         user_service = UserService(user_repository, password_service)
         user_data = RegisterRequestSchema(
             username=args.username, 

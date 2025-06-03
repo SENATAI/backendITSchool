@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Cookie, Path, Query
+from fastapi import APIRouter, Depends, Path, Query
 from uuid import UUID
 from .schemas import (
     StudentReadSchema, StudentCreateSchema, StudentUpdateSchema,
@@ -14,12 +14,14 @@ from .depends import (
     get_student_create_use_case, get_student_update_use_case, get_student_delete_use_case,
     get_student_get_use_case, get_student_list_use_case, get_student_get_me_use_case
 )
+from school_site.apps.users.depends import access_token_schema
+
 router = APIRouter(prefix='/api/students', tags=['Students'])
 
 @router.post("/", response_model=StudentReadSchema)
 async def create_student(
     student: StudentCreateSchema,
-    access_token: str = Cookie(...),
+    access_token: str = Depends(access_token_schema),
     create: CreateStudentUseCaseProtocol = Depends(get_student_create_use_case)
 ):
     return await create(access_token, student)
@@ -28,7 +30,7 @@ async def create_student(
 async def update_student(
     student: StudentUpdateSchema,
     student_id: UUID = Path(...),
-    access_token: str = Cookie(...),
+    access_token: str = Depends(access_token_schema),
     update: UpdateStudentUseCaseProtocol = Depends(get_student_update_use_case)
 ):
     return await update(access_token, student_id, student)
@@ -37,7 +39,7 @@ async def update_student(
 @router.delete("/{student_id}", status_code=204)
 async def delete_student(
     student_id: UUID = Path(...),
-    access_token: str = Cookie(...),
+    access_token: str = Depends(access_token_schema),
     delete: DeleteStudentUseCaseProtocol = Depends(get_student_delete_use_case)
 ):
     await delete(access_token, student_id)
@@ -46,8 +48,8 @@ async def delete_student(
 
 
 @router.get("/me", response_model=StudentReadWithUserSchema)
-async def list_students(
-    access_token: str = Cookie(...),
+async def get_me(
+    access_token: str = Depends(access_token_schema),
     get_me: GetMeStudentUseCaseProtocol = Depends(get_student_get_me_use_case)
 ):
     return await get_me(access_token)
@@ -55,7 +57,7 @@ async def list_students(
 @router.get("/{student_id}", response_model=StudentReadWithUserSchema)
 async def get_student(
     student_id: UUID = Path(...),
-    access_token: str = Cookie(...),
+    access_token: str = Depends(access_token_schema),
     get: GetStudentUseCaseProtocol = Depends(get_student_get_use_case)
 ):
     return await get(access_token, student_id)
@@ -63,7 +65,7 @@ async def get_student(
 
 @router.get("/", response_model=StudentPaginationWithUserResultSchema)
 async def list_students(
-    access_token: str = Cookie(...),
+    access_token: str = Depends(access_token_schema),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0, le=100),
     list: GetListStudentUseCaseProtocol = Depends(get_student_list_use_case)

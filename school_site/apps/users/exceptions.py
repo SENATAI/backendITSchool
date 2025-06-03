@@ -2,7 +2,7 @@ from typing import Any
 from fastapi import status
 from school_site.core.utils.exceptions import ModelAlreadyExistsError, CoreException, \
     ModelFieldNotFoundException
-from school_site.apps.users.models import User
+from school_site.apps.users.models import User, PasswordResetTokens
 
 class UsernameAlreadyExistsError(ModelAlreadyExistsError):
     def __init__(self, headers: dict[str, Any] | None = None) -> None:
@@ -52,3 +52,20 @@ class InvalidTokenError(CoreException):
         headers: dict[str, Any] | None = None
     ) -> None:
         super().__init__(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail, headers=headers)
+
+
+class TokenNotFoundError(ModelFieldNotFoundException):
+    """
+    Исключение, возникающее при отсутствии токена в запросе.
+    """
+    def __init__(
+       self,
+        value: Any,
+        headers: dict[str, Any] | None = None
+    ) -> None:
+        super().__init__(
+            model=PasswordResetTokens,
+            field="hashed_token",
+            value=value,
+            headers=headers,
+        )
