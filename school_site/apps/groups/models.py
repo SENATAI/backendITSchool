@@ -1,5 +1,5 @@
 from uuid import uuid4
-from sqlalchemy import Column, String, Table, ForeignKey
+from sqlalchemy import Column, String, Table, ForeignKey, Date
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import relationship
 from school_site.core.db import Base
@@ -21,6 +21,9 @@ class Group(Base, TimestampMixin):
     name = Column(String, unique=True, nullable=False)
     description = Column(String, nullable=False)
     teacher_id = Column(PostgresUUID(as_uuid=True), ForeignKey("teachers.id", ondelete="SET NULL"), nullable=True)
+
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
 
     students = relationship("Student", secondary=group_student, back_populates="groups")
     teacher = relationship("Teacher", back_populates="groups")
