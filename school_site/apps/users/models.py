@@ -2,9 +2,11 @@ from uuid import uuid4
 from school_site.core.db import Base
 from school_site.core.models import CreationTimeMixin, TimestampMixin
 from school_site.core.enums import UserRole
-from sqlalchemy import Column, ForeignKey, String, Enum, DateTime, Integer, text
+from sqlalchemy import Column, ForeignKey, String, Enum, DateTime, Integer, Sequence
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import relationship
+
+users_seq = Sequence("users_username_seq")
 
 class User(Base, TimestampMixin):
     __tablename__ = "users"
@@ -15,10 +17,8 @@ class User(Base, TimestampMixin):
     patronymic = Column(String, nullable=True)
     username = Column(
         Integer, 
-        unique=True, 
-        index=True, 
-        autoincrement=True,
-        server_default=text("nextval('users_username_seq')")
+        users_seq,
+        server_default=users_seq.next_value()
     )
     phone_number = Column(String(20), index=True, nullable=True)
     email = Column(String(255), index=True, nullable=False)
