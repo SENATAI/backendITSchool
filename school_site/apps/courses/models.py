@@ -1,5 +1,5 @@
 from uuid import uuid4
-from sqlalchemy import Column, String, Integer, Enum, CheckConstraint, ForeignKey, DateTime, Boolean
+from sqlalchemy import Column, String, Integer, Enum, CheckConstraint, ForeignKey, DateTime, Boolean, Float
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from school_site.core.db import Base
 from sqlalchemy.orm import relationship
@@ -12,7 +12,7 @@ class Course(Base, TimestampMixin):
 
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     name = Column(String, unique=True, nullable=False)
-    photo = relationship("Photo", back_populates="course_photo", uselist=False, cascade="all, delete-orphan")
+    photo = relationship("Photo", back_populates="course", uselist=False, cascade="all, delete-orphan")
     photo_id = Column(PostgresUUID(as_uuid=True), ForeignKey("photo_courses.id"))
     description = Column(String, nullable=False)
     age_category = Column(Enum(AgeCategory), nullable=False)
@@ -31,14 +31,14 @@ class Photo(Base, TimestampMixin, FileMixin):
 
     course_id = Column(PostgresUUID(as_uuid=True), ForeignKey("courses.id"), unique=True)
 
-    course = relationship("Course", back_populates="photo_course")
+    course = relationship("Course", back_populates="photo")
 
 
 class Lesson(Base, TimestampMixin):
     __tablename__ = "lessons"
 
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
-    course_id = Column(PostgresUUID(as_uuid=True), ForeignKey("courses.id"), unique=True)
+    course_id = Column(PostgresUUID(as_uuid=True), ForeignKey("courses.id"))
 
     course = relationship("Course", back_populates="lessons")
     groups = relationship("LessonGroup", back_populates="lesson")
@@ -67,6 +67,7 @@ class Comment(Base):
         ForeignKey("teachers.id", ondelete="CASCADE"), 
         nullable=False
     )
+    lesson_student = relationship("LessonStudent", back_populates="comments")
     teacher = relationship("Teacher", back_populates="comments")
 
 
@@ -76,13 +77,7 @@ class Homework(Base):
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     date_created = Column(DateTime, default=timezone.utc)
     file_id = Column(PostgresUUID(as_uuid=True), ForeignKey("file_homeworks.id"))
-    student_id = Column(
-        PostgresUUID(as_uuid=True), 
-        ForeignKey("students.id", ondelete="CASCADE"), 
-        nullable=False
-    )
-
-    file = relationship("FileHomework")
+    file = relationship("FileHomework", back_populates="homework")
 
 
 class FileHomework(FileMixin, Base):
@@ -99,7 +94,7 @@ class LessonGroup(Base):
     lesson_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lessons.id"), primary_key=True)
     group_id = Column(PostgresUUID(as_uuid=True), ForeignKey("groups.id"), primary_key=True)
     holding_date = Column(DateTime, nullable=False)
-    is_opened = Column(PostgresUUID, default=False)
+    is_opened = Column(Boolean, default=False)
     
     lesson = relationship("Lesson", back_populates="groups")
     group = relationship("Group", back_populates="lessons")
@@ -135,9 +130,9 @@ class CourseStudent(Base):
     __tablename__ = "course_students"
     
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
-    student_id = Column(PostgresUUID(as_uuid=True), ForeignKey("students.id"))
+    student_id = Column(PostgresUUID(as_uuid=True))
     course_id = Column(PostgresUUID(as_uuid=True), ForeignKey("courses.id"))
-    progress = Column(PostgresUUID, default=0.0)
+    progress = Column(Float, default=0.0)
     
     student = relationship("Student", back_populates="courses")
     course = relationship("Course", back_populates="students")
