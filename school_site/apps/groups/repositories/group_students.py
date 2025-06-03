@@ -2,14 +2,23 @@ import sqlalchemy as sa
 from uuid import UUID
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
 from ..models import group_student
-from ..schemas import GroupAddStudentsDBSchema
+from ..schemas import (
+    GroupAddStudentsDBSchema,
+    GroupReadStudentsDBSchema,
+    GroupUpdateStudentsDBSchema
+)
 
 
-class GroupStudentsRepositoryProtocol(BaseRepositoryImpl):
+class GroupStudentsRepositoryProtocol(BaseRepositoryImpl[
+    group_student,
+    GroupAddStudentsDBSchema,
+    GroupReadStudentsDBSchema,
+    GroupUpdateStudentsDBSchema
+]):
     async def add_students(self, group_id: UUID, students: GroupAddStudentsDBSchema) -> None:
         ...
 
-    async def delete_student(self, group_id: UUID, student_id: UUID) -> None:
+    async def delete_student(self, group_id: UUID, student_id: UUID) -> bool:
         ...
 
 
@@ -25,7 +34,7 @@ class GroupStudentsRepository(GroupStudentsRepositoryProtocol):
                 )
                 await s.execute(statement)
 
-    async def delete_student(self, group_id: UUID, student_id: UUID) -> None:
+    async def delete_student(self, group_id: UUID, student_id: UUID) -> bool:
         async with self.session as s, s.begin():
             statement = sa.delete(group_student).where(
                 sa.and_(
@@ -33,4 +42,5 @@ class GroupStudentsRepository(GroupStudentsRepositoryProtocol):
                     group_student.c.student_id == student_id
                 )
             )
-            await s.execute(statement) 
+            await s.execute(statement)
+            return True

@@ -1,17 +1,17 @@
 from uuid import UUID
 from school_site.core.use_cases import UseCaseProtocol
-from ..services.students import GroupStudentServiceProtocol
-from ..schemas import GroupAddStudentsSchema
+from ..services.group_students import GroupStudentServiceProtocol
+from ..schemas import GroupAddStudentsSchema, GroupReadStudentsSchema
 
 
-class AddStudentsUseCaseProtocol(UseCaseProtocol[None]):
-    async def __call__(self, group_id: UUID, students: GroupAddStudentsSchema) -> None:
+class AddStudentsUseCaseProtocol(UseCaseProtocol[GroupReadStudentsSchema]):
+    async def __call__(self, group_id: UUID, students: GroupAddStudentsSchema) -> GroupReadStudentsSchema:
         ...
 
 
 class AddStudentsUseCase(AddStudentsUseCaseProtocol):
-    def __init__(self, student_service: GroupStudentServiceProtocol):
-        self.student_service = student_service
-    
-    async def __call__(self, group_id: UUID, students: GroupAddStudentsSchema) -> None:
-        await self.student_service.add_students(group_id, students) 
+    def __init__(self, group_student_service: GroupStudentServiceProtocol):
+        self.group_student_service = group_student_service
+
+    async def __call__(self, group_id: UUID, students: GroupAddStudentsSchema) -> GroupReadStudentsSchema:
+        return await self.group_student_service.add_students(group_id, students) 

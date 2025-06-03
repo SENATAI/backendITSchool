@@ -12,7 +12,7 @@ from school_site.core.enums import UserRole
 from school_site.apps.students.schemas import StudentCreateSchema
 from school_site.apps.students.repositories.students import StudentRepository
 from school_site.apps.users.services.passwords import PasswordService 
-from school_site.apps.groups.services.students import GroupStudentService
+from school_site.apps.groups.services.group_students import GroupStudentService
 from school_site.apps.groups.repositories.group_students import GroupStudentsRepository
 from school_site.apps.students.services.students import StudentService
 from school_site.apps.groups.schemas import GroupAddStudentsSchema

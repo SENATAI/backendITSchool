@@ -4,7 +4,7 @@ from school_site.core.db import get_async_session
 from .repositories.groups import GroupRepositoryProtocol, GroupRepository
 from .repositories.group_students import GroupStudentsRepositoryProtocol, GroupStudentsRepository
 from .services.groups import GroupServiceProtocol, GroupService
-from .services.students import GroupStudentServiceProtocol, GroupStudentService
+from .services.group_students import GroupStudentServiceProtocol, GroupStudentService
 from .use_cases.create_group import CreateGroupUseCaseProtocol, CreateGroupUseCase
 from .use_cases.update_group import UpdateGroupUseCaseProtocol, UpdateGroupUseCase
 from .use_cases.get_group import GetGroupUseCaseProtocol, GetGroupUseCase
@@ -14,6 +14,12 @@ from .use_cases.add_students import AddStudentsUseCaseProtocol, AddStudentsUseCa
 from .use_cases.delete_student import DeleteStudentUseCaseProtocol, DeleteStudentUseCase
 from school_site.apps.students.services.students import StudentServiceProtocol
 from school_site.apps.students.depends import get_students_services
+from .repositories.group_teachers import GroupTeachersRepositoryProtocol, GroupTeachersRepository
+from .services.group_teachers import GroupTeacherServiceProtocol, GroupTeacherService
+from .use_cases.add_teacher import AddTeacherUseCaseProtocol, AddTeacherUseCase
+from .use_cases.delete_teacher import DeleteTeacherUseCaseProtocol, DeleteTeacherUseCase
+from school_site.apps.teachers.services.teachers import TeacherServiceProtocol
+from school_site.apps.teachers.depends import get_teachers_services
 
 def __get_group_repository(
         session: AsyncSession = Depends(get_async_session)
@@ -25,6 +31,11 @@ def __get_group_students_repository(
 ) -> GroupStudentsRepositoryProtocol:
     return GroupStudentsRepository(session)
 
+def __get_group_teachers_repository(
+        session: AsyncSession = Depends(get_async_session)
+) -> GroupTeachersRepositoryProtocol:
+    return GroupTeachersRepository(session)
+
 def get_group_service(
         group_repository: GroupRepositoryProtocol = Depends(__get_group_repository)
 ) -> GroupServiceProtocol:
@@ -32,9 +43,17 @@ def get_group_service(
 
 def get_group_student_service(
     group_students_repository: GroupStudentsRepositoryProtocol = Depends(__get_group_students_repository),
-    student_service: StudentServiceProtocol = Depends(get_students_services)
+    student_service: StudentServiceProtocol = Depends(get_students_services),
+    group_service: GroupServiceProtocol = Depends(get_group_service)
 ) -> GroupStudentServiceProtocol:
-    return GroupStudentService(group_students_repository, student_service)
+    return GroupStudentService(group_students_repository, group_service, student_service)
+
+def get_group_teacher_service(
+    group_teachers_repository: GroupTeachersRepositoryProtocol = Depends(__get_group_teachers_repository),
+    teacher_service: TeacherServiceProtocol = Depends(get_teachers_services),
+    group_service: GroupServiceProtocol = Depends(get_group_service)
+) -> GroupTeacherServiceProtocol:
+    return GroupTeacherService(group_teachers_repository, group_service, teacher_service)
 
 def get_group_create_use_case(
         group_service: GroupServiceProtocol = Depends(get_group_service)
@@ -70,3 +89,13 @@ def get_delete_student_use_case(
         student_service: GroupStudentServiceProtocol = Depends(get_group_student_service)
 ) -> DeleteStudentUseCaseProtocol:
     return DeleteStudentUseCase(student_service)
+
+def get_add_teacher_use_case(
+        teacher_service: GroupTeacherServiceProtocol = Depends(get_group_teacher_service)
+) -> AddTeacherUseCaseProtocol:
+    return AddTeacherUseCase(teacher_service)
+
+def get_delete_teacher_use_case(
+        teacher_service: GroupTeacherServiceProtocol = Depends(get_group_teacher_service)
+) -> DeleteTeacherUseCaseProtocol:
+    return DeleteTeacherUseCase(teacher_service)
