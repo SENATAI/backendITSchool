@@ -14,3 +14,4 @@ class News(Base, TimestampMixin):
     description = Column(String)
     status = Column(SQLEnum(NewsStatus, name="newsstatus", native_enum=True), nullable=True)
 
+__all__ = ["News"]

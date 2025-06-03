@@ -15,3 +15,5 @@ class Teacher(Base, TimestampMixin):
     comments = relationship("Comment", back_populates="teacher")
     user = relationship("User", back_populates="teacher", foreign_keys="[Teacher.user_id]")
     groups = relationship("Group", back_populates="teacher")
+
+__all__ = ["Teacher"]

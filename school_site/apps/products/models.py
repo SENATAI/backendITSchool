@@ -27,3 +27,6 @@ class Photo(Base, TimestampMixin, FileMixin):
     product_id = Column(PostgresUUID(as_uuid=True), ForeignKey("products.id"), unique=True)
 
     product = relationship("Product", back_populates="photo")
+
+
+__all__ = ["Product", "Photo"]
