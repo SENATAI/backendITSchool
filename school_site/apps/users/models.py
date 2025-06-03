@@ -47,3 +47,5 @@ class PasswordResetTokens(Base, CreationTimeMixin):
     user_id = Column(PostgresUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
     token_hash = Column(String(128), nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)
+
+__all__ = ["User", "RefreshToken", "PasswordResetTokens"]

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, HttpUrl
 from typing import Optional
 from uuid import UUID
 from .enums import AgeCategory
@@ -6,6 +6,37 @@ from school_site.core.schemas import (
     CreateBaseModel, UpdateBaseModel, TimestampMixin, PaginationResultSchema
 )
 
+# ====== PHOTO SCHEMAS =======
+
+class PhotoBaseSchema(BaseModel):
+    name: str = Field(..., description="Название фотографии курса")
+    course_id: Optional[UUID] = None
+
+class PhotoCreateSchema(CreateBaseModel, PhotoBaseSchema):
+    pass
+
+class PhotoCreateDBSchema(CreateBaseModel, PhotoBaseSchema):
+    course_id: UUID
+    path: str
+
+class PhotoUpdateSchema(PhotoBaseSchema):
+    id: Optional[UUID] = None
+
+class PhotoUpdateDBSchema(UpdateBaseModel, PhotoBaseSchema):
+    course_id: UUID
+
+class PhotoReadDBSchema(PhotoBaseSchema, TimestampMixin):
+    id: UUID
+    path: str
+
+    class Config:
+        from_attributes = True
+
+class PhotoReadSchema(PhotoBaseSchema, TimestampMixin):
+    id: UUID
+    url: HttpUrl
+
+# --------------------------------
 # ====== COURSE SCHEMAS =======
 
 class CourseBaseSchema(BaseModel):
@@ -17,7 +48,7 @@ class CourseBaseSchema(BaseModel):
 
 
 class CourseCreateSchema(CreateBaseModel, CourseBaseSchema):
-    pass
+    photo: Optional[PhotoCreateSchema] = Field(None, description="Фотография курса (опционально)")
 
 
 class CourseCreateDBSchema(CreateBaseModel, CourseBaseSchema):
@@ -25,7 +56,7 @@ class CourseCreateDBSchema(CreateBaseModel, CourseBaseSchema):
 
 
 class CourseUpdateSchema(UpdateBaseModel, CourseBaseSchema):
-    pass
+    photo: Optional[PhotoUpdateSchema] = None
 
 
 class CourseUpdateDBSchema(UpdateBaseModel, CourseBaseSchema):
@@ -38,6 +69,24 @@ class CourseReadSchema(CourseBaseSchema, TimestampMixin):
 
 class CourseReadDBSchema(CourseBaseSchema, TimestampMixin):
     id: UUID
+
+
+class CourseWithPhotoReadDBSchema(CourseBaseSchema, TimestampMixin):
+    id: UUID
+    photo: Optional[PhotoReadDBSchema] = None
+
+
+class CourseWithPhotoReadSchema(CourseBaseSchema, TimestampMixin):
+    id: UUID
+    photo: Optional[PhotoReadSchema] = None
+
+
+class CourseWithPhotoPaginationResultDBSchema(PaginationResultSchema[CourseWithPhotoReadDBSchema]):
+    pass
+
+
+class CourseWithPhotoPaginationResultSchema(PaginationResultSchema[CourseWithPhotoReadSchema]):
+    pass
 
 
 class CourseReadSimpleSchema(BaseModel):

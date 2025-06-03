@@ -1,0 +1,7 @@
+from .courses.models import *
+from .groups.models import *
+from .news.models import *
+from .products.models import *
+from .students.models import *
+from .teachers.models import *
+from .users.models import *

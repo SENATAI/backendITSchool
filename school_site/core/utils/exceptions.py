@@ -108,3 +108,15 @@ class FileNotFound(CoreException):
         detail = f'File {path} not found.'
         super().__init__(status_code=status.HTTP_404_NOT_FOUND, detail=detail, headers=headers)
         self.path = path
+
+
+class ImageUploadError(CoreException):
+    """
+    Исключение, возникающее при ошибке загрузки изображения.
+    """
+    def __init__(
+        self,
+        detail: str = "Failed to upload image",
+        headers: dict[str, Any] | None = None
+    ) -> None:
+        super().__init__(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=detail, headers=headers)

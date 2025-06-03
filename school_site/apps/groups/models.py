@@ -6,6 +6,7 @@ from school_site.core.db import Base
 from school_site.core.models import TimestampMixin
 import sqlalchemy as sa
 
+
 group_student = Table(
     "group_student",
     Base.metadata,
@@ -27,3 +28,6 @@ class Group(Base, TimestampMixin):
 
     students = relationship("Student", secondary=group_student, back_populates="groups")
     teacher = relationship("Teacher", back_populates="groups")
+    lessons = relationship("LessonGroup", back_populates="group")
+
+__all__ = ["group_student", "Group"]
