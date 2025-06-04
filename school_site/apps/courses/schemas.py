@@ -108,3 +108,56 @@ class CoursePaginationResultSchema(PaginationResultSchema[CourseReadHeadSchema])
 
 class CourseDBPaginationResultSchema(PaginationResultSchema[CourseReadDBHeadSchema]):
     pass
+
+# ====== LESSON SCHEMAS =======
+
+class LessonBaseSchema(BaseModel):
+    teacher_material_id: UUID = Field(..., description="ID материала для учителя")
+    student_material_id: UUID = Field(..., description="ID материала для студента")
+    homework_id: UUID = Field(..., description="ID домашнего задания")
+
+
+class LessonCreateSchema(CreateBaseModel, LessonBaseSchema):
+    pass
+
+
+class LessonCreateDBSchema(CreateBaseModel, LessonBaseSchema):
+    pass
+
+
+class LessonUpdateSchema(LessonBaseSchema):
+    pass
+
+
+class LessonUpdateDBSchema(UpdateBaseModel, LessonBaseSchema):
+    pass
+
+
+class LessonReadSchema(LessonBaseSchema, TimestampMixin):
+    id: UUID
+    course_id: UUID
+
+
+class LessonReadDBSchema(LessonReadSchema):
+    pass
+
+
+class LessonReadSimpleSchema(BaseModel):
+    id: UUID
+    teacher_material_id: UUID
+
+
+class LessonReadHeadSchema(LessonReadSimpleSchema):
+    pass
+
+
+class LessonReadDBHeadSchema(LessonReadSimpleSchema):
+    pass
+
+
+class LessonPaginationResultSchema(PaginationResultSchema[LessonReadHeadSchema]):
+    pass
+
+
+class LessonPaginationResultDBSchema(PaginationResultSchema[LessonReadDBHeadSchema]):
+    pass

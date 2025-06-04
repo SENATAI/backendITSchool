@@ -7,11 +7,21 @@ from .use_cases.update_course import UpdateCourseUseCaseProtocol
 from .use_cases.get_course import GetCourseUseCaseProtocol
 from .use_cases.delete_course import DeleteCourseUseCaseProtocol
 from .use_cases.list_courses import GetListCoursesUseCaseProtocol
+from .use_cases.create_lesson import CreateLessonUseCaseProtocol
+from .use_cases.update_lesson import UpdateLessonUseCaseProtocol
+from .use_cases.get_lesson import GetLessonUseCaseProtocol
+from .use_cases.delete_lesson import DeleteLessonUseCaseProtocol
+from .use_cases.list_lessons import GetListLessonsUseCaseProtocol
 from .depends import (
     get_course_create_use_case, get_course_update_use_case, get_course_get_use_case,
-    get_course_delete_use_case, get_course_get_list_use_case
+    get_course_delete_use_case, get_course_get_list_use_case,
+    get_lesson_create_use_case, get_lesson_update_use_case, get_lesson_get_use_case,
+    get_lesson_delete_use_case, get_lesson_get_list_use_case
 )
-from .schemas import CourseWithPhotoReadSchema, CourseWithPhotoPaginationResultSchema
+from .schemas import (
+    CourseWithPhotoReadSchema, CourseWithPhotoPaginationResultSchema,
+    LessonReadSchema, LessonPaginationResultSchema, LessonCreateSchema, LessonUpdateSchema
+)
 
 router = APIRouter(prefix='/api/courses', tags=['Courses'])
 
@@ -65,4 +75,59 @@ async def delete_course(
     access_token: str = Depends(access_token_schema)
 ):
     await delete(course_id, access_token)
+    return None
+
+
+@router.post("/{course_id}/lessons", response_model=LessonReadSchema, status_code=201)
+async def create_lesson(
+    lesson: LessonCreateSchema,
+    course_id: UUID = Path(...),
+    create: CreateLessonUseCaseProtocol = Depends(get_lesson_create_use_case),
+    access_token: str = Depends(access_token_schema)
+):
+    created_lesson = await create(course_id, lesson, access_token)
+    return created_lesson
+
+
+@router.put("/{course_id}/lessons/{lesson_id}", response_model=LessonReadSchema, status_code=200)
+async def update_lesson(
+    lesson: LessonUpdateSchema,
+    course_id: UUID = Path(...),
+    lesson_id: UUID = Path(...),
+    update: UpdateLessonUseCaseProtocol = Depends(get_lesson_update_use_case),
+    access_token: str = Depends(access_token_schema)
+):
+    updated_lesson = await update(course_id, lesson_id, lesson, access_token)
+    return updated_lesson
+
+
+@router.get("/{course_id}/lessons/{lesson_id}", response_model=LessonReadSchema, status_code=200)
+async def get_lesson(
+    course_id: UUID = Path(...),
+    lesson_id: UUID = Path(...),
+    get: GetLessonUseCaseProtocol = Depends(get_lesson_get_use_case)
+):
+    lesson = await get(course_id, lesson_id)
+    return lesson
+
+
+@router.get("/{course_id}/lessons", response_model=LessonPaginationResultSchema, status_code=200)
+async def list_lessons(
+    course_id: UUID = Path(...),
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0, le=100),
+    list: GetListLessonsUseCaseProtocol = Depends(get_lesson_get_list_use_case)
+):
+    lessons = await list(course_id, limit, offset)
+    return lessons
+
+
+@router.delete("/{course_id}/lessons/{lesson_id}", status_code=204)
+async def delete_lesson(
+    course_id: UUID = Path(...),
+    lesson_id: UUID = Path(...),
+    delete: DeleteLessonUseCaseProtocol = Depends(get_lesson_delete_use_case),
+    access_token: str = Depends(access_token_schema)
+):
+    await delete(course_id, lesson_id, access_token)
     return None
