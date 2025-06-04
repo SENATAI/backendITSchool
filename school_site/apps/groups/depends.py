@@ -1,6 +1,9 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from school_site.core.db import get_async_session
+from school_site.apps.users.services.auth import TokenServiceProtocol
+from school_site.apps.users.depends import get_token_service
+from .services.auth import AuthService, AuthAdminServiceProtocol
 from .repositories.groups import GroupRepositoryProtocol, GroupRepository
 from .repositories.group_students import GroupStudentsRepositoryProtocol, GroupStudentsRepository
 from .services.groups import GroupServiceProtocol, GroupService
@@ -20,6 +23,11 @@ from .use_cases.add_teacher import AddTeacherUseCaseProtocol, AddTeacherUseCase
 from .use_cases.delete_teacher import DeleteTeacherUseCaseProtocol, DeleteTeacherUseCase
 from school_site.apps.teachers.services.teachers import TeacherServiceProtocol
 from school_site.apps.teachers.depends import get_teachers_services
+
+def get_auth_service(
+    token_service: TokenServiceProtocol = Depends(get_token_service)
+) -> AuthAdminServiceProtocol:
+    return AuthService(token_service)
 
 def __get_group_repository(
         session: AsyncSession = Depends(get_async_session)
@@ -56,14 +64,16 @@ def get_group_teacher_service(
     return GroupTeacherService(group_teachers_repository, group_service, teacher_service)
 
 def get_group_create_use_case(
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service),
         group_service: GroupServiceProtocol = Depends(get_group_service)
 ) -> CreateGroupUseCaseProtocol:
-    return CreateGroupUseCase(group_service)
+    return CreateGroupUseCase(auth_service, group_service)
 
 def get_group_update_use_case(
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service),
         group_service: GroupServiceProtocol = Depends(get_group_service)
 ) -> UpdateGroupUseCaseProtocol:
-    return UpdateGroupUseCase(group_service)
+    return UpdateGroupUseCase(auth_service, group_service)
 
 def get_group_get_use_case(
         group_service: GroupServiceProtocol = Depends(get_group_service)
@@ -71,9 +81,10 @@ def get_group_get_use_case(
     return GetGroupUseCase(group_service)
 
 def get_group_delete_use_case(
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service),
         group_service: GroupServiceProtocol = Depends(get_group_service)
 ) -> DeleteGroupUseCaseProtocol:
-    return DeleteGroupUseCase(group_service)
+    return DeleteGroupUseCase(auth_service, group_service)
 
 def get_group_get_list_use_case(
         group_service: GroupServiceProtocol = Depends(get_group_service)
@@ -81,21 +92,25 @@ def get_group_get_list_use_case(
     return GetListGroupsUseCase(group_service)
 
 def get_add_students_use_case(
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service),
         student_service: GroupStudentServiceProtocol = Depends(get_group_student_service)
 ) -> AddStudentsUseCaseProtocol:
-    return AddStudentsUseCase(student_service)
+    return AddStudentsUseCase(auth_service, student_service)
 
 def get_delete_student_use_case(
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service),
         student_service: GroupStudentServiceProtocol = Depends(get_group_student_service)
 ) -> DeleteStudentUseCaseProtocol:
-    return DeleteStudentUseCase(student_service)
+    return DeleteStudentUseCase(auth_service, student_service)
 
 def get_add_teacher_use_case(
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service),
         teacher_service: GroupTeacherServiceProtocol = Depends(get_group_teacher_service)
 ) -> AddTeacherUseCaseProtocol:
-    return AddTeacherUseCase(teacher_service)
+    return AddTeacherUseCase(auth_service, teacher_service)
 
 def get_delete_teacher_use_case(
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service),
         teacher_service: GroupTeacherServiceProtocol = Depends(get_group_teacher_service)
 ) -> DeleteTeacherUseCaseProtocol:
-    return DeleteTeacherUseCase(teacher_service)
+    return DeleteTeacherUseCase(auth_service, teacher_service)
