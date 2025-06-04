@@ -41,13 +41,17 @@ class GroupService(GroupServiceProtocol):
     async def create(self, group: GroupCreateSchema) -> GroupReadSchema:
         group_db = GroupCreateDBSchema(
             name=group.name,
-            description=group.description
+            description=group.description,
+            start_date=group.start_date,
+            end_date=group.end_date
         )
         new_group = await self.group_repository.create(group_db)
         return GroupReadSchema(
             id=new_group.id,
             name=new_group.name,
-            description=new_group.description
+            description=new_group.description,
+            start_date=new_group.start_date,
+            end_date=new_group.end_date
         )
 
     async def get(self, group_id: UUID) -> GroupReadSchema:
@@ -55,20 +59,26 @@ class GroupService(GroupServiceProtocol):
         return GroupReadSchema(
             id=group.id,
             name=group.name,
-            description=group.description
+            description=group.description,
+            start_date=group.start_date,
+            end_date=group.end_date
         )
 
     async def update(self, group_id: UUID, group: GroupUpdateSchema) -> GroupReadSchema:
         group_db = GroupUpdateDBSchema(
             id=group_id,
             name=group.name,
-            description=group.description
+            description=group.description,
+            start_date=group.start_date,
+            end_date=group.end_date
         )
         updated_group = await self.group_repository.update(group_db)
         return GroupReadSchema(
             id=updated_group.id,
             name=updated_group.name,
-            description=updated_group.description
+            description=updated_group.description,
+            start_date=updated_group.start_date,
+            end_date=updated_group.end_date
         )
 
     async def delete(self, group_id: UUID) -> None:

@@ -3,12 +3,15 @@ from uuid import UUID
 from school_site.core.schemas import (
     CreateBaseModel, UpdateBaseModel, TimestampMixin, PaginationResultSchema
 )
+from datetime import date
 
 # ====== GROUP SCHEMAS =======
 
 class GroupBaseSchema(BaseModel):
     name: str = Field(..., description="Название группы")
     description: str = Field(..., description="Описание группы")
+    start_date: date = Field(..., description="Дата начала группы")
+    end_date: date = Field(..., description="Дата окончания группы")
 
 
 class GroupCreateSchema(CreateBaseModel, GroupBaseSchema):

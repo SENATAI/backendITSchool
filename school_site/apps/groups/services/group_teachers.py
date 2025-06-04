@@ -45,6 +45,8 @@ class GroupTeacherService(GroupTeacherServiceProtocol):
                 id=group.id,
                 name=group.name,
                 description=group.description,
+                start_date=group.start_date,
+                end_date=group.end_date,
                 teacher_id=teacher_id
             )
         except IntegrityError as e:

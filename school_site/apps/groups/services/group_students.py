@@ -40,6 +40,8 @@ class GroupStudentService(GroupStudentServiceProtocol):
                 id=group.id,
                 name=group.name,
                 description=group.description,
+                start_date=group.start_date,
+                end_date=group.end_date,
                 students_id=students.students_id
             )
         except IntegrityError as e:
