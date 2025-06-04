@@ -3,10 +3,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from school_site.core.db import get_async_session
 from school_site.core.services.images import FileServiceProtocol
 from school_site.core.depends import get_image_service
+from school_site.apps.users.services.auth import TokenServiceProtocol
+from school_site.apps.users.depends import get_token_service
 from .repositories.photo_courses import PhotoRepositoryProtocol, PhotoRepository
 from .repositories.courses import CourseRepositoryProtocol, CourseRepository
 from .services.photo_courses import PhotoServiceProtocol, PhotoService
 from .services.courses import CourseServiceProtocol, CourseService
+from .services.auth import AuthService, AuthAdminServiceProtocol
 from .use_cases.create_course import CreateCourseUseCaseProtocol, CreateCourseUseCase
 from .use_cases.update_course import UpdateCourseUseCaseProtocol, UpdateCourseUseCase
 from .use_cases.get_course import GetCourseUseCaseProtocol, GetCourseUseCase
@@ -42,15 +45,22 @@ def get_course_service(
 ) -> CourseServiceProtocol:
     return CourseService(course_repository, photo_service)
 
+def get_auth_service(
+    token_service: TokenServiceProtocol = Depends(get_token_service)
+) -> AuthAdminServiceProtocol:
+    return AuthService(token_service)
+
 def get_course_create_use_case(
-        course_service: CourseServiceProtocol = Depends(get_course_service)
+        course_service: CourseServiceProtocol = Depends(get_course_service),
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
 ) -> CreateCourseUseCaseProtocol:
-    return CreateCourseUseCase(course_service)
+    return CreateCourseUseCase(course_service, auth_service)
 
 def get_course_update_use_case(
-        course_service: CourseServiceProtocol = Depends(get_course_service)
+        course_service: CourseServiceProtocol = Depends(get_course_service),
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
 ) -> UpdateCourseUseCaseProtocol:
-    return UpdateCourseUseCase(course_service)
+    return UpdateCourseUseCase(course_service, auth_service)
 
 def get_course_get_use_case(
         course_service: CourseServiceProtocol = Depends(get_course_service)
@@ -58,9 +68,10 @@ def get_course_get_use_case(
     return GetCourseUseCase(course_service)
 
 def get_course_delete_use_case(
-        course_service: CourseServiceProtocol = Depends(get_course_service)
+        course_service: CourseServiceProtocol = Depends(get_course_service),
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
 ) -> DeleteCourseUseCaseProtocol:
-    return DeleteCourseUseCase(course_service)
+    return DeleteCourseUseCase(course_service, auth_service)
 
 def get_course_get_list_use_case(
         course_service: CourseServiceProtocol = Depends(get_course_service)

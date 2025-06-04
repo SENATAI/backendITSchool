@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Path, Query, UploadFile, File, Form
+from school_site.apps.users.depends import access_token_schema
 from uuid import UUID
 from typing import Optional
 from .use_cases.create_course import CreateCourseUseCaseProtocol
@@ -19,9 +20,10 @@ router = APIRouter(prefix='/api/courses', tags=['Courses'])
 async def create_course(
     course_data: str = Form(...),
     create: CreateCourseUseCaseProtocol = Depends(get_course_create_use_case),
-    image: Optional[UploadFile] = File(None)
+    image: Optional[UploadFile] = File(None),
+    access_token: str = Depends(access_token_schema)
 ):
-    created_course = await create(course_data, image)
+    created_course = await create(course_data, image, access_token)
     return created_course
 
 
@@ -30,9 +32,10 @@ async def update_course(
     course_data: str = Form(...),
     course_id: UUID = Path(...),
     update: UpdateCourseUseCaseProtocol = Depends(get_course_update_use_case),
-    image: Optional[UploadFile] = File(None)
+    image: Optional[UploadFile] = File(None),
+    access_token: str = Depends(access_token_schema)
 ):
-    updated_course = await update(course_id, course_data, image)
+    updated_course = await update(course_id, course_data, image, access_token)
     return updated_course
 
 
@@ -58,7 +61,8 @@ async def list_courses(
 @router.delete("/{course_id}", status_code=204)
 async def delete_course(
     course_id: UUID = Path(...),
-    delete: DeleteCourseUseCaseProtocol = Depends(get_course_delete_use_case)
+    delete: DeleteCourseUseCaseProtocol = Depends(get_course_delete_use_case),
+    access_token: str = Depends(access_token_schema)
 ):
-    await delete(course_id)
+    await delete(course_id, access_token)
     return None
