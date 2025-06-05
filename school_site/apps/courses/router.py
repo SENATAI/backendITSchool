@@ -12,15 +12,17 @@ from .use_cases.update_lesson import UpdateLessonUseCaseProtocol
 from .use_cases.get_lesson import GetLessonUseCaseProtocol
 from .use_cases.delete_lesson import DeleteLessonUseCaseProtocol
 from .use_cases.list_lessons import GetListLessonsUseCaseProtocol
+from .use_cases.create_material import CreateLessonHTMLFileUseCaseProtocol
 from .depends import (
     get_course_create_use_case, get_course_update_use_case, get_course_get_use_case,
     get_course_delete_use_case, get_course_get_list_use_case,
     get_lesson_create_use_case, get_lesson_update_use_case, get_lesson_get_use_case,
-    get_lesson_delete_use_case, get_lesson_get_list_use_case
+    get_lesson_delete_use_case, get_lesson_get_list_use_case, get_material_create_use_case
 )
 from .schemas import (
     CourseWithPhotoReadSchema, CourseWithPhotoPaginationResultSchema,
-    LessonReadSchema, LessonPaginationResultSchema, LessonCreateSchema, LessonUpdateSchema
+    LessonReadSchema, LessonPaginationResultSchema, LessonCreateSchema, LessonUpdateSchema,
+    LessonWithMaterialsCreateSchema, LessonHTMLCreateSchema, LessonWithMaterialsReadSchema
 )
 
 router = APIRouter(prefix='/api/courses', tags=['Courses'])
@@ -131,3 +133,40 @@ async def delete_lesson(
 ):
     await delete(course_id, lesson_id, access_token)
     return None
+
+
+@router.post("/{course_id}/lessons-with-materials", response_model=LessonWithMaterialsReadSchema, status_code=201)
+async def create_lesson_with_materials(
+    data: LessonWithMaterialsCreateSchema,
+    course_id: UUID = Path(...),
+    lesson_create_use_case: CreateLessonUseCaseProtocol = Depends(get_lesson_create_use_case),
+    material_create_use_case: CreateLessonHTMLFileUseCaseProtocol = Depends(get_material_create_use_case),
+    access_token: str = Depends(access_token_schema)
+):
+    teacher_material = LessonHTMLCreateSchema(name=data.teacher_material_name, html_text=data.teacher_material_text)
+    student_material = LessonHTMLCreateSchema(name=data.student_material_name, html_text=data.student_material_text)
+    homework = LessonHTMLCreateSchema(name=data.homework_material_name, html_text=data.homework_material_text)
+    
+    created_teacher_material= await material_create_use_case(teacher_material, access_token)
+    created_student_material = await material_create_use_case(student_material, access_token)
+    created_homework = await  material_create_use_case(homework, access_token)
+
+    lesson = LessonCreateSchema(name=data.name, teacher_material_id=created_teacher_material.id, 
+                                student_material_id=created_student_material.id, homework_id=created_homework.id)
+
+    created_lesson = await lesson_create_use_case(
+        course_id,
+        lesson,
+        access_token
+    )
+    return LessonWithMaterialsReadSchema(
+        id=created_lesson.id, 
+        course_id=created_lesson.course_id,
+        name=created_lesson.name, 
+        teacher_material_id=created_teacher_material.id,
+        student_material_id=created_student_material.id, 
+        homework_id=created_homework.id,
+        teacher_material_url=created_teacher_material.url,
+        student_material_url=created_student_material.url,
+        homework_material_url=created_homework.url
+        )

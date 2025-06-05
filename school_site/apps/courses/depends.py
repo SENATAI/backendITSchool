@@ -1,16 +1,18 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from school_site.core.db import get_async_session
-from school_site.core.services.images import FileServiceProtocol
+from school_site.core.services.files import FileServiceProtocol
 from school_site.core.depends import get_image_service
 from school_site.apps.users.services.auth import TokenServiceProtocol
 from school_site.apps.users.depends import get_token_service
 from .repositories.photo_courses import PhotoRepositoryProtocol, PhotoRepository
 from .repositories.courses import CourseRepositoryProtocol, CourseRepository
 from .repositories.lessons import LessonRepositoryProtocol, LessonRepository
+from .repositories.lesson_html_files import LessonHTMLRepositoryProtocol, LessonHTMLRepository
 from .services.photo_courses import PhotoServiceProtocol, PhotoService
 from .services.courses import CourseServiceProtocol, CourseService
 from .services.lessons import LessonServiceProtocol, LessonService
+from .services.lesson_html_files import LessonHTMLServiceProtocol, LessonHTMLService
 from .services.auth import AuthService, AuthAdminServiceProtocol
 from .use_cases.create_course import CreateCourseUseCaseProtocol, CreateCourseUseCase
 from .use_cases.update_course import UpdateCourseUseCaseProtocol, UpdateCourseUseCase
@@ -22,11 +24,12 @@ from .use_cases.update_lesson import UpdateLessonUseCaseProtocol, UpdateLessonUs
 from .use_cases.get_lesson import GetLessonUseCaseProtocol, GetLessonUseCase
 from .use_cases.delete_lesson import DeleteLessonUseCaseProtocol, DeleteLessonUseCase
 from .use_cases.list_lessons import GetListLessonsUseCaseProtocol, GetListLessonsUseCase
+from .use_cases.create_material import CreateLessonHTMLFileUseCaseProtocol, CreateLessonHTMLFileUseCase
 
 
-def get_product_image_service() -> FileServiceProtocol:
+def get_course_file_service() -> FileServiceProtocol:
     """Зависимость для работы с изображениями продуктов."""
-    return get_image_service("course-images")
+    return get_image_service("course-files")
 
 def __get_photo_repository(
         session: AsyncSession = Depends(get_async_session)
@@ -45,10 +48,15 @@ def __get_lesson_repository(
 ) -> LessonRepositoryProtocol:
     return LessonRepository(session)
 
+def __get_lesson_html_file_repository(
+        session: AsyncSession = Depends(get_async_session)
+) -> LessonHTMLRepositoryProtocol:
+    return LessonHTMLRepository(session)
+
 
 def get_photo_service(
         photo_repository: PhotoRepositoryProtocol = Depends(__get_photo_repository),
-        image_service: FileServiceProtocol = Depends(get_product_image_service)
+        image_service: FileServiceProtocol = Depends(get_course_file_service)
 ) -> PhotoServiceProtocol:
     return PhotoService(photo_repository, image_service)
 
@@ -123,3 +131,14 @@ def get_lesson_get_list_use_case(
         lesson_service: LessonServiceProtocol = Depends(get_lesson_service)
 ) -> GetListLessonsUseCaseProtocol:
     return GetListLessonsUseCase(lesson_service)
+
+def get_lesson_html_service(
+        lesson_html_repository = Depends(__get_lesson_html_file_repository),
+        file_service: FileServiceProtocol = Depends(get_course_file_service)
+                            ) -> LessonHTMLServiceProtocol:
+    return LessonHTMLService(lesson_html_repository, file_service)
+
+def get_material_create_use_case(lesson_service: LessonHTMLServiceProtocol = Depends(get_lesson_html_service),
+                                 auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
+                                 ) -> CreateLessonHTMLFileUseCaseProtocol:
+    return CreateLessonHTMLFileUseCase(lesson_service, auth_service)

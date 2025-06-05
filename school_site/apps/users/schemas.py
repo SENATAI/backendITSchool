@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, field_validator
 import re
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, date
 from school_site.core.schemas import CreateBaseModel, UpdateBaseModel
 from school_site.core.enums import UserRole
 from .exceptions import InvalidTokenError
@@ -40,6 +40,7 @@ class UserInfoMixin(BaseModel):
     surname: Optional[str]
     patronymic: Optional[str]
     email: EmailStr
+    birth_date: date
     role: UserRole
 
 

@@ -2,7 +2,7 @@ from uuid import uuid4
 from school_site.core.db import Base
 from school_site.core.models import CreationTimeMixin, TimestampMixin
 from school_site.core.enums import UserRole
-from sqlalchemy import Column, ForeignKey, String, Enum, DateTime, Integer, Sequence
+from sqlalchemy import Column, ForeignKey, String, Enum, DateTime, Integer, Sequence, Date
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import relationship
 
@@ -24,7 +24,7 @@ class User(Base, TimestampMixin):
     email = Column(String(255), index=True, nullable=False)
     password_hash = Column(String)
     role = Column(Enum(UserRole))
-    
+    birth_date = Column(Date, nullable=False)
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
     student = relationship("Student", back_populates="user", uselist=False)
     teacher = relationship("Teacher", back_populates="user", uselist=False)
