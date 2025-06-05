@@ -65,6 +65,7 @@ class Lesson(Base, TimestampMixin):
 
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     course_id = Column(PostgresUUID(as_uuid=True), ForeignKey("courses.id"))
+    name = Column(String, nullable=False)
     teacher_material_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"))
     student_material_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"))
     homework_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"))

@@ -10,7 +10,7 @@ from ..schemas import (
     PhotoReadSchema
 )
 from ..repositories.photo_courses import PhotoRepositoryProtocol
-from ....core.services.images import FileServiceProtocol
+from ....core.services.files import FileServiceProtocol
 from school_site.core.utils.exceptions import ImageUploadError
 
 logger = logging.getLogger(__name__)

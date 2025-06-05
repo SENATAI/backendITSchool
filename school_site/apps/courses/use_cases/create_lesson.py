@@ -1,5 +1,4 @@
 from uuid import UUID
-from typing import Protocol
 from school_site.core.use_cases import UseCaseProtocol
 from ..services.lessons import LessonServiceProtocol
 from ..services.auth import AuthAdminServiceProtocol

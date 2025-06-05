@@ -5,6 +5,8 @@ from school_site.core.schemas import PaginationSchema
 from ..repositories.lessons import LessonRepositoryProtocol
 from ..schemas import (
     LessonCreateSchema,
+    LessonCreateDBSchema,
+    LessonUpdateDBSchema,
     LessonUpdateSchema,
     LessonReadSchema,
     LessonPaginationResultSchema
@@ -35,13 +37,27 @@ class LessonService(LessonServiceProtocol):
         self.lesson_repository = lesson_repository
 
     async def create(self, course_id: UUID, lesson: LessonCreateSchema) -> LessonReadSchema:
-        return await self.lesson_repository.create(lesson)
+        db_lesson_create = LessonCreateDBSchema(
+            name=lesson.name,
+            teacher_material_id=lesson.teacher_material_id,
+            student_material_id=lesson.student_material_id,
+            homework_id=lesson.homework_id,
+            course_id=course_id
+        )
+        return await self.lesson_repository.create(db_lesson_create)
 
     async def get(self, course_id: UUID, lesson_id: UUID) -> LessonReadSchema:
         return await self.lesson_repository.get(lesson_id)
 
     async def update(self, course_id: UUID, lesson_id: UUID, lesson: LessonUpdateSchema) -> LessonReadSchema:
-        return await self.lesson_repository.update(lesson_id, lesson)
+        db_lesson_update = LessonUpdateDBSchema(
+            name=lesson.name,
+            teacher_material_id=lesson.teacher_material_id,
+            student_material_id=lesson.student_material_id,
+            homework_id=lesson.homework_id,
+            course_id=course_id
+        )
+        return await self.lesson_repository.update(db_lesson_update)
 
     async def delete(self, course_id: UUID, lesson_id: UUID) -> None:
         await self.lesson_repository.delete(lesson_id)

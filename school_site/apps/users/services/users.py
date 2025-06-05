@@ -8,7 +8,7 @@ from school_site.apps.users.schemas import(
 from school_site.apps.users.repositories.users import UserRepositoryProtocol
 from school_site.apps.users.services.passwords import PasswordServiceProtocol
 from school_site.apps.users.exceptions import (
-    UsernameAlreadyExistsError, InvalidCredentialsError, UsernameNotExistsExceptions
+    InvalidCredentialsError, UsernameNotExistsExceptions
 )
 from ..schemas import PasswordSchema
 
@@ -75,7 +75,8 @@ class UserService(UserServiceProtocol):
             email=user.email,
             phone_number=user.phone_number,
             password_hash=password_hash,
-            role=user.role
+            role=user.role,
+            birth_date=user.birth_date
         )
         new_user = await self.user_repository.create(user_create)
         
@@ -89,7 +90,8 @@ class UserService(UserServiceProtocol):
             patronymic=user.patronymic,
             email=user.email,
             phone_number=user.phone_number,
-            role=user.role
+            role=user.role,
+            birth_date=user.birth_date
         )
         updated_user = await self.user_repository.update(db_user)
         return UserReadSchema(**updated_user.model_dump(exclude={'password_hash'}))
@@ -109,6 +111,7 @@ class UserService(UserServiceProtocol):
             email=update_data.email,
             phone_number=update_data.phone_number,
             role=update_data.role,
+            birth_date=update_data.birth_date
         )
     
         updated_user = await self.user_repository.update(db_user)
@@ -151,6 +154,10 @@ class UserService(UserServiceProtocol):
         logger.info(f"Authenticating user: {username}")
         
         user = await self._get_user_by_username(username)
+
+        if not user:
+            logger.error(f"User with username {username} not found")
+            raise UsernameNotExistsExceptions(username)
         
         if not self.password_service.verify_password(password, user.password_hash):
             logger.error(f"Authentication failed: Invalid password for user {username}")

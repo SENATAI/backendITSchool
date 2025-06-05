@@ -112,6 +112,7 @@ class CourseDBPaginationResultSchema(PaginationResultSchema[CourseReadDBHeadSche
 # ====== LESSON SCHEMAS =======
 
 class LessonBaseSchema(BaseModel):
+    name: str
     teacher_material_id: UUID = Field(..., description="ID материала для учителя")
     student_material_id: UUID = Field(..., description="ID материала для студента")
     homework_id: UUID = Field(..., description="ID домашнего задания")
@@ -122,7 +123,7 @@ class LessonCreateSchema(CreateBaseModel, LessonBaseSchema):
 
 
 class LessonCreateDBSchema(CreateBaseModel, LessonBaseSchema):
-    pass
+    course_id: UUID
 
 
 class LessonUpdateSchema(LessonBaseSchema):
@@ -130,7 +131,7 @@ class LessonUpdateSchema(LessonBaseSchema):
 
 
 class LessonUpdateDBSchema(UpdateBaseModel, LessonBaseSchema):
-    pass
+    course_id: UUID
 
 
 class LessonReadSchema(LessonBaseSchema, TimestampMixin):
@@ -144,7 +145,8 @@ class LessonReadDBSchema(LessonReadSchema):
 
 class LessonReadSimpleSchema(BaseModel):
     id: UUID
-    teacher_material_id: UUID
+    name: str
+    course_id: UUID
 
 
 class LessonReadHeadSchema(LessonReadSimpleSchema):
@@ -161,3 +163,48 @@ class LessonPaginationResultSchema(PaginationResultSchema[LessonReadHeadSchema])
 
 class LessonPaginationResultDBSchema(PaginationResultSchema[LessonReadDBHeadSchema]):
     pass
+
+
+class LessonWithMaterialsCreateSchema(CreateBaseModel):
+    name: str
+    teacher_material_text: str
+    teacher_material_name: str
+    student_material_text: str 
+    student_material_name: str
+    homework_material_text: str
+    homework_material_name: str
+
+class LessonWithMaterialsReadSchema(LessonReadSchema, LessonBaseSchema):
+    teacher_material_url: HttpUrl
+    student_material_url: HttpUrl 
+    homework_material_url: HttpUrl
+
+# ====== LESSON HTML FILES SCHEMAS =======
+
+class LessonHTMLBaseSchema(BaseModel):
+    name: str
+
+class LessonHTMLCreateSchema(CreateBaseModel, LessonHTMLBaseSchema):
+    html_text: str
+
+class LessonHTMLCreateDBSchema(CreateBaseModel, LessonHTMLBaseSchema):
+    path: str
+
+class LessonHTMLUpdateSchema(CreateBaseModel, LessonHTMLBaseSchema):
+    html_text: str
+
+class LessonHTMLUpdateDBSchema(CreateBaseModel, LessonHTMLBaseSchema):
+    pass
+
+
+class LessonHTMLReadSchema(LessonHTMLBaseSchema, TimestampMixin):
+    id: UUID
+    url: HttpUrl
+
+class LessonHTMLReadDBSchema(LessonHTMLBaseSchema, TimestampMixin):
+    id: UUID
+    path: str
+
+    class Config:
+        from_attributes = True
+
