@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Path, Query
 from uuid import UUID
+from school_site.apps.users.depends import access_token_schema
 from .use_cases.create_group import CreateGroupUseCaseProtocol
 from .use_cases.update_group import UpdateGroupUseCaseProtocol
 from .use_cases.get_group import GetGroupUseCaseProtocol
@@ -17,7 +18,7 @@ from .depends import (
 )
 from .schemas import (
     GroupReadSchema, GroupPaginationResultSchema, GroupCreateSchema, 
-    GroupUpdateSchema, GroupAddStudentsSchema, GroupAddTeacherSchema, GroupReadStudentsSchema, GroupReadTeacherSchema
+    GroupUpdateSchema, GroupAddStudentsSchema, GroupReadStudentsSchema, GroupReadTeacherSchema
 )
 
 router = APIRouter(prefix='/api/groups', tags=['Groups'])
@@ -26,9 +27,10 @@ router = APIRouter(prefix='/api/groups', tags=['Groups'])
 @router.post("/", response_model=GroupReadSchema, status_code=201)
 async def create_group(
     group_data: GroupCreateSchema,
+    access_token: str = Depends(access_token_schema),
     create: CreateGroupUseCaseProtocol = Depends(get_group_create_use_case)
 ):
-    created_group = await create(group_data)
+    created_group = await create(access_token, group_data)
     return created_group
 
 
@@ -36,9 +38,10 @@ async def create_group(
 async def update_group(
     group_data: GroupUpdateSchema,
     group_id: UUID = Path(...),
+    access_token: str = Depends(access_token_schema),
     update: UpdateGroupUseCaseProtocol = Depends(get_group_update_use_case)
 ):
-    updated_group = await update(group_id, group_data)
+    updated_group = await update(access_token, group_id, group_data)
     return updated_group
 
 
@@ -64,9 +67,10 @@ async def list_groups(
 @router.delete("/{group_id}", status_code=204)
 async def delete_group(
     group_id: UUID = Path(...),
+    access_token: str = Depends(access_token_schema),
     delete: DeleteGroupUseCaseProtocol = Depends(get_group_delete_use_case)
 ):
-    await delete(group_id)
+    await delete(access_token, group_id)
     return None
 
 
@@ -74,9 +78,10 @@ async def delete_group(
 async def add_students(
     students: GroupAddStudentsSchema,
     group_id: UUID = Path(...),
+    access_token: str = Depends(access_token_schema),
     add: AddStudentsUseCaseProtocol = Depends(get_add_students_use_case)
 ):
-    updated_group = await add(group_id, students)
+    updated_group = await add(access_token, group_id, students)
     return updated_group
 
 
@@ -84,9 +89,10 @@ async def add_students(
 async def delete_student(
     group_id: UUID = Path(...),
     student_id: UUID = Path(...),
+    access_token: str = Depends(access_token_schema),
     delete: DeleteStudentUseCaseProtocol = Depends(get_delete_student_use_case)
 ):
-    await delete(group_id, student_id)
+    await delete(access_token, group_id, student_id)
     return None
 
 
@@ -94,9 +100,10 @@ async def delete_student(
 async def add_teacher(
     group_id: UUID = Path(...),
     teacher_id: UUID = Path(...),
+    access_token: str = Depends(access_token_schema),
     add: AddTeacherUseCaseProtocol = Depends(get_add_teacher_use_case)
 ):
-    updated_group = await add(group_id, teacher_id)
+    updated_group = await add(access_token, group_id, teacher_id)
     return updated_group
 
 
@@ -104,7 +111,8 @@ async def add_teacher(
 async def delete_teacher(
     group_id: UUID = Path(...),
     teacher_id: UUID = Path(...),
+    access_token: str = Depends(access_token_schema),
     delete: DeleteTeacherUseCaseProtocol = Depends(get_delete_teacher_use_case)
 ):
-    await delete(group_id, teacher_id)
+    await delete(access_token, group_id, teacher_id)
     return None

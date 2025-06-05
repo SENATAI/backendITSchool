@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 from uuid import UUID
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
-from ..models import group_student
+from ..models import GroupStudent
 from ..schemas import (
     GroupAddStudentsDBSchema,
     GroupReadStudentsDBSchema,
@@ -10,7 +10,7 @@ from ..schemas import (
 
 
 class GroupStudentsRepositoryProtocol(BaseRepositoryImpl[
-    group_student,
+    GroupStudent,
     GroupAddStudentsDBSchema,
     GroupReadStudentsDBSchema,
     GroupUpdateStudentsDBSchema
@@ -26,7 +26,7 @@ class GroupStudentsRepository(GroupStudentsRepositoryProtocol):
     async def add_students(self, group_id: UUID, students: GroupAddStudentsDBSchema) -> None:
         async with self.session as s, s.begin():
             for student_id in students.students_id:
-                statement = sa.dialects.postgresql.insert(group_student).values(
+                statement = sa.dialects.postgresql.insert(GroupStudent).values(
                     group_id=group_id,
                     student_id=student_id
                 ).on_conflict_do_nothing(
@@ -36,11 +36,10 @@ class GroupStudentsRepository(GroupStudentsRepositoryProtocol):
 
     async def delete_student(self, group_id: UUID, student_id: UUID) -> bool:
         async with self.session as s, s.begin():
-            statement = sa.delete(group_student).where(
-                sa.and_(
-                    group_student.c.group_id == group_id,
-                    group_student.c.student_id == student_id
+            await s.execute(
+                sa.delete(GroupStudent).where(
+                    GroupStudent.group_id == group_id,
+                    GroupStudent.student_id == student_id
                 )
             )
-            await s.execute(statement)
             return True
