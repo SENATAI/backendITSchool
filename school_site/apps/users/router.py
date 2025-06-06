@@ -3,7 +3,7 @@ from typing import List, Optional
 from uuid import UUID
 from .schemas import (
     LoginRequestSchema, UserReadSchema, PasswordChangeSchema, RegisterRequestSchema, 
-    UserUpdateRequestSchema, UserResetSchema, ResetPasswordRequest
+    UserUpdateRequestSchema, UserResetSchema, ResetPasswordRequest, PaginationResultSchema
 )
 from .use_cases.login import LoginUseCaseProtocol
 from .use_cases.refresh import RefreshUseCaseProtocol
@@ -104,7 +104,7 @@ async def create_user(
     return await create_user_use_case(access_token, user_data)
     
 
-@router.get("/", response_model=List[UserReadSchema], status_code=200)
+@router.get("/", response_model=PaginationResultSchema[UserReadSchema], status_code=200)
 async def get_all_users(
     access_token: str = Depends(access_token_schema),
     role: Optional[UserRole] = Query(None),

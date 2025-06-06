@@ -6,6 +6,8 @@ from school_site.apps.users.services.users import UserServiceProtocol
 from school_site.apps.users.services.auth import AuthServiceProtocol
 from school_site.core.enums import UserRole
 from school_site.core.utils.exceptions import PermissionDeniedError
+from school_site.apps.users.services.permissions import permission_service
+
 
 class UpdateUserUseCaseProtocol(UseCaseProtocol[UserReadSchema]):
     async def __call__(self: Self, url_user_id: UUID, user_data: UserUpdateRequestSchema) -> UserReadSchema:
@@ -20,9 +22,13 @@ class UpdateUserUseCase(UpdateUserUseCaseProtocol):
         current_user = await self.auth_service.get_admin_user(access_token)
         target_user = await self.user_service.update_user_by_router(url_user_id, user_data)
 
+        permission_service.check(
+            "update_user",
+            current_user=current_user,
+            target_user=target_user
+        )
+        
         if current_user.role == UserRole.ADMIN:
-            if target_user.role != UserRole.STUDENT:
-                raise PermissionDeniedError()
             user_data.role = UserRole.STUDENT
         
         return await self.user_service.update_user_by_router(url_user_id, user_data)

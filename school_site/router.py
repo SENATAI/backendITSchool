@@ -9,6 +9,7 @@ from school_site.apps.products.router import router as product_router
 from school_site.apps.students.router import router as student_router
 from school_site.apps.courses.router import router as courses_router
 from school_site.apps.news.router import router as news_router
+from school_site.apps.notification.router import router as notification_router
 
 
 def apply_routes(app: FastAPI) -> FastAPI:
@@ -21,5 +22,6 @@ def apply_routes(app: FastAPI) -> FastAPI:
     app.include_router(student_router)
     app.include_router(courses_router)
     app.include_router(news_router)
+    app.include_router(notification_router)
 
     return app

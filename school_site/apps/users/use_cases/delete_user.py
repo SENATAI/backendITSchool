@@ -6,6 +6,7 @@ from school_site.apps.users.services.users import UserServiceProtocol
 from school_site.apps.users.services.auth import AuthServiceProtocol
 from school_site.core.utils.exceptions import PermissionDeniedError
 from school_site.core.enums import UserRole
+from school_site.apps.users.services.permissions import permission_service
 
 class DeleteUserUseCaseProtocol(UseCaseProtocol[bool]):
     async def __call__(self: Self, user_id: UUID) -> bool:
@@ -20,6 +21,9 @@ class DeleteUserUseCase(DeleteUserUseCaseProtocol):
         current_user = await self.auth_service.get_admin_user(access_token)
         target_user = await self.user_service.get_user_by_id(user_id)
 
-        if current_user.role == UserRole.ADMIN and target_user.role != UserRole.STUDENT:
-            raise PermissionDeniedError()
+        permission_service.check(
+            "delete_user",
+            current_user=current_user,
+            target_user=target_user
+        )
         return await self.user_service.delete_user(user_id)

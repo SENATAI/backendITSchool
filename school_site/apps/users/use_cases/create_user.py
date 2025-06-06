@@ -5,7 +5,7 @@ from school_site.apps.users.services.users import UserServiceProtocol
 from school_site.apps.users.services.auth import AuthServiceProtocol
 from school_site.core.enums import UserRole
 from school_site.core.utils.exceptions import PermissionDeniedError
-
+from school_site.apps.users.services.permissions import permission_service
 
 
 class CreateUserUseCaseProtocol(UseCaseProtocol[UserReadSchema]):
@@ -19,7 +19,10 @@ class CreateUserUseCase(CreateUserUseCaseProtocol):
 
     async def __call__(self: Self, acess_token: str, user_data: RegisterRequestSchema) -> UserReadSchema:
         current_user = await self.auth_service.get_admin_user(acess_token)
-        if current_user.role == UserRole.ADMIN and user_data.role != UserRole.STUDENT:
-            raise PermissionDeniedError()
+        permission_service.check(
+            "create_user",
+            current_user=current_user,
+            user_data=user_data
+        )
         
         return await self.user_service.create_user(user_data)
