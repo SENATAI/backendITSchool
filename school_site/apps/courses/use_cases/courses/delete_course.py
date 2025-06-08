@@ -1,7 +1,7 @@
 from uuid import UUID
 from school_site.core.use_cases import UseCaseProtocol
-from ..services.courses import CourseServiceProtocol
-from ..services.auth import AuthAdminServiceProtocol
+from school_site.apps.courses.services.courses import CourseServiceProtocol
+from school_site.apps.courses.services.auth import AuthAdminServiceProtocol
 
 class DeleteCourseUseCaseProtocol(UseCaseProtocol[None]):
     async def __call__(self, course_id: UUID, access_token: str) -> None:

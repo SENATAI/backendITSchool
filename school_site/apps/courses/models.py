@@ -83,7 +83,7 @@ class LessonHtmlFile(Base, TimestampMixin, FileMixin):
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
 
 
-class FileHomework(FileMixin, Base):
+class FileHomework(Base, TimestampMixin, FileMixin):
     __tablename__ = "file_homeworks"
 
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)

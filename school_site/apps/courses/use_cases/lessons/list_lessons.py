@@ -1,7 +1,7 @@
 from uuid import UUID
 from school_site.core.use_cases import UseCaseProtocol
-from ..services.lessons import LessonServiceProtocol
-from ..schemas import LessonPaginationResultSchema
+from school_site.apps.courses.services.lessons import LessonServiceProtocol
+from school_site.apps.courses.schemas import LessonPaginationResultSchema
 from school_site.core.schemas import PaginationSchema
 
 class GetListLessonsUseCaseProtocol(UseCaseProtocol[LessonPaginationResultSchema]):

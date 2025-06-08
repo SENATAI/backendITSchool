@@ -1,8 +1,8 @@
 from typing import Self
 from school_site.core.use_cases import UseCaseProtocol
-from ..services.lesson_html_files import LessonHTMLServiceProtocol
-from ..services.auth import AuthAdminServiceProtocol
-from ..schemas import LessonHTMLCreateSchema, LessonHTMLReadSchema
+from school_site.apps.courses.services.lesson_html_files import LessonHTMLServiceProtocol
+from school_site.apps.courses.services.auth import AuthAdminServiceProtocol
+from school_site.apps.courses.schemas import LessonHTMLCreateSchema, LessonHTMLReadSchema
 
 class CreateLessonHTMLFileUseCaseProtocol(UseCaseProtocol[LessonHTMLReadSchema]):
     async def __call__(self: Self, lesson: LessonHTMLCreateSchema, access_token: str) -> LessonHTMLReadSchema:

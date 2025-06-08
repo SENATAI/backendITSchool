@@ -1,0 +1,61 @@
+import logging
+from typing import Protocol
+from uuid import UUID
+from ..repositories.lesson_group import LessonGroupRepositoryProtocol
+from ..schemas import (
+    LessonGroupCreateSchema,
+    LessonGroupUpdateSchema,
+    LessonGroupReadSchema,
+    LessonGroupUpdateDBSchema
+)
+
+logger = logging.getLogger(__name__)
+
+
+class LessonGroupServiceProtocol(Protocol):
+    async def create(self, lesson_group: LessonGroupCreateSchema) -> LessonGroupReadSchema:
+        ...
+
+    async def get(self, lesson_group_id: UUID) -> LessonGroupReadSchema:
+        ...
+
+    async def update(self, lesson_group_id: UUID, LessonGroup: LessonGroupUpdateSchema) -> LessonGroupReadSchema:
+        ...
+
+    async def delete(self, lesson_group_id: UUID) -> None:
+        ...
+
+    async def bulk_create(self, lesson_groups: list[LessonGroupCreateSchema]) -> list[LessonGroupReadSchema]:
+        ...
+
+
+class LessonGroupService(LessonGroupServiceProtocol):
+    def __init__(self, lesson_group_repository: LessonGroupRepositoryProtocol):
+        self.lesson_group_repository = lesson_group_repository
+
+    async def create(self, lesson_group: LessonGroupCreateSchema) -> LessonGroupReadSchema:
+        logger.info("Creating LessonGroup")
+        return await self.lesson_group_repository.create(lesson_group)
+
+    async def bulk_create(self, lesson_groups: list[LessonGroupCreateSchema]) -> list[LessonGroupReadSchema]:
+        logger.info("Bulk creating LessonGroup")
+        return await self.lesson_group_repository.bulk_create(lesson_groups)
+
+    async def get(self, lesson_group_id: UUID) -> LessonGroupReadSchema:
+        logger.info(f"Fetching LessonGroup with ID: {lesson_group_id}")
+        return await self.lesson_group_repository.get(lesson_group_id)
+
+    async def update(self, lesson_group_id: UUID, lesson_group: LessonGroupUpdateSchema) -> LessonGroupReadSchema:
+        logger.info(f"Updating LessonGroup with ID: {lesson_group_id}")
+        db_lesson_group = LessonGroupUpdateDBSchema(
+            id=lesson_group_id,
+            lesson_id=lesson_group.lesson_id,
+            group_id=lesson_group.group_id,
+            holding_date=lesson_group.holding_date,
+            is_opened=lesson_group.holding_date
+        )
+        return await self.lesson_group_repository.update(db_lesson_group)
+
+    async def delete(self, lesson_group_id: UUID) -> None:
+        logger.info(f"Deleting LessonGroup with ID: {lesson_group_id}")
+        await self.lesson_group_repository.delete(lesson_group_id)

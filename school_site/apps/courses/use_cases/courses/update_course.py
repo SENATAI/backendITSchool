@@ -3,9 +3,9 @@ from uuid import UUID
 from typing import Optional
 import json
 from school_site.core.use_cases import UseCaseProtocol
-from ..services.courses import CourseServiceProtocol
-from ..services.auth import AuthAdminServiceProtocol
-from ..schemas import CourseWithPhotoReadSchema, CourseUpdateSchema
+from school_site.apps.courses.services.courses import CourseServiceProtocol
+from school_site.apps.courses.services.auth import AuthAdminServiceProtocol
+from school_site.apps.courses.schemas import CourseWithPhotoReadSchema, CourseUpdateSchema
 
 class UpdateCourseUseCaseProtocol(UseCaseProtocol[CourseWithPhotoReadSchema]):
     async def __call__(self, course_id: UUID, course_data: str, image: Optional[UploadFile], access_token: str) -> CourseWithPhotoReadSchema:

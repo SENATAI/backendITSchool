@@ -1,4 +1,3 @@
-from fastapi import UploadFile
 import logging
 from typing import Protocol
 from uuid import UUID, uuid4
@@ -99,8 +98,9 @@ class LessonHTMLService(LessonHTMLServiceProtocol):
 
     async def delete(self, file_id: UUID) -> bool:
         file = await self.files_repository.get(file_id)
+        is_deleted = await self.files_repository.delete(file_id)
         await self.delete_file(file.path)
-        return await self.files_repository.delete(file_id)
+        return is_deleted 
     
 
     async def delete_file(self, path: str) -> bool:

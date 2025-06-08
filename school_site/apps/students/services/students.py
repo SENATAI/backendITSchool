@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Protocol
+from typing import Protocol, List
 from school_site.core.schemas import PaginationSchema
 from ..repositories.students import StudentRepositoryProtocol
 from ..schemas import StudentCreateSchema, StudentReadSchema, StudentUpdateSchema, \
@@ -86,3 +86,15 @@ class StudentService(StudentServiceProtocol):
             updadet_at=student.updated_at,
             user=user
         )
+    
+class StudentsByGroupServiceProtocol(Protocol):
+    
+    async def get_students_by_group_id(self, group_id: UUID) -> List[StudentReadSchema]:
+        ...
+
+class StudentsByGroupService(StudentsByGroupServiceProtocol):
+    def __init__(self, repository: StudentRepositoryProtocol):
+        self.repository = repository
+    
+    async def get_students_by_group_id(self, group_id: UUID) -> List[StudentReadSchema]:
+        return await self.repository.get_students_by_group_id(group_id)

@@ -1,9 +1,8 @@
 from uuid import UUID
-from typing import Protocol
 from school_site.core.use_cases import UseCaseProtocol
-from ..services.lessons import LessonServiceProtocol
-from ..services.auth import AuthAdminServiceProtocol
-from ..schemas import LessonUpdateSchema, LessonReadSchema
+from school_site.apps.courses.services.lessons import LessonServiceProtocol
+from school_site.apps.courses.services.auth import AuthAdminServiceProtocol
+from school_site.apps.courses.schemas import LessonUpdateSchema, LessonReadSchema
 
 
 class UpdateLessonUseCaseProtocol(UseCaseProtocol):
