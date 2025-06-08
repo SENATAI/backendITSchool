@@ -68,7 +68,10 @@ class UserService(UserServiceProtocol):
     async def create_user(self: Self, user: RegisterRequestSchema) -> UserReadSchema:
         
         password_hash = self.password_service.get_password_hash(user.password)
+        username = await self.user_repository.generate_username()
+        print('username: ', username)
         user_create = UserCreateSchema(
+            username=username,
             first_name=user.first_name,
             surname=user.surname,
             patronymic=user.patronymic,
