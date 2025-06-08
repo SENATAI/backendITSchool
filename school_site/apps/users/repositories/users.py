@@ -24,6 +24,9 @@ class UserRepositoryProtocol(BaseRepositoryImpl[
     async def update_password_by_id(self: Self, record_id: UUID, password: PasswordSchema) -> UserReadDBSchema:
         ...
 
+    async def generate_username(self: Self) -> int:
+        ...
+
 class UserRepository(UserRepositoryProtocol):
     async def get_by_username(self: Self, username: int) -> Optional[UserReadDBSchema]:
         async with self.session as session:
@@ -54,3 +57,31 @@ class UserRepository(UserRepositoryProtocol):
             if user is None:
                 return None
             return self.read_schema_type.model_validate(user, from_attributes=True)
+        
+    async def generate_username(self: Self) -> int:
+        async with self.session as session:
+            subquery = (
+            sa.select(
+                self.model_type.username,
+                sa.func.row_number().over(order_by=User.username).label("rn")
+            )
+            .subquery()
+        )
+
+            gap_query = (
+                sa.select(subquery.c.rn)
+                .where(subquery.c.username > subquery.c.rn)
+                .order_by(subquery.c.rn)
+                .limit(1)
+            )
+
+            gap_result = (await session.execute(gap_query)).scalar()
+
+            if gap_result is not None:
+                return gap_result
+
+            max_username = (await session.execute(
+                sa.select(sa.func.max(self.model_type.username))
+            )).scalar() or 0
+
+            return max_username + 1

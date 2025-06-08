@@ -50,6 +50,7 @@ class RegisterRequestSchema(PhoneValidatedMixin, UserInfoMixin):
 
 
 class UserCreateSchema(PhoneValidatedMixin, UserInfoMixin, CreateBaseModel):
+    username: int
     password_hash: str
 
 
@@ -70,6 +71,9 @@ class UserReadDBSchema(PhoneValidatedMixin, UserInfoMixin):
     id: UUID
     password_hash: str
     username: int
+
+    class Config:
+        from_attributes = True
 
 
 class UserTokenDataReadSchema(BaseModel):
