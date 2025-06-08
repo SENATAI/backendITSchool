@@ -1,7 +1,7 @@
 from uuid import UUID
 from school_site.core.use_cases import UseCaseProtocol
-from ..services.lessons import LessonServiceProtocol
-from ..schemas import LessonReadSchema
+from school_site.apps.courses.services.lessons import LessonServiceProtocol
+from school_site.apps.courses.schemas import LessonReadSchema
 
 class GetLessonUseCaseProtocol(UseCaseProtocol[LessonReadSchema]):
     async def __call__(self, course_id: UUID, lesson_id: UUID) -> LessonReadSchema:

@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, HttpUrl
 from typing import Optional
 from uuid import UUID
+from datetime import datetime
 from .enums import AgeCategory
 from school_site.core.schemas import (
     CreateBaseModel, UpdateBaseModel, TimestampMixin, PaginationResultSchema
@@ -165,7 +166,7 @@ class LessonPaginationResultDBSchema(PaginationResultSchema[LessonReadDBHeadSche
     pass
 
 
-class LessonWithMaterialsCreateSchema(CreateBaseModel):
+class LessonWithMaterialsBaseSchema(BaseModel):
     name: str
     teacher_material_text: str
     teacher_material_name: str
@@ -173,6 +174,21 @@ class LessonWithMaterialsCreateSchema(CreateBaseModel):
     student_material_name: str
     homework_material_text: str
     homework_material_name: str
+
+class LessonWithMaterialsCreateSchema(CreateBaseModel, LessonWithMaterialsBaseSchema):
+    pass
+
+class LessonWithMaterialsUpdateSchema(CreateBaseModel, LessonWithMaterialsBaseSchema):
+    teacher_material_id: UUID
+    student_material_id: UUID 
+    homework_material_id: UUID
+
+
+class LessonWithMaterialsDeleteSchema(BaseModel):
+    teacher_material_id: UUID
+    student_material_id: UUID 
+    homework_material_id: UUID
+
 
 class LessonWithMaterialsReadSchema(LessonReadSchema, LessonBaseSchema):
     teacher_material_url: HttpUrl
@@ -193,7 +209,7 @@ class LessonHTMLCreateDBSchema(CreateBaseModel, LessonHTMLBaseSchema):
 class LessonHTMLUpdateSchema(CreateBaseModel, LessonHTMLBaseSchema):
     html_text: str
 
-class LessonHTMLUpdateDBSchema(CreateBaseModel, LessonHTMLBaseSchema):
+class LessonHTMLUpdateDBSchema(UpdateBaseModel, LessonHTMLBaseSchema):
     pass
 
 
@@ -208,3 +224,117 @@ class LessonHTMLReadDBSchema(LessonHTMLBaseSchema, TimestampMixin):
     class Config:
         from_attributes = True
 
+
+# ====== FILE HOMEWORKS SCHEMAS =======
+class FileHomeworkBaseSchema(BaseModel):
+    name: str
+
+class FileHomeworkCreateSchema(CreateBaseModel, FileHomeworkBaseSchema):
+    pass
+
+class FileHomeworkCreateDBSchema(CreateBaseModel, FileHomeworkBaseSchema):
+    path: str
+
+class FileHomeworkUpdateSchema(CreateBaseModel, FileHomeworkBaseSchema):
+    pass
+
+class FileHomeworkUpdateDBSchema(UpdateBaseModel, FileHomeworkBaseSchema):
+    pass
+
+class FileHomeworkReadDBSchema(FileHomeworkBaseSchema, TimestampMixin):
+    id: UUID
+    path: str
+
+    class Config:
+        from_attributes = True
+
+class FileHomeworkReadSchema(FileHomeworkBaseSchema, TimestampMixin):
+    id: UUID
+    url: HttpUrl
+    
+# ====== HOMEWORKS SCHEMAS =======
+
+class HomeworkBaseSchema(BaseModel):
+    name: str
+    file_id: UUID
+
+
+class HomeworkCreateSchema(CreateBaseModel, HomeworkBaseSchema):
+    pass
+
+
+class HomeworkUpdateSchema(CreateBaseModel, HomeworkBaseSchema):
+    pass
+
+
+class HomeworkUpdateDBSchema(UpdateBaseModel, HomeworkBaseSchema):
+    pass
+
+
+class HomeworkReadDBSchema(HomeworkBaseSchema):
+    id: UUID
+
+
+class HomeworkReadSchema(HomeworkBaseSchema):
+    id: UUID
+    file_id: UUID
+    homework: FileHomeworkReadSchema
+
+# ====== LESSON GROUP SCHEMAS =======
+
+class LessonGroupBaseSchema(BaseModel):
+    lesson_id: UUID
+    group_id: UUID
+    holding_date: datetime
+    is_opened: bool = False
+
+
+class LessonGroupCreateSchema(CreateBaseModel, LessonGroupBaseSchema):
+    pass
+
+
+class LessonGroupUpdateSchema(CreateBaseModel, LessonGroupBaseSchema):
+    pass
+
+class LessonGroupUpdateDBSchema(UpdateBaseModel, LessonGroupBaseSchema):
+    pass
+
+
+class LessonGroupReadSchema(LessonGroupBaseSchema, TimestampMixin):
+    id: UUID
+
+    class Config:
+        from_attributes = True
+
+
+
+# ====== LESSON STUDENT SCHEMAS =======
+
+class LessonStudentBaseSchema(BaseModel):
+    student_id: UUID
+    lesson_group_id: UUID
+    is_visited: bool = False
+    is_excused_absence: bool = False
+    is_sent_homework: bool = False
+    is_graded_homework: bool = False
+    coins_for_visit: int = 0
+    coins_for_homework: int = 0
+
+
+class LessonStudentCreateSchema(CreateBaseModel, LessonStudentBaseSchema):
+    pass
+
+
+class LessonStudentUpdateSchema(CreateBaseModel, LessonStudentBaseSchema):
+    pass
+
+class LessonStudentUpdateDBSchema(UpdateBaseModel, LessonStudentBaseSchema):
+    pass
+
+
+class LessonStudentReadSchema(LessonStudentBaseSchema, TimestampMixin):
+    id: UUID
+
+
+    class Config:
+        from_attributes = True

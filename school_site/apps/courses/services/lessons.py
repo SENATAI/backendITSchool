@@ -51,6 +51,7 @@ class LessonService(LessonServiceProtocol):
 
     async def update(self, course_id: UUID, lesson_id: UUID, lesson: LessonUpdateSchema) -> LessonReadSchema:
         db_lesson_update = LessonUpdateDBSchema(
+            id=lesson_id,
             name=lesson.name,
             teacher_material_id=lesson.teacher_material_id,
             student_material_id=lesson.student_material_id,
