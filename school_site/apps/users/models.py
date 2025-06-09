@@ -15,7 +15,7 @@ class User(Base, TimestampMixin):
     first_name = Column(String, nullable=True)
     surname = Column(String, nullable=True)
     patronymic = Column(String, nullable=True)
-    username = Column(Integer, unique=True, nullable=False)
+    username = Column(String, unique=True, nullable=False)
     phone_number = Column(String(20), index=True, nullable=True)
     email = Column(String(255), index=True, nullable=False)
     password_hash = Column(String)

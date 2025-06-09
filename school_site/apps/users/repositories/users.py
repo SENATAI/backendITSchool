@@ -58,19 +58,21 @@ class UserRepository(UserRepositoryProtocol):
                 return None
             return self.read_schema_type.model_validate(user, from_attributes=True)
         
-    async def generate_username(self: Self) -> int:
+    async def generate_username(self: Self) -> str:
         async with self.session as session:
             subquery = (
-            sa.select(
-                self.model_type.username,
-                sa.func.row_number().over(order_by=User.username).label("rn")
+                sa.select(
+                    self.model_type.username,
+                    sa.func.cast(self.model_type.username, sa.Integer).label("username_num"),
+                    sa.func.row_number().over(order_by=sa.cast(self.model_type.username, sa.Integer)).label("rn")
+                )
+                .where(sa.func.regexp_match(self.model_type.username, r'^\d+$').is_not(None))  
+                .subquery()
             )
-            .subquery()
-        )
 
             gap_query = (
                 sa.select(subquery.c.rn)
-                .where(subquery.c.username > subquery.c.rn)
+                .where(sa.cast(subquery.c.username, sa.Integer) > subquery.c.rn)
                 .order_by(subquery.c.rn)
                 .limit(1)
             )
@@ -78,10 +80,18 @@ class UserRepository(UserRepositoryProtocol):
             gap_result = (await session.execute(gap_query)).scalar()
 
             if gap_result is not None:
-                return gap_result
+                return f"{gap_result:03d}" 
+            
+            max_username = (
+                await session.execute(
+                    sa.select(sa.func.max(sa.cast(self.model_type.username, sa.Integer)))
+                    .where(sa.func.regexp_match(self.model_type.username, r'^\d+$').is_not(None)) 
+                )
+            ).scalar() or 0
 
-            max_username = (await session.execute(
-                sa.select(sa.func.max(self.model_type.username))
-            )).scalar() or 0
+            next_id = max_username + 1
 
-            return max_username + 1
+            if next_id < 100:
+                return f"{next_id:03d}"
+            else:
+                return str(next_id)

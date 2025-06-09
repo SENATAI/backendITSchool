@@ -101,8 +101,11 @@ class LessonGroup(Base):
     
     lesson = relationship("Lesson", back_populates="groups")
     group = relationship("Group", back_populates="lessons")
-    students = relationship("LessonStudent", back_populates="lesson_group")
-    
+    students = relationship(
+        "LessonStudent", 
+        back_populates="lesson_group",
+        cascade="all, delete"  
+    )  
     __table_args__ = (
         UniqueConstraint('lesson_id', 'group_id', name='unique_lesson_group'),
     )
