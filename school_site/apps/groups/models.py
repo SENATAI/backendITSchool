@@ -34,6 +34,10 @@ class Group(Base, TimestampMixin):
     group_students = relationship("GroupStudent", back_populates="group", cascade="all, delete-orphan")
     students = relationship("Student", secondary="group_student", back_populates="groups")
     teacher = relationship("Teacher", back_populates="groups")
-    lessons = relationship("LessonGroup", back_populates="group")
+    lessons = relationship(
+        "LessonGroup", 
+        back_populates="group",
+        cascade="all, delete"  
+    )
 
 __all__ = ["GroupStudent", "Group"]
