@@ -1,6 +1,6 @@
 from fastapi import Request
-from typing import Optional
-from pydantic import BaseModel, EmailStr, field_validator
+from typing import Optional, List, Generic, TypeVar
+from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
 import re
 from uuid import UUID
 from datetime import datetime, date
@@ -163,3 +163,11 @@ class CookieTokenSchema:
         if not token and self.auto_error:
             raise InvalidTokenError()
         return token
+
+T = TypeVar('T')
+
+class PaginationResultSchema(BaseModel, Generic[T]):
+    
+    model_config = ConfigDict(from_attributes=True)
+    count: int  
+    objects: List[T]  

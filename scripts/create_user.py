@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import sys
 from contextlib import asynccontextmanager
 from datetime import datetime
 from school_site.apps.teachers.repositories.teachers import TeacherRepository
@@ -16,6 +17,9 @@ from school_site.apps.groups.services.group_students import GroupStudentService
 from school_site.apps.groups.repositories.group_students import GroupStudentsRepository
 from school_site.apps.students.services.students import StudentService
 from school_site.apps.groups.schemas import GroupAddStudentsSchema
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 @asynccontextmanager

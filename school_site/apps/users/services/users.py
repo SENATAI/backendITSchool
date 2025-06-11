@@ -3,7 +3,7 @@ from typing import Protocol, Self, List, Optional
 from uuid import UUID
 from school_site.apps.users.schemas import(
     UserCreateSchema, UserReadSchema, RegisterRequestSchema, UserReadDBSchema,
-    UserUpdateSchema, UserUpdateDBSchema, UserUpdateRequestSchema, UserUpdateNoPasswordSchema, UserUpdateDBNoPasswordHashSchema
+    UserUpdateSchema, UserUpdateDBSchema, UserUpdateRequestSchema, UserUpdateNoPasswordSchema, UserUpdateDBNoPasswordHashSchema, PaginationResultSchema
 ) 
 from school_site.apps.users.repositories.users import UserRepositoryProtocol
 from school_site.apps.users.services.passwords import PasswordServiceProtocol
@@ -11,6 +11,7 @@ from school_site.apps.users.exceptions import (
     InvalidCredentialsError, UsernameNotExistsExceptions
 )
 from ..schemas import PasswordSchema
+from school_site.core.enums import UserRole
 
 
 logger = logging.getLogger(__name__)
@@ -183,12 +184,23 @@ class UserService(UserServiceProtocol):
         logger.info(f"Authentication successful for user: {user_id}")
         return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
     
+    async def get_all_users(self: Self, role: Optional[UserRole] = None, limit: int = 10, offset: int = 0) -> PaginationResultSchema[UserReadSchema]:
+        logger.info(f"Fetching users with role={role}, limit={limit}, offset={offset}")
+    
+        paginated_users = await self.user_repository.get_all(
+            role=role,
+            limit=limit,
+            offset=offset
+        )
+    
+        user_schemas = []
+        for user in paginated_users.objects:
+            user_schema = UserReadSchema(**user.model_dump(exclude={'password_hash'}))
+            user_schemas.append(user_schema)
+    
+    
+        return PaginationResultSchema[UserReadSchema](count=paginated_users.count, objects=user_schemas)
 
-    async def get_all_users(self: Self) -> List[UserReadSchema]:
-        logger.info("Fetching all users")
-
-        users = await self.user_repository.get_all()
-        return [UserReadSchema(**user.model_dump(exclude={'password_hash'})) for user in users]
     
 
     async def delete_user(self: Self, user_id: UUID) -> bool:
