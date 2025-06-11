@@ -1,6 +1,6 @@
 import sqlalchemy as sa
 from uuid import UUID
-from typing import Self, Optional, List
+from typing import Self, Optional
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
 from school_site.core.utils.exceptions import ModelNotFoundException
 from school_site.apps.users.models import User
@@ -39,7 +39,6 @@ class UserRepositoryProtocol(BaseRepositoryImpl[
             data_query = data_query.limit(limit).offset(offset)
             models = (await session.execute(data_query)).scalars().all()
             
-            # Преобразуем SQLAlchemy модели в Pydantic модели
             pydantic_models = [UserReadSchema.model_validate(model, from_attributes=True) for model in models]
         
             return PaginationResultSchema[UserReadSchema](

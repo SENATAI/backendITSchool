@@ -10,7 +10,7 @@ from ..schemas import (
     PhotoReadSchema
 )
 from ..repositories.photos import PhotoRepositoryProtocol
-from ....core.services.images import ImageServiceProtocol
+from ....core.services.images import FileServiceProtocol
 from ..exceptions import ImageUploadError
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class PhotoServiceProtocol(Protocol):
 class PhotoService(PhotoServiceProtocol):
     def __init__(self, 
                  photo_repository: PhotoRepositoryProtocol,
-                 image_service: ImageServiceProtocol
+                 image_service: FileServiceProtocol
                  ):
         self.photo_repository = photo_repository
         self.image_service = image_service

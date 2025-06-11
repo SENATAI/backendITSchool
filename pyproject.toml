@@ -13,6 +13,7 @@ dependencies = [
     "minio>=7.2.15",
     "psycopg>=3.2.6",
     "psycopg-binary>=3.2.7",
+    "psycopg2>=2.9.10",
     "pydantic-settings>=2.8.1",
     "pydantic[email]>=2.10.6",
     "python-jose>=3.4.0",

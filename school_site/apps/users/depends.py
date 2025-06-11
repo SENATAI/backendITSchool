@@ -22,6 +22,7 @@ from .use_cases.update_user import UpdateUserUseCase, UpdateUserUseCaseProtocol
 from .use_cases.delete_user import DeleteUserUseCase, DeleteUserUseCaseProtocol
 from .use_cases.reset_password import ResetPasswordUseCaseProtocol, ResetPasswordUseCase
 from .use_cases.confirm_reset_password import ConfirmResetPasswordUseCaseProtocol, ConfirmResetPasswordUseCase
+from .use_cases.get_me import GetMeByUserIdUseCaseProtocol, GetMeByUserIdUseCase 
 
 def __get_user_repository(
         session: AsyncSession = Depends(get_async_session)
@@ -107,6 +108,11 @@ def get_reset_password_use_case(reset_password_service: ResetPasswordServiceProt
 def get_confirm_reset_password_use_case(reset_password_service: ResetPasswordServiceProtocol = Depends(get_reset_password_service)) -> \
     ConfirmResetPasswordUseCaseProtocol:
     return ConfirmResetPasswordUseCase(reset_password_service)
+
+def get_me_by_user_id_use_case(token_service: TokenServiceProtocol = Depends(get_token_service),
+                               user_service: UserServiceProtocol = Depends(get_user_service)) -> \
+    GetMeByUserIdUseCaseProtocol:
+    return GetMeByUserIdUseCase(token_service, user_service)
 
 access_token_schema = CookieTokenSchema(cookie_name="access_token")
 refresh_token_schema = CookieTokenSchema(cookie_name="refresh_token")

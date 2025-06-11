@@ -51,6 +51,9 @@ class UserServiceProtocol(Protocol):
     async def get_by_email_or_none(self: Self, email: str) -> Optional[UserReadDBSchema]:
       ...
 
+    async def get_me(self: Self, user_id: UUID) -> UserReadSchema:
+        ...
+
 class UserService(UserServiceProtocol):
     def __init__(
         self: Self,
@@ -131,7 +134,7 @@ class UserService(UserServiceProtocol):
         logger.info(f"Fetching user with id: {user_id}")
         user = await self._get_user_by_id(user_id)
         return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
-    
+     
     async def _get_user_by_id(self: Self, user_id: UUID) -> UserReadDBSchema:
         logger.info(f"Fetching user schema with password with id: {user_id}")
         return await self.user_repository.get(user_id)
@@ -198,3 +201,8 @@ class UserService(UserServiceProtocol):
         if not user:
             return None
         return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
+
+    async def get_me(self: Self, user_id: UUID) -> UserReadSchema:
+        user = await self._get_user_by_id(user_id)
+        return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
+   
