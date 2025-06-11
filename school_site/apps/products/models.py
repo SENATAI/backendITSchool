@@ -15,15 +15,18 @@ class Product(Base, TimestampMixin):
     price = Column(Integer, nullable=False)
 
     __table_args__ = (
-        CheckConstraint('price >= 0', name='positive_price_check'),
+        CheckConstraint('price IS NULL OR price >= 0', name='positive_price_check'),
     )
 
     photo = relationship("Photo", back_populates="product", uselist=False, cascade="all, delete-orphan")
 
 
 class Photo(Base, TimestampMixin, FileMixin):
-    __tablename__ = "photos"
+    __tablename__ = "photo_products"
 
     product_id = Column(PostgresUUID(as_uuid=True), ForeignKey("products.id"), unique=True)
 
     product = relationship("Product", back_populates="photo")
+
+
+__all__ = ["Product", "Photo"]

@@ -14,3 +14,4 @@ class News(Base, TimestampMixin):
     description = Column(String)
     is_pinned = Column(Boolean)
 
+__all__ = ["News"]

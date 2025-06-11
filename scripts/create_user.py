@@ -2,7 +2,7 @@ import argparse
 import asyncio
 import sys
 from contextlib import asynccontextmanager
-from uuid import UUID
+from datetime import datetime
 from school_site.apps.teachers.repositories.teachers import TeacherRepository
 from school_site.apps.teachers.schemas import TeacherCreateSchema
 from school_site.core.db import get_async_session  
@@ -13,7 +13,7 @@ from school_site.core.enums import UserRole
 from school_site.apps.students.schemas import StudentCreateSchema
 from school_site.apps.students.repositories.students import StudentRepository
 from school_site.apps.users.services.passwords import PasswordService 
-from school_site.apps.groups.services.students import GroupStudentService
+from school_site.apps.groups.services.group_students import GroupStudentService
 from school_site.apps.groups.repositories.group_students import GroupStudentsRepository
 from school_site.apps.students.services.students import StudentService
 from school_site.apps.groups.schemas import GroupAddStudentsSchema
@@ -33,18 +33,23 @@ async def get_session():
 
 async def main():
     parser = argparse.ArgumentParser(description="Создание нового пользователя")
-    parser.add_argument("--username", required=True, help="Имя пользователя")
     parser.add_argument("--password", required=True, help="Пароль пользователя")
     parser.add_argument("--role", required=True, help="Роль пользователя")
     parser.add_argument("--first_name", required=False, help="Имя пользователя", default=None)
     parser.add_argument("--surname", required=False, help="Фамилия пользователя", default=None)
     parser.add_argument("--patronymic", required=False, help="Отчество пользователя", default=None)
     parser.add_argument("--email", required=True, help="Email пользователя")
+    parser.add_argument("--birth_date", required=True, help="Дата рождения пользователя", default=0)
     parser.add_argument("--phone_number", required=True, help="Телефонный номер пользователя")
     parser.add_argument("--points", required=False, help="Очки пользователя", default=0)
     parser.add_argument("--group_id", required=False, help="ID группы для добавления студента", default=None)
 
     args = parser.parse_args()
+
+    try:
+        birth_date = datetime.strptime(args.birth_date, "%d.%m.%Y").date()
+    except ValueError:
+        raise ValueError("Дата рождения должна быть в формате DD.MM.YYYY")
 
     async with get_session() as session:
         # Создание пользователя
@@ -52,14 +57,14 @@ async def main():
         password_service = PasswordService()
         user_service = UserService(user_repository, password_service)
         user_data = RegisterRequestSchema(
-            username=args.username, 
             password=args.password, 
             role=args.role,
             first_name=args.first_name,
             surname=args.surname,
             patronymic=args.patronymic,
             email=args.email,
-            phone_number=args.phone_number
+            phone_number=args.phone_number,
+            birth_date=birth_date
         )
         new_user = await user_service.create_user(user_data)
         print(f"Пользователь создан: {new_user}")

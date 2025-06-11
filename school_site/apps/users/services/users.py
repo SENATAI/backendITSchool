@@ -8,7 +8,7 @@ from school_site.apps.users.schemas import(
 from school_site.apps.users.repositories.users import UserRepositoryProtocol
 from school_site.apps.users.services.passwords import PasswordServiceProtocol
 from school_site.apps.users.exceptions import (
-    UsernameAlreadyExistsError, InvalidCredentialsError, UsernameNotExistsExceptions
+    InvalidCredentialsError, UsernameNotExistsExceptions
 )
 from ..schemas import PasswordSchema
 from school_site.core.enums import UserRole
@@ -24,10 +24,13 @@ class UserServiceProtocol(Protocol):
     async def get_user_by_id(self: Self, user_id: UUID) -> UserReadSchema:
         ...
     
-    async def _get_user_by_username(self: Self, username: str) -> UserReadDBSchema | None:
+    async def _get_user_by_username(self: Self, username: int) -> UserReadDBSchema | None:
+        ...
+
+    async def get_user_by_username(self: Self, username: int) -> UserReadDBSchema | None:
         ...
     
-    async def authenticate_user(self: Self, username: str, password: str) -> UserReadSchema:
+    async def authenticate_user(self: Self, username: int, password: str) -> UserReadSchema:
         ...
 
     async def authenticate_user_by_id(self: Self, user_id: UUID, password: str) -> UserReadSchema:
@@ -64,23 +67,21 @@ class UserService(UserServiceProtocol):
         self.password_service = password_service
     
     async def create_user(self: Self, user: RegisterRequestSchema) -> UserReadSchema:
-        logger.info(f"Creating user with username: {user.username}")
-        
-        existing_user = await self._get_user_by_username(user.username)
-        if existing_user:
-            logger.error(f"User with username {user.username} already exists")
-            raise UsernameAlreadyExistsError()
         
         password_hash = self.password_service.get_password_hash(user.password)
+        username = await self.user_repository.generate_username()
+        username_str = str(username)
+        username_str = "0" * (3-len(username_str)) + username_str
         user_create = UserCreateSchema(
+            username=username,
             first_name=user.first_name,
             surname=user.surname,
             patronymic=user.patronymic,
             email=user.email,
             phone_number=user.phone_number,
-            username=user.username,
             password_hash=password_hash,
-            role=user.role
+            role=user.role,
+            birth_date=user.birth_date
         )
         new_user = await self.user_repository.create(user_create)
         
@@ -94,8 +95,8 @@ class UserService(UserServiceProtocol):
             patronymic=user.patronymic,
             email=user.email,
             phone_number=user.phone_number,
-            username=user.username,
-            role=user.role
+            role=user.role,
+            birth_date=user.birth_date
         )
         updated_user = await self.user_repository.update(db_user)
         return UserReadSchema(**updated_user.model_dump(exclude={'password_hash'}))
@@ -114,8 +115,8 @@ class UserService(UserServiceProtocol):
             patronymic=update_data.patronymic,
             email=update_data.email,
             phone_number=update_data.phone_number,
-            username=update_data.username,
             role=update_data.role,
+            birth_date=update_data.birth_date
         )
     
         updated_user = await self.user_repository.update(db_user)
@@ -135,21 +136,32 @@ class UserService(UserServiceProtocol):
         user = await self._get_user_by_id(user_id)
         return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
      
+
     async def _get_user_by_id(self: Self, user_id: UUID) -> UserReadDBSchema:
         logger.info(f"Fetching user schema with password with id: {user_id}")
         return await self.user_repository.get(user_id)
 
     
-    async def _get_user_by_username(self: Self, username: str) -> UserReadDBSchema | None:
+    async def _get_user_by_username(self: Self, username: int) -> UserReadDBSchema | None:
         user = await self.user_repository.get_by_username(username)
         return user
     
+
+    async def get_user_by_username(self: Self, username: int) -> UserReadSchema:
+        user = await self.user_repository.get_by_username(username)
+        if not user:
+            logger.error(f"user with username {username} not found")
+            raise UsernameNotExistsExceptions(username)
+        return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
+    
+
     async def authenticate_user(self: Self, username: str, password: str) -> UserReadSchema:
         logger.info(f"Authenticating user: {username}")
         
         user = await self._get_user_by_username(username)
 
         if not user:
+            logger.error(f"User with username {username} not found")
             raise UsernameNotExistsExceptions(username)
         
         if not self.password_service.verify_password(password, user.password_hash):
@@ -159,6 +171,7 @@ class UserService(UserServiceProtocol):
         logger.info(f"Authentication successful for user: {username}")
         return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
     
+
     async def authenticate_user_by_id(self: Self, user_id: UUID, password: str) -> UserReadSchema:
         logger.info(f"Authenticating user: {user_id}")
         
@@ -187,7 +200,9 @@ class UserService(UserServiceProtocol):
     
     
         return PaginationResultSchema[UserReadSchema](count=paginated_users.count, objects=user_schemas)
+
     
+
     async def delete_user(self: Self, user_id: UUID) -> bool:
         logger.info(f"Deleting user with id: {user_id}")
         
@@ -196,13 +211,16 @@ class UserService(UserServiceProtocol):
         logger.info(f"Successfully deleted user with id: {user_id}")
         return True
 
+
     async def get_by_email_or_none(self: Self, email: str) -> Optional[UserReadDBSchema]:
         user = await self.user_repository.get_by_email(email)
         if not user:
             return None
         return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
 
+
     async def get_me(self: Self, user_id: UUID) -> UserReadSchema:
+        logger.info("Fetching myself user")
         user = await self._get_user_by_id(user_id)
         return UserReadSchema(**user.model_dump(exclude={'password_hash'}))
    

@@ -3,12 +3,15 @@ from uuid import UUID
 from school_site.core.schemas import (
     CreateBaseModel, UpdateBaseModel, TimestampMixin, PaginationResultSchema
 )
+from datetime import date
 
 # ====== GROUP SCHEMAS =======
 
 class GroupBaseSchema(BaseModel):
     name: str = Field(..., description="Название группы")
     description: str = Field(..., description="Описание группы")
+    start_date: date = Field(..., description="Дата начала группы")
+    end_date: date = Field(..., description="Дата окончания группы")
 
 
 class GroupCreateSchema(CreateBaseModel, GroupBaseSchema):
@@ -58,19 +61,64 @@ class GroupDBPaginationResultSchema(PaginationResultSchema[GroupReadDBHeadSchema
 
 # ====== GROUP STUDENTS SCHEMAS =======
 
-class GroupAddStudentsSchema(BaseModel):
+
+class GroupStudentsBaseSchema(BaseModel):
     students_id: list[UUID] = Field(..., description="Список ID студентов для добавления в группу")
 
 
-class GroupAddStudentsDBSchema(GroupAddStudentsSchema):
+class GroupAddStudentsSchema(GroupStudentsBaseSchema):
+    pass
+
+
+class GroupAddStudentsDBSchema(GroupStudentsBaseSchema):
+    pass
+
+
+class GroupReadStudentsSchema(GroupReadSchema, GroupStudentsBaseSchema):
+    pass
+
+
+class GroupReadStudentsDBSchema(GroupReadDBSchema, GroupStudentsBaseSchema):
+    pass
+
+
+class GroupUpdateStudentsSchema(GroupStudentsBaseSchema):
+    pass
+
+
+class GroupUpdateStudentsDBSchema(GroupStudentsBaseSchema):
     pass
 
 
 # ====== GROUP TEACHER SCHEMAS =======
 
-class GroupAddTeacherSchema(BaseModel):
+
+class GroupTeacherBaseSchema(BaseModel):
     teacher_id: UUID = Field(..., description="ID преподавателя для добавления в группу")
 
 
-class GroupAddTeacherDBSchema(GroupAddTeacherSchema):
+class GroupAddTeacherSchema(GroupTeacherBaseSchema):
     pass
+
+
+class GroupAddTeacherDBSchema(GroupTeacherBaseSchema):
+    pass
+
+
+class GroupReadTeacherSchema(GroupReadSchema, GroupTeacherBaseSchema):
+    pass
+
+
+class GroupReadTeacherDBSchema(GroupReadDBSchema, GroupTeacherBaseSchema):
+    pass
+
+
+class GroupUpdateTeacherSchema(GroupTeacherBaseSchema):
+    pass
+
+
+class GroupUpdateTeacherDBSchema(GroupTeacherBaseSchema):
+    pass
+
+
+

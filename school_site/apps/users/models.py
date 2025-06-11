@@ -2,9 +2,11 @@ from uuid import uuid4
 from school_site.core.db import Base
 from school_site.core.models import CreationTimeMixin, TimestampMixin
 from school_site.core.enums import UserRole
-from sqlalchemy import Column, ForeignKey, String, Enum, DateTime
+from sqlalchemy import Column, ForeignKey, String, Enum, DateTime, Integer, Sequence, Date
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import relationship
+
+users_seq = Sequence("users_username_seq")
 
 class User(Base, TimestampMixin):
     __tablename__ = "users"
@@ -13,13 +15,12 @@ class User(Base, TimestampMixin):
     first_name = Column(String, nullable=True)
     surname = Column(String, nullable=True)
     patronymic = Column(String, nullable=True)
-    
-    username = Column(String, unique=True, index=True)
-    phone_number = Column(String(20), unique=True, index=True, nullable=False)
-    email = Column(String(255), unique=True, index=True, nullable=False)
+    username = Column(String, unique=True, nullable=False)
+    phone_number = Column(String(20), index=True, nullable=True)
+    email = Column(String(255), index=True, nullable=False)
     password_hash = Column(String)
     role = Column(Enum(UserRole))
-    
+    birth_date = Column(Date, nullable=False)
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
     student = relationship("Student", back_populates="user", uselist=False)
     teacher = relationship("Teacher", back_populates="user", uselist=False)
@@ -42,3 +43,5 @@ class PasswordResetTokens(Base, CreationTimeMixin):
     user_id = Column(PostgresUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
     token_hash = Column(String(128), nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)
+
+__all__ = ["User", "RefreshToken", "PasswordResetTokens"]
