@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, Path, Query, UploadFile, File, Form
 from school_site.apps.users.depends import access_token_schema
 from uuid import UUID
 from typing import Optional
-import json
 from .use_cases.courses.create_course import CreateCourseUseCaseProtocol
 from .use_cases.courses.update_course import UpdateCourseUseCaseProtocol
 from .use_cases.courses.get_course import GetCourseUseCaseProtocol
@@ -21,6 +20,10 @@ from .use_cases.lesson_group_student.create_lesson_group_student import CreateLe
 from .use_cases.lesson_group_student.bulk_create_lesson_group_student import BulkCreateLessonGroupStudentUseCaseProtocol
 from .use_cases.file_homeworks.create_file_homework import CreateHomeworkFileUseCaseProtocol
 from .use_cases.homeworks.create_homework import CreateHomeworkUseCaseProtocol
+from .use_cases.add_homework import AddHomeworkUseCaseProtocol
+from .use_cases.comments.create_comment import CreateCommentUseCaseProtocol
+from .use_cases.comments.update_comment import UpdateCommentUseCaseProtocol
+from .use_cases.comments.delete_comment import DeleteCommentUseCaseProtocol
 from .depends import (
     get_course_create_use_case, get_course_update_use_case, get_course_get_use_case,
     get_course_delete_use_case, get_course_get_list_use_case,
@@ -28,15 +31,16 @@ from .depends import (
     get_lesson_delete_use_case, get_lesson_get_list_use_case, get_material_create_use_case,
     get_material_update_use_case, get_material_get_use_case, get_material_delete_use_case,
     get_create_lesson_group_student_use_case, get_bulk_create_lesson_group_student_use_case,
-    get_create_homework_file_use_case, get_create_homework_use_case
+    get_create_homework_file_use_case, get_create_homework_use_case, get_add_homework_use_case,
+    get_create_comment_use_case, get_update_comment_use_case, get_delete_comment_use_case
 )
 from .schemas import (
     CourseWithPhotoReadSchema, CourseWithPhotoPaginationResultSchema,
     LessonReadSchema, LessonPaginationResultSchema, LessonCreateSchema, LessonUpdateSchema,
     LessonWithMaterialsCreateSchema, LessonWithMaterialsUpdateSchema, LessonHTMLCreateSchema, 
     LessonHTMLUpdateSchema, LessonWithMaterialsReadSchema, LessonWithMaterialsDeleteSchema,
-    LessonGroupReadSchema, LessonGroupCreateSchema, LessonHTMLReadSchema,
-    HomeworkCreateSchema, HomeworkReadSchema, FileHomeworkCreateSchema
+    LessonGroupReadSchema, LessonGroupCreateSchema, LessonHTMLReadSchema, AddHomeworkReadSchema,
+    CommentCreateSchema, CommentReadSchema, CommentUpdateSchema
 )
 
 router = APIRouter(prefix='/api/courses', tags=['Courses'])
@@ -361,22 +365,39 @@ async def get_material(
     return await get_material(material_id, access_token_schema)
     
 
-@router.post("/homework", response_model=HomeworkReadSchema, status_code=201)
+@router.post("/{course_id}/lessons/{lesson_id}/homework", response_model=AddHomeworkReadSchema, status_code=201)
 async def create_homework(
     homework_data: str = Form(...),
     homework_file: Optional[UploadFile] = File(...),
+    lesson_id: UUID = Path(...),
     access_token_schema: str = Depends(access_token_schema),
-    create_homework_file: CreateHomeworkFileUseCaseProtocol = Depends(get_create_homework_file_use_case),
-    create_homework: CreateHomeworkUseCaseProtocol = Depends(get_create_homework_use_case)
-
+    add_homework: AddHomeworkUseCaseProtocol = Depends(get_add_homework_use_case)
 ):
-    homework = FileHomeworkCreateSchema(**json.loads(homework_data))
-    created_homework_file = await create_homework_file(homework, homework_file, access_token_schema)
-    homework_for_create = HomeworkCreateSchema(file_id=created_homework_file.id)
-    created_homework = await create_homework(homework_for_create, access_token_schema)
-    return HomeworkReadSchema(
-        id=created_homework.id,
-        file_id=created_homework_file.id,
-        homework=created_homework_file
-    )
+    return await add_homework(lesson_id, homework_data, homework_file, access_token_schema)
 
+
+@router.post("/{course_id}/lessons/{lesson_id}/comments", response_model=CommentReadSchema, status_code=201)
+async def create_comment(
+    comment: CommentCreateSchema,
+    access_token_schema: str = Depends(access_token_schema),
+    create_comment: CreateCommentUseCaseProtocol = Depends(get_create_comment_use_case)
+):
+    return await create_comment(comment, access_token_schema)
+
+@router.put("/{course_id}/lessons/{lesson_id}/comments/{comment_id}", response_model=CommentReadSchema, status_code=200)
+async def update_comment(
+    comment: CommentUpdateSchema,
+    comment_id: UUID = Path(...),
+    access_token_schema: str = Depends(access_token_schema),
+    update_comment: UpdateCommentUseCaseProtocol = Depends(get_update_comment_use_case)
+):
+    return await update_comment(comment_id, comment, access_token_schema)
+
+@router.delete("/{course_id}/lessons/{lesson_id}/comments/{comment_id}", status_code=204)
+async def delete_comment(
+    comment_id: UUID = Path(...),
+    access_token_schema: str = Depends(access_token_schema),
+    delete_comment: DeleteCommentUseCaseProtocol = Depends(get_delete_comment_use_case)
+):
+    await delete_comment(comment_id, access_token_schema)
+    return None

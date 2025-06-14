@@ -43,7 +43,7 @@ class StudentService(StudentServiceProtocol):
             user_id=student.user_id,
             points=student.points,
             created_at=student.created_at,
-            updadet_at=student.updated_at,
+            updated_at=student.updated_at,
             user=user
         )
     

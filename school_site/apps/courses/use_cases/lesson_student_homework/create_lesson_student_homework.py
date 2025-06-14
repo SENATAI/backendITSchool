@@ -1,17 +1,17 @@
-from uuid import UUID
 from school_site.core.use_cases import UseCaseProtocol
 from school_site.apps.courses.services.homeworks import HomeworkServiceProtocol
 from school_site.apps.courses.services.auth import AuthAdminServiceProtocol
+from school_site.apps.courses.schemas import HomeworkCreateSchema, HomeworkReadSchema
 
 
-class DeleteHomeworkUseCaseProtocol(UseCaseProtocol):
+class CreateHomeworkUseCaseProtocol(UseCaseProtocol):
     async def __call__(
-        self, homework_id: UUID, access_token: str
-    ) -> None:
+        self, homework: HomeworkCreateSchema, access_token: str
+    ) -> HomeworkReadSchema:
         ...
 
 
-class DeleteHomeworkUseCase(DeleteHomeworkUseCaseProtocol):
+class CreateHomeworkUseCase(CreateHomeworkUseCaseProtocol):
     def __init__(
         self,
         homework_service: HomeworkServiceProtocol,
@@ -21,7 +21,7 @@ class DeleteHomeworkUseCase(DeleteHomeworkUseCaseProtocol):
         self.auth_service = auth_service
 
     async def __call__(
-        self, homework_id: UUID, access_token: str
-    ) -> None:
+        self, homework: HomeworkCreateSchema, access_token: str
+    ) -> HomeworkReadSchema:
         await self.auth_service.get_student_user(access_token)
-        return await self.homework_service.delete(homework_id)
+        return await self.homework_service.create(homework)

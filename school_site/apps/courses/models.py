@@ -3,7 +3,6 @@ from sqlalchemy import Column, String, Integer, Enum, CheckConstraint, ForeignKe
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from school_site.core.db import Base
 from sqlalchemy.orm import relationship
-from datetime import timezone
 from school_site.core.models import TimestampMixin, FileMixin
 from .enums import AgeCategory
 
@@ -43,12 +42,11 @@ class Homework(Base, TimestampMixin):
     students = relationship("LessonStudent", secondary="lesson_student_homework", back_populates="passed_homeworks")
 
 
-class Comment(Base):
+class Comment(Base, TimestampMixin):
     __tablename__ = "comments"
     
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     text = Column(String, nullable=False)
-    date_created = Column(DateTime, default=timezone.utc)
     lesson_student_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_students.id"))
     teacher_id = Column(
         PostgresUUID(as_uuid=True), 
