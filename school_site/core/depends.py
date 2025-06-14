@@ -1,5 +1,5 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from .services.images import FileServiceProtocol, MinioFileService
+from .services.files import FileServiceProtocol, MinioFileService
 from .clients.minio import get_minio_client
 
 def get_image_service(bucket_name: str) -> FileServiceProtocol:

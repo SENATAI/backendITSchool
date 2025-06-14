@@ -6,7 +6,7 @@ from school_site.apps.users.depends import get_token_service
 from school_site.apps.users.depends import get_user_service
 from school_site.apps.users.services.users import UserServiceProtocol
 from .repositories.students import StudentRepositoryProtocol, StudentRepository
-from .services.students import StudentServiceProtocol, StudentService
+from .services.students import StudentServiceProtocol, StudentService, StudentsByGroupServiceProtocol, StudentsByGroupService
 from .services.auth import AuthAdminAndStudentServiceProtocol, AuthService
 from .use_cases.create_student import CreateStudentUseCaseProtocol, CreateStudentUseCase
 from .use_cases.update_student import UpdateStudentUseCaseProtocol, UpdateStudentUseCase
@@ -31,6 +31,8 @@ def get_students_services(student_repository: StudentRepositoryProtocol = Depend
 def get_auth_admin_and_students_service(auth_service: TokenServiceProtocol = Depends(get_token_service)) -> AuthAdminAndStudentServiceProtocol:
     return AuthService(auth_service)
 
+def get_student_by_group_service(student_repository:StudentRepositoryProtocol = Depends(__get_students_repository)) -> StudentsByGroupServiceProtocol:
+    return StudentsByGroupService(student_repository)
 
 def get_student_create_use_case(auth_service: AuthAdminAndStudentServiceProtocol = Depends(get_auth_admin_and_students_service),
                                 student_service: StudentServiceProtocol = Depends(get_students_services),

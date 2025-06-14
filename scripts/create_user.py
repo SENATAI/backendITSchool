@@ -1,7 +1,8 @@
 import argparse
 import asyncio
+import sys
 from contextlib import asynccontextmanager
-from uuid import UUID
+from datetime import datetime
 from school_site.apps.teachers.repositories.teachers import TeacherRepository
 from school_site.apps.teachers.schemas import TeacherCreateSchema
 from school_site.core.db import get_async_session  
@@ -16,6 +17,9 @@ from school_site.apps.groups.services.group_students import GroupStudentService
 from school_site.apps.groups.repositories.group_students import GroupStudentsRepository
 from school_site.apps.students.services.students import StudentService
 from school_site.apps.groups.schemas import GroupAddStudentsSchema
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 @asynccontextmanager
@@ -35,11 +39,17 @@ async def main():
     parser.add_argument("--surname", required=False, help="Фамилия пользователя", default=None)
     parser.add_argument("--patronymic", required=False, help="Отчество пользователя", default=None)
     parser.add_argument("--email", required=True, help="Email пользователя")
+    parser.add_argument("--birth_date", required=True, help="Дата рождения пользователя", default=0)
     parser.add_argument("--phone_number", required=True, help="Телефонный номер пользователя")
     parser.add_argument("--points", required=False, help="Очки пользователя", default=0)
     parser.add_argument("--group_id", required=False, help="ID группы для добавления студента", default=None)
 
     args = parser.parse_args()
+
+    try:
+        birth_date = datetime.strptime(args.birth_date, "%d.%m.%Y").date()
+    except ValueError:
+        raise ValueError("Дата рождения должна быть в формате DD.MM.YYYY")
 
     async with get_session() as session:
         # Создание пользователя
@@ -53,7 +63,8 @@ async def main():
             surname=args.surname,
             patronymic=args.patronymic,
             email=args.email,
-            phone_number=args.phone_number
+            phone_number=args.phone_number,
+            birth_date=birth_date
         )
         new_user = await user_service.create_user(user_data)
         print(f"Пользователь создан: {new_user}")

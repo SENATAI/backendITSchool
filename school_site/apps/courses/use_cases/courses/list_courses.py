@@ -1,6 +1,6 @@
 from school_site.core.use_cases import UseCaseProtocol
-from ..services.courses import CourseServiceProtocol
-from ..schemas import CourseWithPhotoPaginationResultSchema
+from school_site.apps.courses.services.courses import CourseServiceProtocol
+from school_site.apps.courses.schemas import CourseWithPhotoPaginationResultSchema
 from school_site.core.schemas import PaginationSchema
 
 class GetListCoursesUseCaseProtocol(UseCaseProtocol[CourseWithPhotoPaginationResultSchema]):

@@ -13,6 +13,7 @@ from school_site.apps.teachers.models import *
 from school_site.apps.courses.models import *
 from school_site.apps.news.models import *
 from school_site.apps.groups.models import *
+from school_site.apps.notification.models import *
 
 #--------------------------------------------------------------------------
 import asyncio

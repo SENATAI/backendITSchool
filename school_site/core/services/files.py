@@ -22,6 +22,9 @@ class FileServiceProtocol(Protocol):
     async def delete(self, file_id: str) -> bool:
          ...
 
+    async def upload_html(self, path: str, html_text: str) -> bool:
+        ...
+
 
 class MinioFileService(FileServiceProtocol):
     def __init__(self, minio_client: Minio, bucket_name: str):
@@ -47,6 +50,30 @@ class MinioFileService(FileServiceProtocol):
             file.content_type
         )
         return True
+    
+    async def upload_html(self, path: str, html_text: str) -> bool:
+        """
+        Загружает HTML-текст как файл в MinIO
+        
+        :param path: Путь/имя файла в MinIO (например, "lessons/abc123.html")
+        :param html_text: HTML-контент
+        :return: True при успехе
+        """
+        try:
+            file_data = html_text.encode("utf-8")
+            
+            await self._run_sync(
+                self.client.put_object,
+                self.bucket_name,
+                path,
+                io.BytesIO(file_data),
+                len(file_data),
+                "text/html"
+            )
+            return True
+        except Exception as e:
+            logger.error(f"Failed to upload HTML to MinIO: {e}")
+            return False
     
 
     async def get_url(self, path: str) -> str:

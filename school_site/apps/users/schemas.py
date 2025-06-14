@@ -1,15 +1,28 @@
 from fastapi import Request
-from typing import Optional
-from pydantic import BaseModel, EmailStr, field_validator
+from typing import Optional, List, Generic, TypeVar
+from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
 import re
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, date
 from school_site.core.schemas import CreateBaseModel, UpdateBaseModel
 from school_site.core.enums import UserRole
 from .exceptions import InvalidTokenError
 
-class LoginRequestSchema(BaseModel):
-    username: int
+
+class UsernameRelatedMixin(BaseModel):
+    username: str
+
+    @field_validator('username')
+    @classmethod
+    def validate_username(cls, v: str) -> str:
+        if not v.isdigit():
+            raise ValueError('Username должен содержать только цифры.')
+        if len(v) < 3:
+            raise ValueError('Username должен быть не менее 3 символов.')
+        return v
+    
+
+class LoginRequestSchema(UsernameRelatedMixin):
     password: str
 
 
@@ -40,15 +53,15 @@ class UserInfoMixin(BaseModel):
     surname: Optional[str]
     patronymic: Optional[str]
     email: EmailStr
+    birth_date: date
     role: UserRole
-
-
+    
 
 class RegisterRequestSchema(PhoneValidatedMixin, UserInfoMixin):
     password: str
 
 
-class UserCreateSchema(PhoneValidatedMixin, UserInfoMixin, CreateBaseModel):
+class UserCreateSchema(PhoneValidatedMixin, UserInfoMixin, UsernameRelatedMixin, CreateBaseModel):
     password_hash: str
 
 
@@ -60,15 +73,16 @@ class UserUpdateSchema(PhoneValidatedMixin, UserInfoMixin, UpdateBaseModel):
     password: str
 
 
-class UserReadSchema(PhoneValidatedMixin, UserInfoMixin):
+class UserReadSchema(PhoneValidatedMixin, UserInfoMixin, UsernameRelatedMixin):
     id: UUID
-    username: int
 
 
-class UserReadDBSchema(PhoneValidatedMixin, UserInfoMixin):
+class UserReadDBSchema(PhoneValidatedMixin, UserInfoMixin, UsernameRelatedMixin):
     id: UUID
     password_hash: str
-    username: int
+
+    class Config:
+        from_attributes = True
 
 
 class UserTokenDataReadSchema(BaseModel):
@@ -114,8 +128,7 @@ class UserUpdateNoPasswordSchema(PhoneValidatedMixin, UserInfoMixin, UpdateBaseM
 class UserUpdateDBNoPasswordHashSchema(PhoneValidatedMixin, UserInfoMixin, UpdateBaseModel):
     ...
 
-class UserResetSchema(BaseModel):
-    username: int
+class UserResetSchema(UsernameRelatedMixin):
     email: EmailStr
 
 class ResetPasswordRequest(BaseModel):
@@ -150,3 +163,11 @@ class CookieTokenSchema:
         if not token and self.auto_error:
             raise InvalidTokenError()
         return token
+
+T = TypeVar('T')
+
+class PaginationResultSchema(BaseModel, Generic[T]):
+    
+    model_config = ConfigDict(from_attributes=True)
+    count: int  
+    objects: List[T]  

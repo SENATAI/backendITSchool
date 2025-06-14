@@ -34,11 +34,10 @@ class PhotoCourse(Base, TimestampMixin, FileMixin):
     course = relationship("Course", back_populates="photo")
 
 
-class Homework(Base):
+class Homework(Base, TimestampMixin):
     __tablename__ = "homeworks"
     
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
-    date_created = Column(DateTime, default=timezone.utc)
     file_id = Column(PostgresUUID(as_uuid=True), ForeignKey("file_homeworks.id"))
     file = relationship("FileHomework", back_populates="homework")
     students = relationship("LessonStudent", secondary="lesson_student_homework", back_populates="passed_homeworks")
@@ -65,9 +64,10 @@ class Lesson(Base, TimestampMixin):
 
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     course_id = Column(PostgresUUID(as_uuid=True), ForeignKey("courses.id"))
-    teacher_material_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"))
-    student_material_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"))
-    homework_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"))
+    name = Column(String, nullable=False)
+    teacher_material_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"), nullable=True)
+    student_material_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"), nullable=True)
+    homework_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"), nullable=True)
 
     course = relationship("Course", back_populates="lessons")
     groups = relationship("LessonGroup", back_populates="lesson")
@@ -82,7 +82,7 @@ class LessonHtmlFile(Base, TimestampMixin, FileMixin):
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
 
 
-class FileHomework(FileMixin, Base):
+class FileHomework(Base, TimestampMixin, FileMixin):
     __tablename__ = "file_homeworks"
 
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -100,8 +100,11 @@ class LessonGroup(Base):
     
     lesson = relationship("Lesson", back_populates="groups")
     group = relationship("Group", back_populates="lessons")
-    students = relationship("LessonStudent", back_populates="lesson_group")
-    
+    students = relationship(
+        "LessonStudent", 
+        back_populates="lesson_group",
+        cascade="all, delete"  
+    )  
     __table_args__ = (
         UniqueConstraint('lesson_id', 'group_id', name='unique_lesson_group'),
     )
@@ -124,6 +127,10 @@ class LessonStudent(Base):
     lesson_group = relationship("LessonGroup", back_populates="students")
     passed_homeworks = relationship("Homework", secondary="lesson_student_homework", back_populates="students")
     comments = relationship("Comment", back_populates="lesson_student")
+
+    __table_args__ = (
+        UniqueConstraint('student_id', 'lesson_group_id', name='unique_student_lesson_group'),
+    )
 
 
 class LessonStudentHomework(Base):

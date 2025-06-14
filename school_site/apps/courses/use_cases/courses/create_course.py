@@ -2,9 +2,9 @@ from fastapi import UploadFile
 from typing import Optional
 import json
 from school_site.core.use_cases import UseCaseProtocol
-from ..services.courses import CourseServiceProtocol
-from ..services.auth import AuthAdminServiceProtocol
-from ..schemas import CourseWithPhotoReadSchema, CourseCreateSchema
+from school_site.apps.courses.services.courses import CourseServiceProtocol
+from school_site.apps.courses.services.auth import AuthAdminServiceProtocol
+from school_site.apps.courses.schemas import CourseWithPhotoReadSchema, CourseCreateSchema
 
 class CreateCourseUseCaseProtocol(UseCaseProtocol[CourseWithPhotoReadSchema]):
     async def __call__(self, course_data: str, image: Optional[UploadFile], access_token: str) -> CourseWithPhotoReadSchema:
