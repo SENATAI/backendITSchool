@@ -28,8 +28,7 @@ class NotificationReadSchema(BaseModel):
 class NotificationUpdateSchema(UpdateBaseModel):
     content: str
 
-class NotificationRecipientCreateSchema(CreateBaseModel):
-    notification_id: UUID
+class NotificationRecipientCreateSchema(BaseModel):
     recipient_type: RecipientType
     recipient_id: UUID
 

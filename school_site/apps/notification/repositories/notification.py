@@ -1,7 +1,8 @@
 from typing import Self
 from uuid import UUID
 
-from school_site.apps.users.models import User
+from school_site.apps.students.models import Student
+from school_site.apps.groups.models import Group
 
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
 from ..models import Notification, NotificationRecipients, ReadStatus
@@ -43,6 +44,7 @@ class NotificationRepositoryProtocol(BaseRepositoryImpl[Notification, Notificati
 
     async def add_recipient(
         self: Self,
+        notification_id: UUID,
         recipient_data: NotificationRecipientCreateSchema
     ) -> NotificationRecipientReadSchema:
         ...
@@ -61,18 +63,17 @@ class NotificationRepository(NotificationRepositoryProtocol):
             return NotificationReadSchema.model_validate(model, from_attributes=True)
     
     async def get_student_notifications(
-    self: Self,
-    student_id: UUID,
-    limit: int = 10,
-    offset: int = 0
-) -> PaginationResultSchema[NotificationWithStatusSchema]:
+        self: Self,
+        student_id: UUID,
+        limit: int = 10,
+        offset: int = 0
+    ) -> PaginationResultSchema[NotificationWithStatusSchema]:
         async with self.session as session:
             # Подзапрос для получения group_id студента
-            group_subquery = sa.select(User.group_id).where(
-                sa.and_(
-                    User.id == student_id,
-                    User.role == "student"
-                )
+            group_subquery = (
+                sa.select(Group.id)
+                .join(Student.groups)
+                .where(Student.id == student_id)
             )
 
             # Запрос для подсчета общего количества уведомлений
@@ -121,8 +122,9 @@ class NotificationRepository(NotificationRepositoryProtocol):
                 .limit(limit)
                 .offset(offset)
             )
+            
             results = (await session.execute(data_query)).all()
-
+            
             notifications = []
             for notification, is_read, read_at in results:
                 notification_data = NotificationWithStatusSchema(
@@ -136,14 +138,14 @@ class NotificationRepository(NotificationRepositoryProtocol):
                 count=total_count,
                 objects=notifications
             )
-
+        
     async def update_read_status(
         self: Self,
         notification_id: UUID,
         student_id: UUID,
         is_read: bool = True
     ) -> NotificationWithStatusSchema:
-        async with self.session as session, session.begin():
+        async with self.session as session:
             # Проверяем существование уведомления
             notification = await self.get(notification_id)
             if notification is None:
@@ -186,6 +188,8 @@ class NotificationRepository(NotificationRepositoryProtocol):
                 session.add(read_status)
                 await session.flush()
 
+            await session.commit()
+
             return NotificationWithStatusSchema(
                 **NotificationReadSchema.model_validate(notification, from_attributes=True).model_dump(),
                 is_read=read_status.is_read,
@@ -194,18 +198,19 @@ class NotificationRepository(NotificationRepositoryProtocol):
 
     async def add_recipient(
         self: Self,
+        notification_id: UUID,
         recipient_data: NotificationRecipientCreateSchema
     ) -> NotificationRecipientReadSchema:
         async with self.session as session:
             # Проверяем существование уведомления
-            notification = await self.get(recipient_data.notification_id)
+            notification = await self.get(notification_id)
             if notification is None:
                 raise NotificationNotFoundException()
 
             # Проверяем существование получателя
             stmt = sa.select(NotificationRecipients).where(
                 sa.and_(
-                    NotificationRecipients.notification_id == recipient_data.notification_id,
+                    NotificationRecipients.notification_id == notification_id,
                     NotificationRecipients.recipient_id == recipient_data.recipient_id,
                     NotificationRecipients.recipient_type == recipient_data.recipient_type
                 )
@@ -216,7 +221,7 @@ class NotificationRepository(NotificationRepositoryProtocol):
 
             # Создаем нового получателя
             new_recipient = NotificationRecipients(
-                notification_id=recipient_data.notification_id,
+                notification_id=notification_id,
                 recipient_type=recipient_data.recipient_type,
                 recipient_id=recipient_data.recipient_id
             )
@@ -224,3 +229,73 @@ class NotificationRepository(NotificationRepositoryProtocol):
             await session.commit()
 
             return NotificationRecipientReadSchema.model_validate(new_recipient, from_attributes=True)
+        
+
+    async def get_group_notifications(
+        self: Self,
+        group_id: UUID,
+        limit: int = 10,
+        offset: int = 0
+    ) -> PaginationResultSchema[NotificationWithStatusSchema]:
+        async with self.session as session:
+            # Запрос для подсчета общего количества уведомлений
+            count_query = sa.select(sa.func.count(self.model_type.id)).join(NotificationRecipients).where(
+                sa.and_(
+                    NotificationRecipients.recipient_type == RecipientType.GROUP,
+                    NotificationRecipients.recipient_id == group_id
+                )
+            )
+            total_count = (await session.execute(count_query)).scalar_one()
+
+            # Основной запрос для получения уведомлений
+            data_query = (
+                sa.select(
+                    self.model_type,
+                    ReadStatus.is_read,
+                    ReadStatus.read_at
+                )
+                .join(NotificationRecipients)
+                .where(
+                    sa.and_(
+                        NotificationRecipients.recipient_type == RecipientType.GROUP,
+                        NotificationRecipients.recipient_id == group_id
+                    )
+                )
+                .order_by(self.model_type.created_at.desc())
+                .limit(limit)
+                .offset(offset)
+            )
+            results = (await session.execute(data_query)).all()
+
+            notifications = []
+            for notification, is_read, read_at in results:
+                notification_data = NotificationWithStatusSchema(
+                    **NotificationReadSchema.model_validate(notification, from_attributes=True).model_dump(),
+                    is_read=is_read or False,
+                    read_at=read_at
+                )
+                notifications.append(notification_data)
+
+            return PaginationResultSchema[NotificationWithStatusSchema](
+                count=total_count,
+                objects=notifications
+            )
+
+    async def delete(self: Self, id: UUID) -> None:
+        async with self.session as session:
+            # Сначала удаляем связанные записи в notification_recipients
+            stmt_recipients = sa.delete(NotificationRecipients).where(
+                NotificationRecipients.notification_id == id
+            )
+            await session.execute(stmt_recipients)
+
+            # Затем удаляем связанные записи в read_status
+            stmt_read_status = sa.delete(ReadStatus).where(
+                ReadStatus.notification_id == id
+            )
+            await session.execute(stmt_read_status)
+
+            # И только потом удаляем само уведомление
+            stmt = sa.delete(self.model_type).where(self.model_type.id == id)
+            await session.execute(stmt)
+            await session.commit()
