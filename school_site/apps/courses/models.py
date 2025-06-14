@@ -34,11 +34,10 @@ class PhotoCourse(Base, TimestampMixin, FileMixin):
     course = relationship("Course", back_populates="photo")
 
 
-class Homework(Base):
+class Homework(Base, TimestampMixin):
     __tablename__ = "homeworks"
     
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
-    date_created = Column(DateTime, default=timezone.utc)
     file_id = Column(PostgresUUID(as_uuid=True), ForeignKey("file_homeworks.id"))
     file = relationship("FileHomework", back_populates="homework")
     students = relationship("LessonStudent", secondary="lesson_student_homework", back_populates="passed_homeworks")
@@ -66,9 +65,9 @@ class Lesson(Base, TimestampMixin):
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     course_id = Column(PostgresUUID(as_uuid=True), ForeignKey("courses.id"))
     name = Column(String, nullable=False)
-    teacher_material_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"))
-    student_material_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"))
-    homework_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"))
+    teacher_material_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"), nullable=True)
+    student_material_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"), nullable=True)
+    homework_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"), nullable=True)
 
     course = relationship("Course", back_populates="lessons")
     groups = relationship("LessonGroup", back_populates="lesson")
@@ -128,6 +127,10 @@ class LessonStudent(Base):
     lesson_group = relationship("LessonGroup", back_populates="students")
     passed_homeworks = relationship("Homework", secondary="lesson_student_homework", back_populates="students")
     comments = relationship("Comment", back_populates="lesson_student")
+
+    __table_args__ = (
+        UniqueConstraint('student_id', 'lesson_group_id', name='unique_student_lesson_group'),
+    )
 
 
 class LessonStudentHomework(Base):

@@ -31,7 +31,7 @@ class HomeworkService(HomeworkServiceProtocol):
         self.homework_repository = homework_repository
 
     async def create(self, homework: HomeworkCreateSchema) -> HomeworkReadDBSchema:
-        logger.info(f"Creating homework: {homework.name}")
+        logger.info("Creating homework")
         return await self.homework_repository.create(homework)
 
     async def get(self, homework_id: UUID) -> HomeworkReadDBSchema:
@@ -42,7 +42,6 @@ class HomeworkService(HomeworkServiceProtocol):
         logger.info(f"Updating homework with ID: {homework_id}")
         db_homework = HomeworkUpdateDBSchema(
             id=homework_id,
-            name=homework.name,
             file_id=homework.file_id
         )
         return await self.homework_repository.update(db_homework)

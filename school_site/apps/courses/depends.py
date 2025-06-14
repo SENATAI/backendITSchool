@@ -13,6 +13,8 @@ from .repositories.lessons import LessonRepositoryProtocol, LessonRepository
 from .repositories.lesson_html_files import LessonHTMLRepositoryProtocol, LessonHTMLRepository
 from .repositories.lesson_group import LessonGroupRepositoryProtocol, LessonGroupRepository
 from .repositories.lesson_student import LessonStudentRepositoryProtocol, LessonStudentRepository
+from .repositories.homework_files import FileHomeworkRepositoryProtocol, FileHomeworkRepository
+from .repositories.homeworks import HomeworkRepositoryProtocol, HomeworkRepository
 from .services.lesson_group_student import CombinedLessonGroupStudentServiceProtocol, CombinedLessonGroupStudentService
 from .services.photo_courses import PhotoServiceProtocol, PhotoService
 from .services.courses import CourseServiceProtocol, CourseService
@@ -20,6 +22,8 @@ from .services.lessons import LessonServiceProtocol, LessonService
 from .services.lesson_group import LessonGroupServiceProtocol, LessonGroupService
 from .services.lesson_student import LessonStudentServiceProtocol, LessonStudentService
 from .services.lesson_html_files import LessonHTMLServiceProtocol, LessonHTMLService
+from .services.homeworks_files import FileHomeworkServiceProtocol, FileHomeworkService
+from .services.homeworks import HomeworkServiceProtocol, HomeworkService
 from .services.auth import AuthService, AuthAdminServiceProtocol
 from .use_cases.courses.create_course import CreateCourseUseCaseProtocol, CreateCourseUseCase
 from .use_cases.courses.update_course import UpdateCourseUseCaseProtocol, UpdateCourseUseCase
@@ -37,6 +41,12 @@ from .use_cases.materials.get_material import GetLessonHTMLFileUseCaseProtocol, 
 from .use_cases.materials.delete_material import DeleteLessonHTMLFileUseCaseProtocol, DeleteLessonHTMLFileUseCase
 from .use_cases.lesson_group_student.create_lesson_group_student import CreateLessonGroupStudentUseCaseProtocol, CreateLessonGroupStudentUseCase
 from .use_cases.lesson_group_student.bulk_create_lesson_group_student import BulkCreateLessonGroupStudentUseCaseProtocol, BulkCreateLessonGroupStudentUseCase
+from .use_cases.file_homeworks.create_file_homework import CreateHomeworkFileUseCaseProtocol, CreateHomeworkFileUseCase
+from .use_cases.homeworks.create_homework import CreateHomeworkUseCaseProtocol, CreateHomeworkUseCase
+from .use_cases.homeworks.update_homework import UpdateHomeworkUseCaseProtocol, UpdateHomeworkUseCase
+from .use_cases.homeworks.get_homework import GetHomeworkUseCaseProtocol, GetHomeworkUseCase
+from .use_cases.homeworks.delete_homework import DeleteHomeworkUseCaseProtocol, DeleteHomeworkUseCase
+
 
 def get_course_file_service() -> FileServiceProtocol:
     """Зависимость для работы с изображениями продуктов."""
@@ -74,6 +84,16 @@ def __get_lesson_student_repository(
     session: AsyncSession = Depends(get_async_session)
 ) -> LessonStudentRepositoryProtocol:
     return LessonStudentRepository(session)
+
+def __get_homework_files_repository(
+    session: AsyncSession = Depends(get_async_session)
+) -> FileHomeworkRepositoryProtocol:
+    return FileHomeworkRepository(session)
+
+def __get_homework_repository(
+    session: AsyncSession = Depends(get_async_session)
+) -> HomeworkRepositoryProtocol:
+    return HomeworkRepository(session)
 
 def get_photo_service(
         photo_repository: PhotoRepositoryProtocol = Depends(__get_photo_repository),
@@ -159,6 +179,17 @@ def get_lesson_html_service(
                             ) -> LessonHTMLServiceProtocol:
     return LessonHTMLService(lesson_html_repository, file_service)
 
+def get_homework_files_service(
+        file_service: FileServiceProtocol = Depends(get_course_file_service),
+        homework_files_repository: FileHomeworkRepositoryProtocol = Depends(__get_homework_files_repository)
+) -> FileHomeworkServiceProtocol:
+    return FileHomeworkService(homework_files_repository, file_service)
+
+def get_homework_service(
+        homework_repository: HomeworkRepositoryProtocol = Depends(__get_homework_repository)
+) -> HomeworkServiceProtocol:
+    return HomeworkService(homework_repository)
+
 def get_material_create_use_case(lesson_service: LessonHTMLServiceProtocol = Depends(get_lesson_html_service),
                                  auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
                                  ) -> CreateLessonHTMLFileUseCaseProtocol:
@@ -204,3 +235,17 @@ def get_bulk_create_lesson_group_student_use_case(lesson_student_group_service: 
                                              auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
                                              ) -> BulkCreateLessonGroupStudentUseCaseProtocol:
     return BulkCreateLessonGroupStudentUseCase(lesson_student_group_service, auth_service)
+
+def get_create_homework_file_use_case(
+        homework_files_service: FileHomeworkServiceProtocol = Depends(get_homework_files_service),
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
+        
+) -> CreateHomeworkFileUseCaseProtocol:
+    return CreateHomeworkFileUseCase(homework_files_service, auth_service)
+
+def get_create_homework_use_case(
+    homework_service: HomeworkServiceProtocol = Depends(get_homework_service),
+    auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
+
+) -> CreateHomeworkUseCaseProtocol:
+    return CreateHomeworkUseCase(homework_service, auth_service)
