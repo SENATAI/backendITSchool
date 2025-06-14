@@ -1,4 +1,5 @@
 from typing import Protocol, Self
+from uuid import UUID
 
 from school_site.apps.notification.schemas import (
     NotificationRecipientCreateSchema,
@@ -10,6 +11,7 @@ from school_site.apps.notification.services.notification import NotificationServ
 class AddRecipientUseCaseProtocol(Protocol):
     async def execute(
         self: Self,
+        notification_id: UUID,
         recipient_data: NotificationRecipientCreateSchema
     ) -> NotificationRecipientReadSchema:
         ...
@@ -21,6 +23,10 @@ class AddRecipientUseCase(AddRecipientUseCaseProtocol):
 
     async def execute(
         self: Self,
+        notification_id: UUID,
         recipient_data: NotificationRecipientCreateSchema
     ) -> NotificationRecipientReadSchema:
-        return await self.notification_service.add_recipient(recipient_data)
+        return await self.notification_service.add_recipient(
+            notification_id=notification_id,
+            recipient_data=recipient_data
+        )

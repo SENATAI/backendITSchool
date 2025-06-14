@@ -1,5 +1,1 @@
 Generic single-database configuration.
-```
-def upgrade() -> None:
-    op.execute("CREATE SEQUENCE users_username_seq;")
-```

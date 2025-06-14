@@ -125,8 +125,10 @@ async def add_recipient(
     Returns:
         NotificationRecipientReadSchema: Добавленный получатель
     """
-    recipient_data.notification_id = notification_id
-    return await add_recipient_use_case.execute(recipient_data)
+    return await add_recipient_use_case.execute(
+        notification_id=notification_id,
+        recipient_data=recipient_data
+    )
 
 
 @router.delete('/{notification_id}', status_code=204)
