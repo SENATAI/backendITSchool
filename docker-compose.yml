@@ -30,19 +30,7 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
     command: server --console-address ":9001" /data
 
-  backend:
-    build:
-      context: .
-    ports:
-      - "8080:8080"
-    depends_on:
-      db:
-        condition: service_healthy
-      minio:
-        condition: service_started
-    volumes:
-      - .:/app
-    entrypoint: /docker/entrypoint.sh
+
 volumes:
   school_site_data:
   minio_data:
