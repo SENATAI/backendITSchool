@@ -1,5 +1,5 @@
 import logging
-from typing import Protocol
+from typing import Protocol, Self, Union
 from uuid import UUID
 from school_site.core.schemas import PaginationSchema
 from ..repositories.lessons import LessonRepositoryProtocol
@@ -9,7 +9,10 @@ from ..schemas import (
     LessonUpdateDBSchema,
     LessonUpdateSchema,
     LessonReadSchema,
-    LessonPaginationResultSchema
+    LessonPaginationResultSchema,
+    LessonStudentOpenSchema,
+    LessonStudentClosedSchema,
+    LessonTeacherDetailSchema
 )
 
 logger = logging.getLogger(__name__)
@@ -65,3 +68,16 @@ class LessonService(LessonServiceProtocol):
 
     async def list(self, course_id: UUID, pagination: PaginationSchema) -> LessonPaginationResultSchema:
         return await self.lesson_repository.paginate_by_course(course_id, pagination) 
+    
+
+class GetLessonWithMaterialsServiceProtocol(Protocol):
+    async def get_lesson_for_student(self: Self, lesson_id: UUID, student_id: UUID) -> Union[LessonStudentOpenSchema, LessonStudentClosedSchema]:
+
+        ...
+    
+    async def get_lesson_for_teacher(self: Self, lesson_id: UUID, student_id: UUID) -> LessonTeacherDetailSchema:
+        ...
+
+
+class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
+    pass
