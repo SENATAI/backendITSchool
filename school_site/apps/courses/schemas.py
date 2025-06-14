@@ -1,11 +1,12 @@
 from pydantic import BaseModel, Field, HttpUrl
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
 from .enums import AgeCategory
 from school_site.core.schemas import (
     CreateBaseModel, UpdateBaseModel, TimestampMixin, PaginationResultSchema
 )
+from school_site.apps.students.schemas import StudentReadWithUserSchema
 
 # ====== PHOTO SCHEMAS =======
 
@@ -114,9 +115,9 @@ class CourseDBPaginationResultSchema(PaginationResultSchema[CourseReadDBHeadSche
 
 class LessonBaseSchema(BaseModel):
     name: str
-    teacher_material_id: UUID = Field(..., description="ID материала для учителя")
-    student_material_id: UUID = Field(..., description="ID материала для студента")
-    homework_id: UUID = Field(..., description="ID домашнего задания")
+    teacher_material_id: Optional[UUID] = Field(None, description="ID материала для учителя")
+    student_material_id: Optional[UUID]  = Field(None, description="ID материала для студента")
+    homework_id: Optional[UUID]  = Field(None, description="ID домашнего задания")
 
 
 class LessonCreateSchema(CreateBaseModel, LessonBaseSchema):
@@ -168,32 +169,55 @@ class LessonPaginationResultDBSchema(PaginationResultSchema[LessonReadDBHeadSche
 
 class LessonWithMaterialsBaseSchema(BaseModel):
     name: str
-    teacher_material_text: str
-    teacher_material_name: str
-    student_material_text: str 
-    student_material_name: str
-    homework_material_text: str
-    homework_material_name: str
+    teacher_material_text: Optional[str] = None
+    teacher_material_name: Optional[str] = None
+    student_material_text: Optional[str]  = None
+    student_material_name: Optional[str] = None
+    homework_material_text: Optional[str] = None
+    homework_material_name: Optional[str] = None
 
 class LessonWithMaterialsCreateSchema(CreateBaseModel, LessonWithMaterialsBaseSchema):
     pass
 
 class LessonWithMaterialsUpdateSchema(CreateBaseModel, LessonWithMaterialsBaseSchema):
-    teacher_material_id: UUID
-    student_material_id: UUID 
-    homework_material_id: UUID
+    teacher_material_id: Optional[UUID] = None
+    student_material_id: Optional[UUID] = None
+    homework_material_id: Optional[UUID] = None
 
 
 class LessonWithMaterialsDeleteSchema(BaseModel):
-    teacher_material_id: UUID
-    student_material_id: UUID 
-    homework_material_id: UUID
+    teacher_material_id: Optional[UUID] = None
+    student_material_id: Optional[UUID] = None 
+    homework_material_id: Optional[UUID] = None
 
 
 class LessonWithMaterialsReadSchema(LessonReadSchema, LessonBaseSchema):
-    teacher_material_url: HttpUrl
-    student_material_url: HttpUrl 
-    homework_material_url: HttpUrl
+    teacher_material_url: Optional[HttpUrl] = None
+    student_material_url: Optional[HttpUrl] = None
+    homework_material_url: Optional[HttpUrl] = None
+
+class LessonShortSchema(BaseModel):
+    id: UUID
+    name: str
+
+class LessonStudentSchema(BaseModel):
+    is_visited: bool
+    is_excused_absence: bool
+    is_sent_homework: bool
+    is_graded_homework: bool
+    coins_for_visit: int
+    coins_for_homework: int
+
+class LessonGroupSchema(BaseModel):
+    id: UUID
+    holding_date: datetime
+    is_opened: bool
+    students: List[LessonStudentSchema] = []
+
+    class Config:
+        from_attributes = True
+
+
 
 # ====== LESSON HTML FILES SCHEMAS =======
 
@@ -255,7 +279,6 @@ class FileHomeworkReadSchema(FileHomeworkBaseSchema, TimestampMixin):
 # ====== HOMEWORKS SCHEMAS =======
 
 class HomeworkBaseSchema(BaseModel):
-    name: str
     file_id: UUID
 
 
@@ -335,6 +358,112 @@ class LessonStudentUpdateDBSchema(UpdateBaseModel, LessonStudentBaseSchema):
 class LessonStudentReadSchema(LessonStudentBaseSchema, TimestampMixin):
     id: UUID
 
+
+    class Config:
+        from_attributes = True
+
+# ====== LESSON STUDENT HOMEWORK SCHEMAS =======
+
+class LessonStudentHomeworkBaseSchema(BaseModel):
+    lesson_student_id: UUID
+    homework_id: UUID
+
+class LessonStudentHomeworkCreateSchema(CreateBaseModel, LessonStudentHomeworkBaseSchema):
+    pass
+
+class LessonStudentHomeworkUpdateDBSchema(UpdateBaseModel, LessonStudentHomeworkBaseSchema):
+    pass
+
+class LessonStudentHomeworkUpdateSchema(CreateBaseModel, LessonStudentHomeworkBaseSchema):
+    pass
+
+class LessonStudentHomeworkReadSchema(LessonStudentHomeworkBaseSchema):
+    pass
+
+# ====== ADD HOMEWORK SCHEMAS =======
+
+class AddHomeworkReadSchema(BaseModel):
+    lesson_id: UUID
+    homework: FileHomeworkReadSchema
+    lesson_student_homework: LessonStudentHomeworkReadSchema
+
+
+# ====== COMENTS SCHEMAS =======
+
+class CommentBaseSchema(BaseModel):
+    text: str
+    lesson_student_id: UUID
+
+class CommentCreateSchema(CreateBaseModel, CommentBaseSchema):
+    pass
+
+class CommentCreateDBSchema(CreateBaseModel, CommentBaseSchema):
+    teacher_id: UUID
+
+class CommentUpdateSchema(CreateBaseModel, CommentBaseSchema):
+    pass
+
+class CommentUpdateDBSchema(UpdateBaseModel, CommentBaseSchema):
+    teacher_id: UUID
+
+class CommentReadSchema(CommentBaseSchema, TimestampMixin):
+    id: UUID
+    teacher_id: UUID
+
+
+    class Config:
+        from_attributes = True
+
+class LessonDetailSchema(LessonShortSchema, LessonWithMaterialsBaseSchema):
+    groups: List[LessonGroupSchema] = []
+
+    class Config:
+        from_attributes = True
+
+class LessonMaterialBaseSchema(BaseModel):
+    homework: Optional[LessonHTMLReadDBSchema] = None
+    passed_homeworks: List[HomeworkReadDBSchema] = []
+    comments: List[CommentReadSchema] = []
+
+
+class LessonStudentOpenSchema(LessonShortSchema, LessonMaterialBaseSchema):
+    groups: List[LessonGroupSchema] = []
+    student_material: Optional[LessonHTMLReadDBSchema] = None
+
+
+    class Config:
+        from_attributes = True
+
+class LessonStudentClosedSchema(LessonShortSchema, LessonGroupSchema):
+    pass
+
+
+class LessonStudentForTeacherSchema(BaseModel):
+    id: UUID
+    student_id: UUID
+    is_visited: bool
+    passed_homeworks: List[HomeworkReadDBSchema] = []
+    comments: List[CommentReadSchema] = []
+    student: StudentReadWithUserSchema  # ← Включает user.name
+
+    class Config:
+        from_attributes = True
+
+
+class LessonGroupWithStudentsForTeacher(BaseModel):
+    id: UUID
+    students: List[LessonStudentForTeacherSchema] = []
+
+    class Config:
+        from_attributes = True
+
+
+class LessonTeacherDetailSchema(BaseModel):
+    id: UUID
+    name: str
+    teacher_material: Optional[LessonHTMLReadDBSchema]
+    homework: Optional[LessonHTMLReadDBSchema]
+    groups: List[LessonGroupWithStudentsForTeacher]
 
     class Config:
         from_attributes = True

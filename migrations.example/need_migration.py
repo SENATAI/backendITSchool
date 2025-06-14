@@ -1,8 +1,8 @@
 """init tables
 
-Revision ID: ce08ef4179a5
+Revision ID: ca5f57859a4f
 Revises: 
-Create Date: 2025-06-09 14:29:24.761364
+Create Date: 2025-06-11 17:10:56.718343
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'ce08ef4179a5'
+revision: str = 'ca5f57859a4f'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -54,12 +54,19 @@ def upgrade() -> None:
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('description', sa.String(), nullable=True),
-    sa.Column('status', sa.Enum('LOW', 'HIGH', 'TOP', name='newsstatus'), nullable=True),
+    sa.Column('is_pinned', sa.Boolean(), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id', name=op.f('news_pkey'))
     )
     op.create_index(op.f('news_name_idx'), 'news', ['name'], unique=True)
+    op.create_table('notifications',
+    sa.Column('id', sa.UUID(), nullable=False),
+    sa.Column('content', sa.Text(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.PrimaryKeyConstraint('id', name=op.f('notifications_pkey'))
+    )
     op.create_table('products',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
@@ -90,8 +97,9 @@ def upgrade() -> None:
     op.create_index(op.f('users_phone_number_idx'), 'users', ['phone_number'], unique=False)
     op.create_table('homeworks',
     sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('date_created', sa.DateTime(), nullable=True),
     sa.Column('file_id', sa.UUID(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['file_id'], ['file_homeworks.id'], name=op.f('homeworks_file_id_fkey')),
     sa.PrimaryKeyConstraint('id', name=op.f('homeworks_pkey'))
     )
@@ -109,6 +117,17 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['student_material_id'], ['lesson_html_files.id'], name=op.f('lessons_student_material_id_fkey')),
     sa.ForeignKeyConstraint(['teacher_material_id'], ['lesson_html_files.id'], name=op.f('lessons_teacher_material_id_fkey')),
     sa.PrimaryKeyConstraint('id', name=op.f('lessons_pkey'))
+    )
+    op.create_table('notification_recipients',
+    sa.Column('notification_id', sa.UUID(), nullable=False),
+    sa.Column('recipient_type', sa.String(), nullable=False),
+    sa.Column('recipient_id', sa.UUID(), nullable=False),
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.CheckConstraint("recipient_type IN ('student', 'group')", name=op.f('notification_recipients_check_recipient_type_check')),
+    sa.ForeignKeyConstraint(['notification_id'], ['notifications.id'], name=op.f('notification_recipients_notification_id_fkey')),
+    sa.PrimaryKeyConstraint('notification_id', 'recipient_id', 'id', name=op.f('notification_recipients_pkey'))
     )
     op.create_table('password_reset_tokens',
     sa.Column('id', sa.UUID(), nullable=False),
@@ -140,6 +159,17 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['product_id'], ['products.id'], name=op.f('photo_products_product_id_fkey')),
     sa.PrimaryKeyConstraint('id', name=op.f('photo_products_pkey')),
     sa.UniqueConstraint('product_id', name=op.f('photo_products_product_id_key'))
+    )
+    op.create_table('read_status',
+    sa.Column('notification_id', sa.UUID(), nullable=False),
+    sa.Column('student_id', sa.UUID(), nullable=False),
+    sa.Column('is_read', sa.Boolean(), nullable=False),
+    sa.Column('read_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['notification_id'], ['notifications.id'], name=op.f('read_status_notification_id_fkey')),
+    sa.PrimaryKeyConstraint('notification_id', 'student_id', 'id', name=op.f('read_status_pkey'))
     )
     op.create_table('refresh_tokens',
     sa.Column('id', sa.UUID(), nullable=False),
@@ -289,15 +319,18 @@ def downgrade() -> None:
     op.drop_table('students')
     op.drop_index(op.f('refresh_tokens_hashed_refresh_token_idx'), table_name='refresh_tokens')
     op.drop_table('refresh_tokens')
+    op.drop_table('read_status')
     op.drop_table('photo_products')
     op.drop_table('photo_courses')
     op.drop_table('password_reset_tokens')
+    op.drop_table('notification_recipients')
     op.drop_table('lessons')
     op.drop_table('homeworks')
     op.drop_index(op.f('users_phone_number_idx'), table_name='users')
     op.drop_index(op.f('users_email_idx'), table_name='users')
     op.drop_table('users')
     op.drop_table('products')
+    op.drop_table('notifications')
     op.drop_index(op.f('news_name_idx'), table_name='news')
     op.drop_table('news')
     op.drop_table('lesson_html_files')
