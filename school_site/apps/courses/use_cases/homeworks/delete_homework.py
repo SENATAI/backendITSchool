@@ -4,14 +4,14 @@ from school_site.apps.courses.services.homeworks import HomeworkServiceProtocol
 from school_site.apps.courses.services.auth import AuthAdminServiceProtocol
 
 
-class CreateHomeworkUseCaseProtocol(UseCaseProtocol):
+class DeleteHomeworkUseCaseProtocol(UseCaseProtocol):
     async def __call__(
         self, lesson_id: UUID, access_token: str
     ) -> None:
         ...
 
 
-class CreateHomeworkUseCase(CreateHomeworkUseCaseProtocol):
+class DeleteHomeworkUseCase(DeleteHomeworkUseCaseProtocol):
     def __init__(
         self,
         homework_service: HomeworkServiceProtocol,

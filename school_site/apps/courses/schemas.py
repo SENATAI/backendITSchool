@@ -114,9 +114,9 @@ class CourseDBPaginationResultSchema(PaginationResultSchema[CourseReadDBHeadSche
 
 class LessonBaseSchema(BaseModel):
     name: str
-    teacher_material_id: UUID = Field(..., description="ID материала для учителя")
-    student_material_id: UUID = Field(..., description="ID материала для студента")
-    homework_id: UUID = Field(..., description="ID домашнего задания")
+    teacher_material_id: Optional[UUID] = Field(None, description="ID материала для учителя")
+    student_material_id: Optional[UUID]  = Field(None, description="ID материала для студента")
+    homework_id: Optional[UUID]  = Field(None, description="ID домашнего задания")
 
 
 class LessonCreateSchema(CreateBaseModel, LessonBaseSchema):
@@ -168,32 +168,32 @@ class LessonPaginationResultDBSchema(PaginationResultSchema[LessonReadDBHeadSche
 
 class LessonWithMaterialsBaseSchema(BaseModel):
     name: str
-    teacher_material_text: str
-    teacher_material_name: str
-    student_material_text: str 
-    student_material_name: str
-    homework_material_text: str
-    homework_material_name: str
+    teacher_material_text: Optional[str] = None
+    teacher_material_name: Optional[str] = None
+    student_material_text: Optional[str]  = None
+    student_material_name: Optional[str] = None
+    homework_material_text: Optional[str] = None
+    homework_material_name: Optional[str] = None
 
 class LessonWithMaterialsCreateSchema(CreateBaseModel, LessonWithMaterialsBaseSchema):
     pass
 
 class LessonWithMaterialsUpdateSchema(CreateBaseModel, LessonWithMaterialsBaseSchema):
-    teacher_material_id: UUID
-    student_material_id: UUID 
-    homework_material_id: UUID
+    teacher_material_id: Optional[UUID] = None
+    student_material_id: Optional[UUID] = None
+    homework_material_id: Optional[UUID] = None
 
 
 class LessonWithMaterialsDeleteSchema(BaseModel):
-    teacher_material_id: UUID
-    student_material_id: UUID 
-    homework_material_id: UUID
+    teacher_material_id: Optional[UUID] = None
+    student_material_id: Optional[UUID] = None 
+    homework_material_id: Optional[UUID] = None
 
 
 class LessonWithMaterialsReadSchema(LessonReadSchema, LessonBaseSchema):
-    teacher_material_url: HttpUrl
-    student_material_url: HttpUrl 
-    homework_material_url: HttpUrl
+    teacher_material_url: Optional[HttpUrl] = None
+    student_material_url: Optional[HttpUrl] = None
+    homework_material_url: Optional[HttpUrl] = None
 
 # ====== LESSON HTML FILES SCHEMAS =======
 
@@ -255,7 +255,6 @@ class FileHomeworkReadSchema(FileHomeworkBaseSchema, TimestampMixin):
 # ====== HOMEWORKS SCHEMAS =======
 
 class HomeworkBaseSchema(BaseModel):
-    name: str
     file_id: UUID
 
 

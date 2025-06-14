@@ -5,7 +5,7 @@ from school_site.apps.courses.services.auth import AuthAdminServiceProtocol
 from school_site.apps.courses.schemas import FileHomeworkCreateSchema, FileHomeworkReadSchema
 
 
-class CreateHomeworkUseCaseProtocol(UseCaseProtocol):
+class CreateHomeworkFileUseCaseProtocol(UseCaseProtocol):
     async def __call__(
         self, homework: FileHomeworkCreateSchema, file: UploadFile,
           access_token: str
@@ -13,7 +13,7 @@ class CreateHomeworkUseCaseProtocol(UseCaseProtocol):
         ...
 
 
-class CreateHomeworkUseCase(CreateHomeworkUseCaseProtocol):
+class CreateHomeworkFileUseCase(CreateHomeworkFileUseCaseProtocol):
     def __init__(
         self,
         homework_service: FileHomeworkServiceProtocol,

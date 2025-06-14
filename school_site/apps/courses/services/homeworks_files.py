@@ -44,7 +44,7 @@ class FileHomeworkService(FileHomeworkServiceProtocol):
         self.file_service = file_service
 
     async def create(self, file_create: FileHomeworkCreateSchema, file: UploadFile) -> FileHomeworkReadSchema:
-        path = self._generate_file_path()
+        path = self._generate_file_path(file.filename)
         is_file_uploaded = await self.file_service.upload(path, file)
         
         if not is_file_uploaded:
@@ -106,9 +106,9 @@ class FileHomeworkService(FileHomeworkServiceProtocol):
     async def get_file_url(self, path: str) -> HttpUrl:
         return await self.file_service.get_url(path)
 
-    def _generate_file_path(self) -> str:
+    def _generate_file_path(self, filename: str) -> str:
         STANDARD_PATH = "homeworks/files"
-        return f"{STANDARD_PATH}/{uuid4()}{self._get_extension()}"
+        return f"{STANDARD_PATH}/{uuid4()}{self._get_extension(filename)}"
 
     def _get_extension(self, filename: Optional[str]) -> str:
         if not filename:
