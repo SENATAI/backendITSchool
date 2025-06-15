@@ -9,6 +9,7 @@ from school_site.core.utils.exceptions import ModelNotFoundException
 from school_site.core.schemas import PaginationSchema
 from school_site.apps.students.models import Student
 from school_site.apps.teachers.models import Teacher
+from school_site.apps.courses.models import LessonGroup, Lesson
 from ..models import Group
 from ..schemas import (
     GroupCreateDBSchema,
@@ -16,7 +17,7 @@ from ..schemas import (
     GroupUpdateDBSchema,
     GroupDBPaginationResultSchema,
     GroupReadDBHeadSchema,
-    GroupWithStudentsAndTeacherSchema
+    GroupWithStudentsAndTeacherAndCoursesSchema
 )
 
 
@@ -36,7 +37,7 @@ class GroupRepositoryProtocol(BaseRepositoryImpl[
         ...
     async def get_with_students_and_teacher(
     self: Self, group_id: UUID
-) -> GroupWithStudentsAndTeacherSchema:
+) -> GroupWithStudentsAndTeacherAndCoursesSchema:
         ...
 
 
@@ -80,7 +81,7 @@ class GroupRepository(GroupRepositoryProtocol):
 
     async def get_with_students_and_teacher(
     self: Self, group_id: UUID
-) -> GroupWithStudentsAndTeacherSchema:
+) -> GroupWithStudentsAndTeacherAndCoursesSchema:
         async with self.session as s:
             statement = (
                 sa.select(self.model_type)
@@ -89,15 +90,40 @@ class GroupRepository(GroupRepositoryProtocol):
                     joinedload(self.model_type.students)
                     .joinedload(Student.user), 
                     joinedload(self.model_type.teacher)
-                    .joinedload(Teacher.user)
+                    .joinedload(Teacher.user),
+                    joinedload(self.model_type.lessons)  # Group.lessons -> LessonGroup
+                    .joinedload(LessonGroup.lesson)      # LessonGroup.lesson -> Lesson
+                    .joinedload(Lesson.course)           # Lesson.course -> Course
                 )
             )
 
             result = (await s.execute(statement)).unique().scalar_one_or_none()
-
             if not result:
                 raise ModelNotFoundException(
                     model=self.model_type, model_id=group_id
                 )
 
-            return GroupWithStudentsAndTeacherSchema.model_validate(result, from_attributes=True)
+            unique_courses = {}
+            for lesson_group in result.lessons:
+                if lesson_group.lesson and lesson_group.lesson.course:
+                    course = lesson_group.lesson.course
+                    unique_courses[course.id] = {
+                        "id": course.id,
+                        "name": course.name
+                    }
+
+            group_data = {
+                "id": result.id,
+                "name": result.name,
+                "description": result.description,
+                "teacher_id": result.teacher_id,
+                "created_at": result.created_at,
+                "updated_at": result.updated_at,
+                "students": result.students,
+                "teacher": result.teacher,
+                "start_date": result.start_date,
+                "end_date": result.end_date,
+                "courses": list(unique_courses.values())
+            }
+
+            return GroupWithStudentsAndTeacherAndCoursesSchema.model_validate(group_data, from_attributes=True)

@@ -6,6 +6,7 @@ from school_site.core.schemas import (
 )
 from school_site.apps.students.schemas import StudentReadWithUserSchema
 from school_site.apps.teachers.schemas import TeacherReadWithUserSchema
+from school_site.apps.courses.schemas import CourseReadSimpleSchema
 from datetime import date
 
 # ====== GROUP SCHEMAS =======
@@ -62,14 +63,14 @@ class GroupPaginationResultSchema(PaginationResultSchema[GroupReadHeadSchema]):
 class GroupDBPaginationResultSchema(PaginationResultSchema[GroupReadDBHeadSchema]):
     pass
 
-class GroupWithStudentsAndTeacherSchema(GroupReadSchema):
+class GroupWithStudentsAndTeacherAndCoursesSchema(GroupReadSchema):
     students: list[StudentReadWithUserSchema] = Field(
         default_factory=list, description="Список студентов в группе"
     )
     teacher: Optional[TeacherReadWithUserSchema] = Field(
-        None, description="Преподаватель группы"
+        default_factory=None, description="Список преподавателей в группе"
     )
-
+    courses: list[CourseReadSimpleSchema] = []
 
 # ====== GROUP STUDENTS SCHEMAS =======
 
