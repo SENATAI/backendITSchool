@@ -1,17 +1,22 @@
 import sqlalchemy as sa
 from sqlalchemy.sql.expression import func
+from sqlalchemy.orm import joinedload
 from collections.abc import Iterable
-from typing import Self, List
+from typing import Self
 from uuid import UUID
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
+from school_site.core.utils.exceptions import ModelNotFoundException
 from school_site.core.schemas import PaginationSchema
+from school_site.apps.students.models import Student
+from school_site.apps.teachers.models import Teacher
 from ..models import Group
 from ..schemas import (
     GroupCreateDBSchema,
     GroupReadDBSchema,
     GroupUpdateDBSchema,
     GroupDBPaginationResultSchema,
-    GroupReadDBHeadSchema
+    GroupReadDBHeadSchema,
+    GroupWithStudentsAndTeacherSchema
 )
 
 
@@ -28,6 +33,10 @@ class GroupRepositoryProtocol(BaseRepositoryImpl[
         sorting: Iterable[str],
         pagination: PaginationSchema
     ) -> GroupDBPaginationResultSchema:
+        ...
+    async def get_with_students_and_teacher(
+    self: Self, group_id: UUID
+) -> GroupWithStudentsAndTeacherSchema:
         ...
 
 
@@ -67,3 +76,28 @@ class GroupRepository(GroupRepositoryProtocol):
                     for id, name in results
                 ]
             ) 
+        
+
+    async def get_with_students_and_teacher(
+    self: Self, group_id: UUID
+) -> GroupWithStudentsAndTeacherSchema:
+        async with self.session as s:
+            statement = (
+                sa.select(self.model_type)
+                .where(self.model_type.id == group_id)
+                .options(
+                    joinedload(self.model_type.students)
+                    .joinedload(Student.user), 
+                    joinedload(self.model_type.teacher)
+                    .joinedload(Teacher.user)
+                )
+            )
+
+            result = (await s.execute(statement)).unique().scalar_one_or_none()
+
+            if not result:
+                raise ModelNotFoundException(
+                    model=self.model_type, model_id=group_id
+                )
+
+            return GroupWithStudentsAndTeacherSchema.model_validate(result, from_attributes=True)

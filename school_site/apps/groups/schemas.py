@@ -1,8 +1,11 @@
 from pydantic import BaseModel, Field
 from uuid import UUID
+from typing import Optional
 from school_site.core.schemas import (
     CreateBaseModel, UpdateBaseModel, TimestampMixin, PaginationResultSchema
 )
+from school_site.apps.students.schemas import StudentReadWithUserSchema
+from school_site.apps.teachers.schemas import TeacherReadWithUserSchema
 from datetime import date
 
 # ====== GROUP SCHEMAS =======
@@ -12,8 +15,9 @@ class GroupBaseSchema(BaseModel):
     description: str = Field(..., description="Описание группы")
     start_date: date = Field(..., description="Дата начала группы")
     end_date: date = Field(..., description="Дата окончания группы")
-
-
+    teacher_id: Optional[UUID] = Field(
+        None, description="ID преподавателя, ответственного за группу"
+    )
 class GroupCreateSchema(CreateBaseModel, GroupBaseSchema):
     pass
 
@@ -57,6 +61,14 @@ class GroupPaginationResultSchema(PaginationResultSchema[GroupReadHeadSchema]):
 
 class GroupDBPaginationResultSchema(PaginationResultSchema[GroupReadDBHeadSchema]):
     pass
+
+class GroupWithStudentsAndTeacherSchema(GroupReadSchema):
+    students: list[StudentReadWithUserSchema] = Field(
+        default_factory=list, description="Список студентов в группе"
+    )
+    teacher: Optional[TeacherReadWithUserSchema] = Field(
+        None, description="Преподаватель группы"
+    )
 
 
 # ====== GROUP STUDENTS SCHEMAS =======
