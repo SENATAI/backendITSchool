@@ -9,7 +9,8 @@ from ..schemas import (
     GroupReadSchema,
     GroupReadHeadSchema,
     GroupPaginationResultSchema,
-    GroupCreateDBSchema
+    GroupCreateDBSchema,
+    GroupWithStudentsAndTeacherSchema
 )
 from ..repositories.groups import GroupRepositoryProtocol
 
@@ -21,7 +22,7 @@ class GroupServiceProtocol(Protocol):
     async def create(self, group: GroupCreateSchema) -> GroupReadSchema:
         ...
 
-    async def get(self, group_id: UUID) -> GroupReadSchema:
+    async def get(self, group_id: UUID) -> GroupWithStudentsAndTeacherSchema:
         ...
 
     async def update(self, group_id: UUID, group: GroupUpdateSchema) -> GroupReadSchema:
@@ -43,7 +44,8 @@ class GroupService(GroupServiceProtocol):
             name=group.name,
             description=group.description,
             start_date=group.start_date,
-            end_date=group.end_date
+            end_date=group.end_date,
+            teacher_id=group.teacher_id
         )
         new_group = await self.group_repository.create(group_db)
         return GroupReadSchema(
@@ -51,18 +53,13 @@ class GroupService(GroupServiceProtocol):
             name=new_group.name,
             description=new_group.description,
             start_date=new_group.start_date,
-            end_date=new_group.end_date
+            end_date=new_group.end_date,
+            teacher_id=new_group.teacher_id
         )
 
-    async def get(self, group_id: UUID) -> GroupReadSchema:
-        group = await self.group_repository.get(group_id)
-        return GroupReadSchema(
-            id=group.id,
-            name=group.name,
-            description=group.description,
-            start_date=group.start_date,
-            end_date=group.end_date
-        )
+    async def get(self, group_id: UUID) -> GroupWithStudentsAndTeacherSchema:
+        group = await self.group_repository.get_with_students_and_teacher(group_id)
+        return group
 
     async def update(self, group_id: UUID, group: GroupUpdateSchema) -> GroupReadSchema:
         group_db = GroupUpdateDBSchema(
@@ -70,7 +67,8 @@ class GroupService(GroupServiceProtocol):
             name=group.name,
             description=group.description,
             start_date=group.start_date,
-            end_date=group.end_date
+            end_date=group.end_date,
+            teacher_id=group.teacher_id
         )
         updated_group = await self.group_repository.update(group_db)
         return GroupReadSchema(
@@ -78,7 +76,8 @@ class GroupService(GroupServiceProtocol):
             name=updated_group.name,
             description=updated_group.description,
             start_date=updated_group.start_date,
-            end_date=updated_group.end_date
+            end_date=updated_group.end_date,
+            teacher_id=updated_group.teacher_id
         )
 
     async def delete(self, group_id: UUID) -> None:
