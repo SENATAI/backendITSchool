@@ -1,122 +1,159 @@
-import logging 
-from typing import Protocol
-from ..repositories.news import NewsRepositoryProtocol
-from ..schemas import (
-    NewsCreateSchema,   
-    NewsReadSchema, 
-    NewsUpdateSchema,
-    PaginationResultSchema,
-    NewsUpdateRequestSchema
-)
+# import logging 
+# from typing import Protocol
+# from fastapi import UploadFile
+# from typing import Optional
+# from ..repositories.news import NewsRepositoryProtocol
+# from ..schemas import (
+#     NewsCreateSchema,   
+#     NewsReadSchema, 
+#     NewsUpdateSchema,
+#     PaginationResultSchema,
+#     NewsCreateDBSchema,
+#     NewsUpdateDBSchema,
+#     NewsWithPhotoReadSchema,
+#     PhotoCreateSchema,
+#     PhotoReadSchema
+# )
 
-from uuid import UUID
-from ..exceptions import NewsAlreadyExistsError, NewsNotFoundException
-from ..enums import NewsStatus
-from typing_extensions import Self
+# from uuid import UUID
+# from ..exceptions import  NewsNotFoundException
+# from typing_extensions import Self
+# from .photo_news import PhotoServiceProtocol
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 
-class NewsServiceProtocol(Protocol): 
+# class NewsServiceProtocol(Protocol): 
 
-    async def create_news(self, news: NewsCreateSchema) -> NewsReadSchema: 
-        ...
+#     async def create_news(self: Self, news: NewsCreateSchema, image: Optional[UploadFile]) -> NewsWithPhotoReadSchema:
+#         ...
 
-    async def get_news_by_id(self, news_id: UUID) -> NewsReadSchema: 
-        ... 
+#     async def get_news_by_id(self, news_id: UUID) -> NewsReadSchema: 
+#         ... 
 
-    async def get_all_news(self, limit: int = 10, offset: int = 0) -> PaginationResultSchema[NewsReadSchema]: 
-        ... 
+#     async def get_all_news(self, limit: int = 10, offset: int = 0) -> PaginationResultSchema[NewsReadSchema]: 
+#         ... 
 
-    async def _get_news_by_name(self, name: str) -> NewsReadSchema | None:
-        ...
+#     async def _get_news_by_name(self, name: str) -> NewsReadSchema | None:
+#         ...
 
-    async def update_news(self, news_id: UUID) -> NewsReadSchema:
-        ...
+#     async def update_news(self, news_id: UUID) -> NewsReadSchema:
+#         ...
 
-    async def delete_news(self, news_id: UUID) -> bool:
-        ...
+#     async def delete_news(self, news_id: UUID) -> bool:
+#         ...
 
         
-class NewsService(NewsServiceProtocol):
-    def __init__(self: Self, news_repository: NewsRepositoryProtocol):
-        self.news_repository = news_repository
+# class NewsService(NewsServiceProtocol):
+#     def __init__(self: Self, news_repository: NewsRepositoryProtocol,
+#                  photo_service: PhotoServiceProtocol):
+#         self.news_repository = news_repository
+#         self.photo_service = photo_service
 
-    async def create_news(self: Self, news: NewsCreateSchema) -> NewsReadSchema:
-        logger.info(f"Creating news with name {news.name} and with a pinned state {news.is_pinned}")
+#     async def create_news(self: Self, news: NewsCreateSchema, image: Optional[UploadFile]) -> NewsWithPhotoReadSchema:
+#         logger.info(f"Creating news with name {news.name} and with a pinned state {news.is_pinned}")
 
-        exisitng_news = await self._get_news_by_name(news.name)
-        if exisitng_news:
-            logger.error(f"News with name {news.name} already exists")
-            raise NewsAlreadyExistsError()
+#         news_db = NewsCreateDBSchema(
+#             name=news.name,
+#             description=news.description,
+#             is_pinned=news.is_pinned,
+#         )
+#         new_news = await self.news_repository.create(news_db)
+#         photo = None
+#         if news.photo and image:
+#             photo = await self.photo_service.create(
+#                 PhotoCreateSchema(name=news.photo.name, news_id=new_news.id),
+#                 image
+#             )
+#         return NewsWithPhotoReadSchema(
+#             id=new_news.id,
+#             name=new_news.name,
+#             description=new_news.description,
+#             is_pinned=new_news.is_pinned,
+#             photo=photo,
+#             created_at=new_news.created_at,
+#             updated_at=new_news.updated_at
+#         )
+    
+#     async def get_all_news(self: Self, limit: int = 10, offset: int = 0) -> PaginationResultSchema[NewsReadSchema]:
+#         logger.info(f"Getting all news with limit={limit}, offset={offset}")
+#         paginated_news = await self.news_repository.get_all(limit=limit, offset=offset)
         
-        news_create = NewsCreateSchema(
-            name=news.name,
-            description=news.description,
-            is_pinned=news.is_pinned  
-        )
-        
-        news_create = await self.news_repository.create(news_create)
-
-        logger.info(f"Created news with name {news.name} and with a pinned state {news.is_pinned}")
-        return NewsReadSchema(**news_create.model_dump())
-    
-    async def get_all_news(self: Self, limit: int = 10, offset: int = 0) -> PaginationResultSchema[NewsReadSchema]:
-        logger.info(f"Getting all news with limit={limit}, offset={offset}")
-        paginated_news = await self.news_repository.get_all(limit=limit, offset=offset)
-        
-        # Преобразуем SQLAlchemy модели в Pydantic модели
-        news_schemas = [NewsReadSchema.model_validate(news, from_attributes=True) for news in paginated_news.objects]
+#         # Преобразуем SQLAlchemy модели в Pydantic модели
+#         news_schemas = [NewsReadSchema.model_validate(news, from_attributes=True) for news in paginated_news.objects]
     
         
-        # Создаем PaginationResultSchema с помощью model_validate
-        return PaginationResultSchema[NewsReadSchema].model_validate({
-            "count": paginated_news.count,
-            "objects": news_schemas
-            })
+#         # Создаем PaginationResultSchema с помощью model_validate
+#         return PaginationResultSchema[NewsReadSchema].model_validate({
+#             "count": paginated_news.count,
+#             "objects": news_schemas
+#             })
     
-    async def get_news_by_id(self: Self, news_id: UUID) -> NewsReadSchema:   
-        logger.info(f"Fetching news with id {news_id}")
-        news = await self.news_repository.get(news_id)
-        if not news:
-            logger.error(f"News with id {news_id} not found")
-            raise NewsNotFoundException()
-        return NewsReadSchema(**news.model_dump())
+#     async def get_news_by_id(self: Self, news_id: UUID) -> NewsWithPhotoReadSchema:   
+#         logger.info(f"Fetching news with id {news_id}")
+#         course = await self.get_with_photo(course_id)
+#         photo_read = None
+#         if course.photo:
+#             image_url = await self.photo_service.get_photo_url(course.photo.path)
+#             photo_read = PhotoReadSchema(
+#                 id=course.photo.id,
+#                 name=course.photo.name,
+#                 product_id=course.id,
+#                 url=image_url,
+#                 course_id=course.id,
+#                 created_at=course.photo.created_at,
+#                 updated_at=course.photo.updated_at
+#             )
+#         return CourseWithPhotoReadSchema(
+#             id=course.id,
+#             name=course.name,
+#             description=course.description,
+#             age_category=course.age_category,
+#             price=course.price,
+#             author_name=course.author_name,
+#             created_at=course.created_at,
+#             updated_at=course.updated_at,
+#             photo=photo_read
+#         )
     
-    async def _get_news_by_name(self, name: str) -> NewsReadSchema | None:
-        news = await self.news_repository.get_by_name(name)
-        return news
+#     async def get_with_photo(self, course_id: UUID) -> CourseWithPhotoReadSchema:
+#         course = await self.course_repository.get_with_photo(course_id)
+#         return course
     
-    async def update_news(self, news_id: UUID, news_data: NewsUpdateRequestSchema) -> NewsReadSchema:
-        logger.info(f"Fetching news with id {news_id}")
-        existing_news = await self.news_repository.get(news_id)
+#     async def _get_news_by_name(self, name: str) -> NewsReadSchema | None:
+#         news = await self.news_repository.get_by_name(name)
+#         return news
     
-        if not existing_news:
-            logger.info(f"News to update with id {news_id} not found")
-            raise NewsNotFoundException()
+#     async def update_news(self, news_id: UUID, news_data: NewsUpdateRequestSchema) -> NewsReadSchema:
+#         logger.info(f"Fetching news with id {news_id}")
+#         existing_news = await self.news_repository.get(news_id)
+    
+#         if not existing_news:
+#             logger.info(f"News to update with id {news_id} not found")
+#             raise NewsNotFoundException()
         
-        # Создаем NewsUpdateSchema с id из URL
-        update_data = NewsUpdateSchema(
-            id=news_id,
-            name=news_data.name,
-            description=news_data.description,
-            is_pinned=news_data.is_pinned
-        )
+#         # Создаем NewsUpdateSchema с id из URL
+#         update_data = NewsUpdateSchema(
+#             id=news_id,
+#             name=news_data.name,
+#             description=news_data.description,
+#             is_pinned=news_data.is_pinned
+#         )
 
-        updated_news = await self.news_repository.update(update_data)
+#         updated_news = await self.news_repository.update(update_data)
 
-        return NewsReadSchema(**updated_news.model_dump())
+#         return NewsReadSchema(**updated_news.model_dump())
 
 
 
     
-    async def delete_news(self, news_id: UUID) -> bool:
-        logger.info(f"Fetching news with id {news_id}")
-        news_to_delete = await self.news_repository.get(news_id)
-        if not news_to_delete:
-            logger.info(f"News to delete with id {news_id} not found")
-            raise NewsNotFoundException()
+#     async def delete_news(self, news_id: UUID) -> bool:
+#         logger.info(f"Fetching news with id {news_id}")
+#         news_to_delete = await self.news_repository.get(news_id)
+#         if not news_to_delete:
+#             logger.info(f"News to delete with id {news_id} not found")
+#             raise NewsNotFoundException()
         
-        logger.info(f"Deleting news with id {news_id}")
-        return await self.news_repository.delete(news_id)
+#         logger.info(f"Deleting news with id {news_id}")
+#         return await self.news_repository.delete(news_id)
        
