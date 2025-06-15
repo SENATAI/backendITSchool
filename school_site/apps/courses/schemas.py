@@ -205,8 +205,11 @@ class LessonStudentSchema(BaseModel):
     is_excused_absence: bool
     is_sent_homework: bool
     is_graded_homework: bool
-    coins_for_visit: int
-    coins_for_homework: int
+    coins_for_visit: Optional[int] = None
+    grade_for_visit: Optional[int] = None
+    coins_for_homework: Optional[int] = None
+    grade_for_homework: Optional[int] = None
+
 
 class LessonGroupSchema(BaseModel):
     id: UUID

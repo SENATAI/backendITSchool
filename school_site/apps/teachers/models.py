@@ -10,8 +10,11 @@ class Teacher(Base, TimestampMixin):
     __tablename__ = "teachers"
 
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
-    user_id = Column(PostgresUUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
-
+    user_id = Column(
+        PostgresUUID, 
+        ForeignKey("users.id", ondelete="CASCADE"), 
+        nullable=False
+    )
     comments = relationship("Comment", back_populates="teacher")
     user = relationship("User", back_populates="teacher", foreign_keys="[Teacher.user_id]")
     groups = relationship("Group", back_populates="teacher")

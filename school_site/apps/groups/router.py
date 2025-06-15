@@ -19,7 +19,7 @@ from .depends import (
 from .schemas import (
     GroupReadSchema, GroupPaginationResultSchema, GroupCreateSchema, 
     GroupUpdateSchema, GroupAddStudentsSchema, GroupReadStudentsSchema, GroupReadTeacherSchema,
-    GroupWithStudentsAndTeacherSchema
+    GroupWithStudentsAndTeacherAndCoursesSchema
 )
 
 router = APIRouter(prefix='/api/groups', tags=['Groups'])
@@ -46,7 +46,7 @@ async def update_group(
     return updated_group
 
 
-@router.get("/{group_id}", response_model=GroupWithStudentsAndTeacherSchema, status_code=200)
+@router.get("/{group_id}", response_model=GroupWithStudentsAndTeacherAndCoursesSchema, status_code=200)
 async def get_group(
     group_id: UUID = Path(...),
     get: GetGroupUseCaseProtocol = Depends(get_group_get_use_case)

@@ -10,7 +10,7 @@ from ..schemas import (
     GroupReadHeadSchema,
     GroupPaginationResultSchema,
     GroupCreateDBSchema,
-    GroupWithStudentsAndTeacherSchema
+    GroupWithStudentsAndTeacherAndCoursesSchema
 )
 from ..repositories.groups import GroupRepositoryProtocol
 
@@ -22,7 +22,7 @@ class GroupServiceProtocol(Protocol):
     async def create(self, group: GroupCreateSchema) -> GroupReadSchema:
         ...
 
-    async def get(self, group_id: UUID) -> GroupWithStudentsAndTeacherSchema:
+    async def get(self, group_id: UUID) -> GroupWithStudentsAndTeacherAndCoursesSchema:
         ...
 
     async def update(self, group_id: UUID, group: GroupUpdateSchema) -> GroupReadSchema:
@@ -57,7 +57,7 @@ class GroupService(GroupServiceProtocol):
             teacher_id=new_group.teacher_id
         )
 
-    async def get(self, group_id: UUID) -> GroupWithStudentsAndTeacherSchema:
+    async def get(self, group_id: UUID) -> GroupWithStudentsAndTeacherAndCoursesSchema:
         group = await self.group_repository.get_with_students_and_teacher(group_id)
         return group
 

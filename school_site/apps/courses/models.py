@@ -118,8 +118,10 @@ class LessonStudent(Base):
     is_excused_absence = Column(Boolean, default=False)
     is_sent_homework = Column(Boolean, default=False)
     is_graded_homework = Column(Boolean, default=False)
-    coins_for_visit = Column(Integer, default=0)
-    coins_for_homework = Column(Integer, default=0)
+    coins_for_visit = Column(Integer, nullable=True)
+    grade_for_visit = Column(Integer, nullable=True)
+    coins_for_homework = Column(Integer, nullable=True)
+    grade_for_homework = Column(Integer, nullable=True)
     
     student = relationship("Student", back_populates="lessons")
     lesson_group = relationship("LessonGroup", back_populates="students")
