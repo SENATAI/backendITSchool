@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Path, Query, UploadFile, File, Form
 from school_site.apps.users.depends import access_token_schema
 from uuid import UUID
-from typing import Optional
+from typing import Optional, Union
 from .use_cases.courses.create_course import CreateCourseUseCaseProtocol
 from .use_cases.courses.update_course import UpdateCourseUseCaseProtocol
 from .use_cases.courses.get_course import GetCourseUseCaseProtocol
@@ -18,12 +18,15 @@ from .use_cases.materials.get_material import GetLessonHTMLFileUseCaseProtocol
 from .use_cases.materials.delete_material import DeleteLessonHTMLFileUseCaseProtocol
 from .use_cases.lesson_group_student.create_lesson_group_student import CreateLessonGroupStudentUseCaseProtocol
 from .use_cases.lesson_group_student.bulk_create_lesson_group_student import BulkCreateLessonGroupStudentUseCaseProtocol
-from .use_cases.file_homeworks.create_file_homework import CreateHomeworkFileUseCaseProtocol
-from .use_cases.homeworks.create_homework import CreateHomeworkUseCaseProtocol
 from .use_cases.add_homework import AddHomeworkUseCaseProtocol
 from .use_cases.comments.create_comment import CreateCommentUseCaseProtocol
 from .use_cases.comments.update_comment import UpdateCommentUseCaseProtocol
 from .use_cases.comments.delete_comment import DeleteCommentUseCaseProtocol
+from .use_cases.lesson_group.update_lesson_group import UpdateLessonGroupUseCaseProtocol
+from .use_cases.lessons.get_teacher_lesson_with_materials import GetTeacherMaterialUseCaseProtocol
+from .use_cases.lessons.get_student_lesson_with_material import GetStudentMaterialUseCaseProtocol
+from .use_cases.lessons.get_lesson_info_teacher import GetTeacherLessonInfoUseCaseProtocol
+from .use_cases.courses_students.get_courses_for_student import GetCoursesForStudentUseCaseProtocol
 from .depends import (
     get_course_create_use_case, get_course_update_use_case, get_course_get_use_case,
     get_course_delete_use_case, get_course_get_list_use_case,
@@ -31,20 +34,29 @@ from .depends import (
     get_lesson_delete_use_case, get_lesson_get_list_use_case, get_material_create_use_case,
     get_material_update_use_case, get_material_get_use_case, get_material_delete_use_case,
     get_create_lesson_group_student_use_case, get_bulk_create_lesson_group_student_use_case,
-    get_create_homework_file_use_case, get_create_homework_use_case, get_add_homework_use_case,
-    get_create_comment_use_case, get_update_comment_use_case, get_delete_comment_use_case
+    get_add_homework_use_case, get_teacher_lesson_info_use_case,
+    get_create_comment_use_case, get_update_comment_use_case, get_delete_comment_use_case,
+    get_lesson_group_update_use_case, get_lesson_for_teacher_use_case, get_lesson_for_student_use_case,
+    get_courses_for_student_use_case
 )
 from .schemas import (
     CourseWithPhotoReadSchema, CourseWithPhotoPaginationResultSchema,
     LessonReadSchema, LessonPaginationResultSchema, LessonCreateSchema, LessonUpdateSchema,
     LessonWithMaterialsCreateSchema, LessonWithMaterialsUpdateSchema, LessonHTMLCreateSchema, 
     LessonHTMLUpdateSchema, LessonWithMaterialsReadSchema, LessonWithMaterialsDeleteSchema,
-    LessonGroupReadSchema, LessonGroupCreateSchema, LessonHTMLReadSchema, AddHomeworkReadSchema,
-    CommentCreateSchema, CommentReadSchema, CommentUpdateSchema
+    LessonGroupReadSchema, LessonGroupCreateSchema, LessonGroupUpdateSchema, LessonHTMLReadSchema, AddHomeworkReadSchema,
+    CommentCreateSchema, CommentReadSchema, CommentUpdateSchema, LessonSimpleReadSchema, LessonStudentMaterialDetailReadSchema,
+    LessonTeacherMaterialDetailReadSchema, LessonInfoTeacherReadSchema, CourseStudentWithCoursesSchema
 )
 
 router = APIRouter(prefix='/api/courses', tags=['Courses'])
 
+@router.get("/student", response_model=list[CourseStudentWithCoursesSchema], status_code=200)
+async def get_courses_for_student(
+    access_token: str = Depends(access_token_schema),
+    get_courses_for_student: GetCoursesForStudentUseCaseProtocol = Depends(get_courses_for_student_use_case)
+):
+    return await get_courses_for_student(access_token)
 
 @router.post("/", response_model=CourseWithPhotoReadSchema, status_code=201)
 async def create_course(
@@ -240,9 +252,9 @@ async def update_lesson_with_materials(
         teacher_material_id=updated_teacher_material.id if updated_teacher_material else data.teacher_material_id,
         student_material_id=updated_student_material.id if updated_student_material else data.student_material_id,
         homework_id=updated_homework_material.id if updated_homework_material else data.homework_material_id,
-        teacher_material_url=updated_teacher_material.url if updated_teacher_material else data.teacher_material_url,
-        student_material_url=updated_student_material.url if updated_student_material else data.student_material_url,
-        homework_material_url=updated_homework_material.url if updated_homework_material else data.homework_material_url
+        teacher_material_url=updated_teacher_material.url if updated_teacher_material else None,
+        student_material_url=updated_student_material.url if updated_student_material else None,
+        homework_material_url=updated_homework_material.url if updated_homework_material else None
     )
 
 
@@ -323,6 +335,15 @@ async def create_group_with_students(
 ):
     return await create(data, access_token)
 
+@router.put("/lesson-group/{lesson_group_id}", response_model=LessonGroupReadSchema)
+async def update_lesson_group(
+    lesson_group: LessonGroupUpdateSchema,
+    lesson_group_id: UUID = Path(...),
+    access_token: str = Depends(access_token_schema),
+    update: UpdateLessonGroupUseCaseProtocol = Depends(get_lesson_group_update_use_case)
+):
+    return await update(lesson_group_id, lesson_group, access_token)
+
 @router.post("/lesson-groups", response_model=list[LessonGroupReadSchema])
 async def bulk_create_groups_with_students(
     data: list[LessonGroupCreateSchema],
@@ -401,3 +422,32 @@ async def delete_comment(
 ):
     await delete_comment(comment_id, access_token_schema)
     return None
+
+@router.get("/{course_id}/lessons/{lesson_id}/student-materials", response_model=Union[LessonSimpleReadSchema, LessonStudentMaterialDetailReadSchema], status_code=200)
+async def get_lesson_materials_for_student(
+    course_id: UUID = Path(...),
+    lesson_id: UUID = Path(...),
+    access_token: str = Depends(access_token_schema),
+    get_lesson_with_materials: GetStudentMaterialUseCaseProtocol = Depends(get_lesson_for_student_use_case)
+):
+    return await get_lesson_with_materials(lesson_id, access_token)
+
+@router.get("/{course_id}/lessons/{lesson_id}/teacher-materials", response_model=Union[LessonSimpleReadSchema, LessonTeacherMaterialDetailReadSchema], status_code=200)
+async def get_lesson_materials_for_teacher(
+    course_id: UUID = Path(...),
+    lesson_id: UUID = Path(...),
+    student_id: UUID = Query(...),
+    access_token: str = Depends(access_token_schema),
+    get_lesson_with_materials: GetTeacherMaterialUseCaseProtocol = Depends(get_lesson_for_teacher_use_case)
+):
+    return await get_lesson_with_materials(lesson_id, student_id, access_token)
+
+@router.get("/{course_id}/lessons/{lesson_id}/teacher-info", response_model=LessonInfoTeacherReadSchema, status_code=200)
+async def get_lesson_info_for_teacher(
+    course_id: UUID = Path(...),
+    lesson_id: UUID = Path(...),
+    access_token: str = Depends(access_token_schema),
+    get_lesson_info: GetTeacherLessonInfoUseCaseProtocol = Depends(get_teacher_lesson_info_use_case)
+):
+    return await get_lesson_info(lesson_id, access_token)
+

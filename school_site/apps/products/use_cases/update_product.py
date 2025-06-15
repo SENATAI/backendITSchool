@@ -18,7 +18,6 @@ class UpdateProductUseCase(UpdateProductUseCaseProtocol):
         self.product_service = product_service
     
     async def __call__(self, token: str, product_id: UUID, product_data: str, image: Optional[UploadFile]) -> ProductReadSchema:
-        print("image: ", image)
         await self.auth_service.get_admin_user(token)
         product = ProductUpdateSchema(**json.loads(product_data))
         return await self.product_service.update(product_id, product, image)

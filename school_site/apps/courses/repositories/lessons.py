@@ -1,20 +1,22 @@
 import sqlalchemy as sa
-from typing import Self, List, Union
+from sqlalchemy.orm import joinedload, contains_eager
+from typing import Self, Union
 from uuid import UUID
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
 from school_site.core.schemas import PaginationSchema
-from school_site.apps.students.models import Student
-from ..models import Lesson, LessonGroup, LessonStudent
+from school_site.core.utils.exceptions import ModelNotFoundException
+from ..models import Lesson, LessonGroup, LessonStudent, Homework
+from school_site.apps.groups.models import Group
 from ..schemas import (
     LessonCreateDBSchema,
     LessonReadDBSchema,
     LessonUpdateDBSchema,
     LessonPaginationResultDBSchema,
     LessonReadDBHeadSchema,
-    LessonDetailSchema,
-    LessonStudentOpenSchema,
-    LessonStudentClosedSchema,
-    LessonTeacherDetailSchema
+    LessonStudentMaterialDetailReadDBSchema,
+    LessonTeacherMaterialDetailReadDBSchema,
+    LessonSimpleReadSchema,
+    LessonInfoTeacherReadDBSchema
 )
 
 
@@ -37,7 +39,15 @@ class LessonRepositoryProtocol(BaseRepositoryImpl[
     async def check_teacher_material_exists(self: Self, teacher_material_id: UUID) -> bool:
         ...
 
-    async def get_lesson_for_student(self: Self, lesson_id, student_id) -> LessonDetailSchema:
+    async def get_lesson_for_student(self: Self, lesson_id: UUID, student_id: UUID) -> Union[LessonStudentMaterialDetailReadDBSchema, LessonSimpleReadSchema]:
+        ...
+
+    async def get_lesson_for_teacher(
+    self, lesson_id: UUID, student_id: UUID, teacher_id: UUID
+) -> Union[LessonTeacherMaterialDetailReadDBSchema, LessonSimpleReadSchema]:
+        ...
+
+    async def get_lesson_info_for_teacher(self: Self, lesson_id: UUID, teacher_id: UUID) -> LessonInfoTeacherReadDBSchema:
         ...
 
 class LessonRepository(LessonRepositoryProtocol):
@@ -81,70 +91,123 @@ class LessonRepository(LessonRepositoryProtocol):
             statement = sa.select(self.model_type).where(self.model_type.teacher_material_id == teacher_material_id)
             result = await s.execute(statement)
             return result.scalar_one_or_none() is not None 
-        
-    async def get_lesson_for_student(self: Self, lesson_id: UUID, student_id: UUID) -> Union[LessonStudentOpenSchema, LessonStudentClosedSchema]:
+    
+    async def get_lesson_for_student(
+    self, lesson_id: UUID, student_id: UUID
+) -> Union[LessonStudentMaterialDetailReadDBSchema, LessonSimpleReadSchema]:
         async with self.session as s:
-            student_groups = await self._get_student_groups(student_id)
-
-            opened_group = next((group for group in student_groups if group.is_opened), None)
-
-            if opened_group:
-                stmt = (
-                    sa.select(self.model_type)
-                    .where(self.model_type.id == lesson_id)
-                    .options(
-                        sa.joinedload(self.model_type.student_material),
-                        sa.joinedload(self.model_type.homework),
-                        sa.joinedload(self.model_type.groups)
-                        .where(LessonGroup.id == opened_group.id)
-                        .selectinload(LessonGroup.students)
-                        .where(LessonStudent.student_id == student_id)
-                        .selectinload(LessonStudent.passed_homeworks)
-                        .selectinload(LessonStudent.comments)
-                        .selectinload(LessonStudent.student)
-                        .selectinload(Student.user)
-                    )
-                )
-
-                result = await s.execute(stmt)
-                lesson = result.unique().scalars().first()
-
-                return LessonStudentOpenSchema.model_validate(lesson, from_attributes=True)
-
-            else:
-                result = await s.execute(sa.select(self.model_type.name).where(self.model_type.id == lesson_id))
-                name = result.scalar()
-                return LessonStudentClosedSchema(id=lesson_id, name=name)
-            
-    async def get_lesson_for_teacher(self: Self, lesson_id: UUID, student_id: UUID) -> LessonTeacherDetailSchema:
-        async with self.session as s:
-            stmt = (
-                sa.select(self.model_type)
-                .where(self.model_type.id == lesson_id)
-                .options(
-                    sa.joinedload(self.model_type.teacher_material),
-                    sa.joinedload(self.model_type.homework),
-                    sa.joinedload(self.model_type.groups)
-                    .selectinload(LessonGroup.students)
-                    .where(LessonStudent.student_id == student_id)
-                    .selectinload(LessonStudent.passed_homeworks)
-                    .selectinload(LessonStudent.comments)
-                    .selectinload(LessonStudent.student)
-                    .selectinload(Student.user)
-                )
-            )
-
-            result = await s.execute(stmt)
-            lesson = result.unique().scalars().first()
-
-            return LessonTeacherDetailSchema.model_validate(lesson, from_attributes=True)
-
-    async def _get_student_groups(self, student_id: UUID) -> List[LessonGroup]:
-        async with self.session as s:
-            stmt = (
+            lesson_group_stmt = (
                 sa.select(LessonGroup)
                 .join(LessonGroup.students)
-                .where(LessonStudent.student_id == student_id)
+                .where(
+                    LessonGroup.lesson_id == lesson_id,
+                    LessonStudent.student_id == student_id
+                )
             )
-            result = await s.execute(stmt)
-            return result.scalars().all()
+            lesson_groups = (await s.execute(lesson_group_stmt)).scalars().all()
+
+            if not lesson_groups:
+                raise ModelNotFoundException(model=LessonGroup, model_id=lesson_id)
+
+            opened_groups = [group for group in lesson_groups if group.is_opened]
+            
+            if not opened_groups:
+                lesson = await self.get(lesson_id)
+                return LessonSimpleReadSchema.model_validate(lesson, from_attributes=True)
+
+            lesson_stmt = (
+                sa.select(Lesson)
+                .where(Lesson.id == lesson_id)
+                .options(
+                    joinedload(Lesson.homework),
+                    joinedload(Lesson.student_material),
+                    joinedload(Lesson.groups)
+                    .selectinload(LessonGroup.students)
+                    .selectinload(LessonStudent.passed_homeworks)
+                    .selectinload(Homework.file),
+                    joinedload(Lesson.groups)
+                    .selectinload(LessonGroup.students)
+                    .selectinload(LessonStudent.comments)
+                )
+            )
+
+            lesson = (await s.execute(lesson_stmt)).unique().scalar_one()
+
+            lesson.groups = [group for group in lesson.groups if group.id in [g.id for g in opened_groups]]
+
+            return LessonStudentMaterialDetailReadDBSchema.model_validate(lesson, from_attributes=True)           
+    
+    async def get_lesson_for_teacher(
+    self, lesson_id: UUID, student_id: UUID, teacher_id: UUID
+) -> Union[LessonTeacherMaterialDetailReadDBSchema, LessonSimpleReadSchema]:
+        async with self.session as s:
+            lesson_group_stmt = (
+                sa.select(LessonGroup)
+                .join(LessonGroup.students)
+                .join(LessonGroup.group)
+                .where(
+                    LessonGroup.lesson_id == lesson_id,
+                    LessonStudent.student_id == student_id,
+                    Group.teacher_id == teacher_id
+                )
+            )
+            lesson_group = (await s.execute(lesson_group_stmt)).scalar()
+
+            if not lesson_group:
+                raise ModelNotFoundException(model=LessonGroup, model_id=lesson_id)
+
+            lesson_stmt = (
+                sa.select(Lesson)
+                .where(Lesson.id == lesson_id)
+                .join(Lesson.groups)
+                .join(LessonGroup.students)
+                .join(LessonGroup.group)
+                .where(
+                    LessonGroup.id == lesson_group.id,
+                    LessonStudent.student_id == student_id,
+                    Group.teacher_id == teacher_id
+                )
+                .options(
+                    joinedload(Lesson.teacher_material),
+                    joinedload(Lesson.homework),
+                    contains_eager(Lesson.groups)
+                    .contains_eager(LessonGroup.students)
+                    .selectinload(LessonStudent.passed_homeworks)
+                    .selectinload(Homework.file),
+                    contains_eager(Lesson.groups)
+                    .contains_eager(LessonGroup.students)
+                    .selectinload(LessonStudent.comments)
+                )
+            )
+
+            lesson = (await s.execute(lesson_stmt)).unique().scalar_one()
+
+            return LessonTeacherMaterialDetailReadDBSchema.model_validate(lesson, from_attributes=True)        
+    
+    async def get_lesson_info_for_teacher(
+    self: Self, lesson_id: UUID, teacher_id: UUID
+) -> LessonInfoTeacherReadDBSchema:
+        async with self.session as s:
+            lesson_stmt = (
+                sa.select(self.model_type)
+                .join(self.model_type.groups)        # ← LessonGroup
+                .join(LessonGroup.group)           # ← Group
+                .where(
+                    Lesson.id == lesson_id,
+                    Group.teacher_id == teacher_id  # ← Проверка принадлежности преподавателю
+                )
+                .options(
+                    joinedload(self.model_type.homework),
+                    joinedload(self.model_type.teacher_material),
+                    joinedload(self.model_type.groups)
+                    .selectinload(LessonGroup.students)  # ← Ученики в группе
+                )
+            )
+
+            result = await s.execute(lesson_stmt)
+            lesson = result.unique().scalar_one_or_none()  # ← Обязательно используйте .unique()
+
+            if not lesson:
+                raise ModelNotFoundException(model=Lesson, model_id=lesson_id)
+
+            return LessonInfoTeacherReadDBSchema.model_validate(lesson, from_attributes=True)
