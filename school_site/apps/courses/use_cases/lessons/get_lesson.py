@@ -12,4 +12,4 @@ class GetLessonUseCase(GetLessonUseCaseProtocol):
         self.lesson_service = lesson_service
     
     async def __call__(self, course_id: UUID, lesson_id: UUID) -> LessonReadSchema:
-        return await self.lesson_service.get(course_id, lesson_id) 
+        return await self.lesson_service.get(lesson_id) 

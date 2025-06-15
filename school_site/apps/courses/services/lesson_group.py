@@ -52,7 +52,7 @@ class LessonGroupService(LessonGroupServiceProtocol):
             lesson_id=lesson_group.lesson_id,
             group_id=lesson_group.group_id,
             holding_date=lesson_group.holding_date,
-            is_opened=lesson_group.holding_date
+            is_opened=lesson_group.is_opened
         )
         return await self.lesson_group_repository.update(db_lesson_group)
 

@@ -15,8 +15,11 @@ class Student(Base, TimestampMixin):
     __table_args__ = (
         CheckConstraint('points >= 0', name='positive_price_check'),
     )
-    user_id = Column(PostgresUUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
-
+    user_id = Column(
+        PostgresUUID, 
+        ForeignKey("users.id", ondelete="CASCADE"),  # ← CASCADE на уровне БД
+        nullable=False
+    )
     user = relationship("User", back_populates="student", foreign_keys="[Student.user_id]")
     groups = relationship("Group", secondary="group_student", back_populates="students")
     group_students = relationship("GroupStudent", back_populates="student", cascade="all, delete-orphan")

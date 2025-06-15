@@ -297,6 +297,9 @@ class HomeworkUpdateDBSchema(UpdateBaseModel, HomeworkBaseSchema):
 class HomeworkReadDBSchema(HomeworkBaseSchema):
     id: UUID
 
+class HomeworkReadWithFileDBSchema(HomeworkBaseSchema):
+    id: UUID
+    file: FileHomeworkReadDBSchema
 
 class HomeworkReadSchema(HomeworkBaseSchema):
     id: UUID
@@ -414,56 +417,134 @@ class CommentReadSchema(CommentBaseSchema, TimestampMixin):
     class Config:
         from_attributes = True
 
-class LessonDetailSchema(LessonShortSchema, LessonWithMaterialsBaseSchema):
-    groups: List[LessonGroupSchema] = []
-
-    class Config:
-        from_attributes = True
-
-class LessonMaterialBaseSchema(BaseModel):
-    homework: Optional[LessonHTMLReadDBSchema] = None
-    passed_homeworks: List[HomeworkReadDBSchema] = []
-    comments: List[CommentReadSchema] = []
-
-
-class LessonStudentOpenSchema(LessonShortSchema, LessonMaterialBaseSchema):
-    groups: List[LessonGroupSchema] = []
-    student_material: Optional[LessonHTMLReadDBSchema] = None
-
-
-    class Config:
-        from_attributes = True
-
-class LessonStudentClosedSchema(LessonShortSchema, LessonGroupSchema):
-    pass
-
-
-class LessonStudentForTeacherSchema(BaseModel):
-    id: UUID
-    student_id: UUID
-    is_visited: bool
-    passed_homeworks: List[HomeworkReadDBSchema] = []
-    comments: List[CommentReadSchema] = []
-    student: StudentReadWithUserSchema  # ← Включает user.name
-
-    class Config:
-        from_attributes = True
-
-
-class LessonGroupWithStudentsForTeacher(BaseModel):
-    id: UUID
-    students: List[LessonStudentForTeacherSchema] = []
-
-    class Config:
-        from_attributes = True
-
-
-class LessonTeacherDetailSchema(BaseModel):
+class LessonSimpleReadSchema(BaseModel):
     id: UUID
     name: str
-    teacher_material: Optional[LessonHTMLReadDBSchema]
-    homework: Optional[LessonHTMLReadDBSchema]
-    groups: List[LessonGroupWithStudentsForTeacher]
+
+    class Config:
+        from_attributes = True
+
+class LessonStudentDetailReadDBSchema(LessonStudentReadSchema):
+    passed_homeworks: Optional[List[HomeworkReadWithFileDBSchema]] = None
+    comments: Optional[List[CommentReadSchema]] = None
+
+    class Config:
+        from_attributes = True
+
+class LessonGroupDetailDBBaseSchema(LessonGroupBaseSchema):
+    students: Optional[List[LessonStudentDetailReadDBSchema]] = None
+
+    class Config:
+        from_attributes = True
+
+class LessonDetailReadDBSchema(BaseModel):
+    id: UUID
+    name: str
+    course_id: UUID
+    homework: Optional[LessonHTMLReadDBSchema] = None
+    groups: List[LessonGroupDetailDBBaseSchema] = []
+
+    class Config:
+        from_attributes = True
+
+class LessonStudentMaterialDetailReadDBSchema(LessonDetailReadDBSchema):
+    student_material: Optional[LessonHTMLReadDBSchema] = None
+
+    class Config:
+        from_attributes = True
+
+class LessonTeacherMaterialDetailReadDBSchema(LessonDetailReadDBSchema):
+    teacher_material: Optional[LessonHTMLReadDBSchema] = None
+    
+    class Config:
+        from_attributes = True
+
+
+
+
+
+class LessonStudentDetailReadSchema(LessonStudentReadSchema):
+    passed_homeworks: Optional[List[HomeworkReadSchema]] = None
+    comments: Optional[List[CommentReadSchema]] = None
+
+    class Config:
+        from_attributes = True
+
+class LessonGroupDetailBaseSchema(LessonGroupBaseSchema):
+    students: Optional[List[LessonStudentDetailReadSchema]] = None
+
+    class Config:
+        from_attributes = True
+
+class LessonDetailReadSchema(BaseModel):
+    id: UUID
+    name: str
+    course_id: UUID
+    homework: Optional[LessonHTMLReadSchema] = None
+    groups: List[LessonGroupDetailBaseSchema] = []
+
+    class Config:
+        from_attributes = True
+
+class LessonStudentMaterialDetailReadSchema(LessonDetailReadSchema):
+    student_material: Optional[LessonHTMLReadSchema] = None
+
+    class Config:
+        from_attributes = True
+
+class LessonTeacherMaterialDetailReadSchema(LessonDetailReadSchema):
+    teacher_material: Optional[LessonHTMLReadSchema] = None
+    
+    class Config:
+        from_attributes = True
+
+
+class LessonInfoTeacherReadDBSchema(BaseModel):
+    id: UUID
+    name: str
+    course_id: UUID
+    homework: Optional[LessonHTMLReadDBSchema] = None
+    teacher_material: Optional[LessonHTMLReadDBSchema] = None
+
+    class Config:
+        from_attributes = True
+
+class LessonInfoTeacherReadSchema(BaseModel):
+    id: UUID
+    name: str
+    course_id: UUID
+    homework: Optional[LessonHTMLReadSchema] = None
+    teacher_material: Optional[LessonHTMLReadSchema] = None
+
+
+# ====== COURSE STUDENTS SCHEMAS =======
+
+class CourseStudentBaseSchema(BaseModel):
+    student_id: UUID
+    course_id: UUID
+    progress: float = 0.0
+
+class CourseStudentCreateSchema(CreateBaseModel, CourseStudentBaseSchema):
+    pass
+
+class CourseStudentUpdateSchema(CreateBaseModel, CourseStudentBaseSchema):
+    pass
+
+class CourseStudentUpdateDBSchema(UpdateBaseModel, CourseStudentBaseSchema):
+    pass
+
+class CourseStudentReadSchema(CourseStudentBaseSchema):
+    id: UUID
+
+
+class CourseStudentWithCoursesDBSchema(CourseStudentReadSchema):
+    course: CourseWithPhotoReadDBSchema
+
+    class Config:
+        from_attributes = True
+
+class CourseStudentWithCoursesSchema(CourseStudentReadSchema):
+    course: CourseWithPhotoReadSchema
 
     class Config:
         from_attributes = True

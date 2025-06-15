@@ -18,6 +18,7 @@ class StudentRepositoryProtocol(BaseRepositoryImpl[
 
     async def get_students_by_group_id(self, group_id: UUID) -> List[Student]:
         ...
+    
 
 class StudentRepository(StudentRepositoryProtocol):
     async def get_by_user_id(self, user_id: UUID) -> StudentReadSchema:
