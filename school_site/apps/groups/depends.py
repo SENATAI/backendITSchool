@@ -23,6 +23,12 @@ from .use_cases.add_teacher import AddTeacherUseCaseProtocol, AddTeacherUseCase
 from .use_cases.delete_teacher import DeleteTeacherUseCaseProtocol, DeleteTeacherUseCase
 from school_site.apps.teachers.services.teachers import TeacherServiceProtocol
 from school_site.apps.teachers.depends import get_teachers_services
+from school_site.apps.courses.services.lesson_group import LessonGroupServiceProtocol
+from school_site.apps.courses.services.lesson_student import LessonStudentServiceProtocol
+from school_site.apps.courses.services.course_student import CourseStudentServiceProtocol
+from school_site.apps.courses.depends import get_lesson_group_service, get_lesson_student_service, get_course_student_service
+from school_site.apps.courses.services.lessons import LessonServiceProtocol
+from school_site.apps.courses.depends import get_lesson_service
 
 def get_auth_service(
     token_service: TokenServiceProtocol = Depends(get_token_service)
@@ -52,9 +58,21 @@ def get_group_service(
 def get_group_student_service(
     group_students_repository: GroupStudentsRepositoryProtocol = Depends(__get_group_students_repository),
     student_service: StudentServiceProtocol = Depends(get_students_services),
-    group_service: GroupServiceProtocol = Depends(get_group_service)
+    group_service: GroupServiceProtocol = Depends(get_group_service),
+    lesson_group_service: LessonGroupServiceProtocol = Depends(get_lesson_group_service),
+    lesson_student_service: LessonStudentServiceProtocol = Depends(get_lesson_student_service),
+    course_student_service: CourseStudentServiceProtocol = Depends(get_course_student_service),
+    lesson_service: LessonServiceProtocol = Depends(get_lesson_service)
 ) -> GroupStudentServiceProtocol:
-    return GroupStudentService(group_students_repository, group_service, student_service)
+    return GroupStudentService(
+        group_students_repository,
+        group_service,
+        student_service,
+        lesson_group_service,
+        lesson_student_service,
+        course_student_service,
+        lesson_service
+    )
 
 def get_group_teacher_service(
     group_teachers_repository: GroupTeachersRepositoryProtocol = Depends(__get_group_teachers_repository),

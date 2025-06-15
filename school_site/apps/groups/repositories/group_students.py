@@ -7,6 +7,7 @@ from ..schemas import (
     GroupReadStudentsDBSchema,
     GroupUpdateStudentsDBSchema
 )
+from school_site.apps.courses.models import LessonGroup
 
 
 class GroupStudentsRepositoryProtocol(BaseRepositoryImpl[
@@ -19,6 +20,9 @@ class GroupStudentsRepositoryProtocol(BaseRepositoryImpl[
         ...
 
     async def delete_student(self, group_id: UUID, student_id: UUID) -> bool:
+        ...
+
+    async def get_lesson_groups_by_group_id(self, group_id: UUID) -> list[LessonGroup]:
         ...
 
 
@@ -43,3 +47,9 @@ class GroupStudentsRepository(GroupStudentsRepositoryProtocol):
                 )
             )
             return True
+
+    async def get_lesson_groups_by_group_id(self, group_id: UUID) -> list[LessonGroup]:
+        async with self.session as s:
+            query = sa.select(LessonGroup).where(LessonGroup.group_id == group_id)
+            result = await s.execute(query)
+            return list(result.scalars().all())
