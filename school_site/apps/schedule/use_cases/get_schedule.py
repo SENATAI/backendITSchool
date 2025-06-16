@@ -22,7 +22,4 @@ class GetScheduleUseCase(GetScheduleUseCaseProtocol):
         elif token_data.role == UserRole.TEACHER:
             return await self.schedule_service.get_teacher_schedule(token_data.user_id)
         else:
-            raise ValidationError(
-                field="UserRole",
-                message="role must be either student or teacher"
-            ) 
+            return await self.schedule_service.get_all_groups_schedule() 

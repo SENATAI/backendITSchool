@@ -7,7 +7,9 @@ class ScheduleReadSchema(BaseModel):
     id: UUID
     lesson_id: UUID
     group_id: UUID
-    holding_date: datetime
+    start_datetime: datetime
+    end_datetime: datetime
+    auditorium: str
     is_opened: bool
     lesson_name: str
     course_name: str

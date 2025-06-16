@@ -41,7 +41,7 @@ class GetFilteredScheduleUseCase(GetFilteredScheduleUseCaseProtocol):
                 date_end
             )
         else:
-            raise ValidationError(
-                field="UserRole",
-                message="role must be either student or teacher"
+            return await self.schedule_service.get_filtered_all_groups_schedule(
+                date_start,
+                date_end
             ) 

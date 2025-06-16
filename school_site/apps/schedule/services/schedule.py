@@ -29,6 +29,16 @@ class ScheduleServiceProtocol(UseCaseProtocol[List[ScheduleReadSchema]]):
     ) -> List[ScheduleReadSchema]:
         ...
 
+    async def get_all_groups_schedule(self: Self) -> List[ScheduleReadSchema]:
+        ...
+
+    async def get_filtered_all_groups_schedule(
+        self: Self,
+        date_start: datetime,
+        date_end: datetime
+    ) -> List[ScheduleReadSchema]:
+        ...
+
 class ScheduleService(ScheduleServiceProtocol):
     def __init__(
         self: Self,
@@ -62,6 +72,19 @@ class ScheduleService(ScheduleServiceProtocol):
     ) -> List[ScheduleReadSchema]:
         return await self.schedule_repository.get_filtered_teacher_schedule(
             user_id,
+            date_start,
+            date_end
+        )
+
+    async def get_all_groups_schedule(self: Self) -> List[ScheduleReadSchema]:
+        return await self.schedule_repository.get_all_groups_schedule()
+
+    async def get_filtered_all_groups_schedule(
+        self: Self,
+        date_start: datetime,
+        date_end: datetime
+    ) -> List[ScheduleReadSchema]:
+        return await self.schedule_repository.get_filtered_all_groups_schedule(
             date_start,
             date_end
         ) 
