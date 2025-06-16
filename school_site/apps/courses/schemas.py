@@ -266,7 +266,7 @@ class FileHomeworkReadDBSchema(FileHomeworkBaseSchema, TimestampMixin):
 
 class FileHomeworkReadSchema(FileHomeworkBaseSchema, TimestampMixin):
     id: UUID
-    url: HttpUrl
+    url: Optional[HttpUrl]
     
 # ====== HOMEWORKS SCHEMAS =======
 
@@ -338,12 +338,14 @@ class LessonGroupReadWithLessonSchema(LessonGroupBaseSchema):
 class LessonStudentBaseSchema(BaseModel):
     student_id: UUID
     lesson_group_id: UUID
-    is_visited: bool = False
-    is_excused_absence: bool = False
-    is_sent_homework: bool = False
-    is_graded_homework: bool = False
-    coins_for_visit: int = 0
-    coins_for_homework: int = 0
+    is_visited: Optional[bool] = None
+    is_excused_absence: Optional[bool] = None
+    is_sent_homework: Optional[bool] = None
+    is_graded_homework: Optional[bool] = None
+    coins_for_visit: Optional[int] = None
+    grade_for_visit: Optional[int] = None
+    coins_for_homework: Optional[int] = None
+    grade_for_homework: Optional[int] = None
 
 
 class LessonStudentCreateSchema(CreateBaseModel, LessonStudentBaseSchema):
@@ -357,9 +359,16 @@ class LessonStudentUpdateDBSchema(UpdateBaseModel, LessonStudentBaseSchema):
     pass
 
 
-class LessonStudentReadSchema(LessonStudentBaseSchema, TimestampMixin):
+class LessonStudentReadSchema(LessonStudentBaseSchema):
     id: UUID
 
+
+    class Config:
+        from_attributes = True
+
+class LessonStudentReadWithStudentSchema(LessonStudentBaseSchema):
+    id: UUID
+    student: StudentReadWithUserSchema
 
     class Config:
         from_attributes = True

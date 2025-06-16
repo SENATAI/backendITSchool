@@ -116,10 +116,10 @@ class LessonStudent(Base):
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     student_id = Column(PostgresUUID(as_uuid=True), ForeignKey("students.id"))
     lesson_group_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_groups.id"))
-    is_visited = Column(Boolean, default=False)
-    is_excused_absence = Column(Boolean, default=False)
-    is_sent_homework = Column(Boolean, default=False)
-    is_graded_homework = Column(Boolean, default=False)
+    is_visited = Column(Boolean, nullable=True)
+    is_excused_absence = Column(Boolean, nullable=True)
+    is_sent_homework = Column(Boolean, nullable=True)
+    is_graded_homework = Column(Boolean, nullable=True)
     coins_for_visit = Column(Integer, nullable=True)
     grade_for_visit = Column(Integer, nullable=True)
     coins_for_homework = Column(Integer, nullable=True)
@@ -138,9 +138,16 @@ class LessonStudent(Base):
 class LessonStudentHomework(Base):
     __tablename__ = "lesson_student_homework"
 
-    lesson_student_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_students.id"), primary_key=True)
-    homework_id = Column(PostgresUUID(as_uuid=True), ForeignKey("homeworks.id"), primary_key=True)
-
+    lesson_student_id = Column(
+        PostgresUUID(as_uuid=True), 
+        ForeignKey("lesson_students.id", ondelete="CASCADE"),  # Добавить каскадное удаление
+        primary_key=True
+    )
+    homework_id = Column(
+        PostgresUUID(as_uuid=True), 
+        ForeignKey("homeworks.id", ondelete="CASCADE"),  # И здесь тоже
+        primary_key=True
+    )
 
 class CourseStudent(Base):
     __tablename__ = "course_students"
