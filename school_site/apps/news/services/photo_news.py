@@ -51,7 +51,7 @@ class PhotoService(PhotoServiceProtocol):
         
         photo_for_create = PhotoCreateDBSchema(
             name=photo.name,
-            course_id=photo.news_id,
+            news_id=photo.news_id,
             path=path
         )
         created_photo = await self.photo_repository.create(photo_for_create)
@@ -59,7 +59,7 @@ class PhotoService(PhotoServiceProtocol):
         return PhotoReadSchema(
             id=created_photo.id,
             name=created_photo.name,
-            course_id=created_photo.news_id,
+            news_id=created_photo.news_id,
             url=uploaded_photo_url
         ) 
 
@@ -75,7 +75,7 @@ class PhotoService(PhotoServiceProtocol):
         return PhotoReadSchema(
             id=photo.id,
             name=photo.name,
-            course_id=photo.news_id,
+            news_id=photo.news_id,
             url=photo_url,
             created_at=photo.created_at,
             updated_at=photo.updated_at
@@ -85,7 +85,7 @@ class PhotoService(PhotoServiceProtocol):
     async def update(self, photo_id: UUID, photo: PhotoUpdateSchema, image: UploadFile) -> PhotoReadSchema:
         db_update_photo = PhotoUpdateDBSchema(
             id=photo_id,
-            course_id=photo.news_id,
+            news_id=photo.news_id,
             name=photo.name
         )
         updated_photo = await self.photo_repository.update(db_update_photo)
@@ -96,7 +96,7 @@ class PhotoService(PhotoServiceProtocol):
         return PhotoReadSchema(
             id=updated_photo.id,
             name=updated_photo.name,
-            course_id=updated_photo.news_id,
+            news_id=updated_photo.news_id,
             url=updated_photo_url,
             created_at=updated_photo.created_at
         ) 
