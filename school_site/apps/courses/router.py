@@ -27,7 +27,8 @@ from .use_cases.lessons.get_teacher_lesson_with_materials import GetTeacherMater
 from .use_cases.lessons.get_student_lesson_with_material import GetStudentMaterialUseCaseProtocol
 from .use_cases.lessons.get_lesson_info_teacher import GetTeacherLessonInfoUseCaseProtocol
 from .use_cases.courses_students.get_courses_for_student import GetCoursesForStudentUseCaseProtocol
-from .use_cases.courses_teachers.get_courses_for_teacher import GetCoursesForTeacherUseCaseProtocol 
+from .use_cases.courses_teachers.get_courses_for_teacher import GetCoursesForTeacherUseCaseProtocol
+from .use_cases.lesson_group.get_by_group_id import GetByGroupIdLessonGroupUseCaseProtocol 
 from .depends import (
     get_course_create_use_case, get_course_update_use_case, get_course_get_use_case,
     get_course_delete_use_case, get_course_get_list_use_case,
@@ -38,7 +39,8 @@ from .depends import (
     get_add_homework_use_case, get_teacher_lesson_info_use_case,
     get_create_comment_use_case, get_update_comment_use_case, get_delete_comment_use_case,
     get_lesson_group_update_use_case, get_lesson_for_teacher_use_case, get_lesson_for_student_use_case,
-    get_courses_for_student_use_case, get_courses_for_teacher_use_case
+    get_courses_for_student_use_case, get_courses_for_teacher_use_case, 
+    get_by_group_id_lesson_group_use_case
 )
 from .schemas import (
     CourseWithPhotoReadSchema, CourseWithPhotoPaginationResultSchema,
@@ -47,7 +49,8 @@ from .schemas import (
     LessonHTMLUpdateSchema, LessonWithMaterialsReadSchema, LessonWithMaterialsDeleteSchema,
     LessonGroupReadSchema, LessonGroupCreateSchema, LessonGroupUpdateSchema, LessonHTMLReadSchema, AddHomeworkReadSchema,
     CommentCreateSchema, CommentReadSchema, CommentUpdateSchema, LessonSimpleReadSchema, LessonStudentMaterialDetailReadSchema,
-    LessonTeacherMaterialDetailReadSchema, LessonInfoTeacherReadSchema, CourseStudentWithCoursesSchema
+    LessonTeacherMaterialDetailReadSchema, LessonInfoTeacherReadSchema, CourseStudentWithCoursesSchema,
+    LessonGroupReadWithLessonSchema
 )
 
 router = APIRouter(prefix='/api/courses', tags=['Courses'])
@@ -65,6 +68,24 @@ async def get_courses_for_teacher(
     get_courses_for_teacher: GetCoursesForTeacherUseCaseProtocol = Depends(get_courses_for_teacher_use_case)
 ):
     return await get_courses_for_teacher(access_token)
+
+@router.post("/lesson-group", response_model=LessonGroupReadSchema)
+async def create_group_with_students(
+    data: LessonGroupCreateSchema,
+    create: CreateLessonGroupStudentUseCaseProtocol = Depends(get_create_lesson_group_student_use_case),
+    access_token: str = Depends(access_token_schema)
+
+):
+    return await create(data, access_token)
+
+@router.get("/lesson-group", response_model=list[LessonGroupReadWithLessonSchema])
+async def get_lesson_group_by_id(
+    group_id: UUID = Query(...),
+    get: GetByGroupIdLessonGroupUseCaseProtocol = Depends(get_by_group_id_lesson_group_use_case),
+    access_token: str = Depends(access_token_schema)
+
+):
+    return await get(group_id)
 
 @router.post("/", response_model=CourseWithPhotoReadSchema, status_code=201)
 async def create_course(
@@ -333,15 +354,6 @@ async def delete_lesson_with_materials(
 
     return None
 
-
-@router.post("/lesson-group", response_model=LessonGroupReadSchema)
-async def create_group_with_students(
-    data: LessonGroupCreateSchema,
-    create: CreateLessonGroupStudentUseCaseProtocol = Depends(get_create_lesson_group_student_use_case),
-    access_token: str = Depends(access_token_schema)
-
-):
-    return await create(data, access_token)
 
 @router.put("/lesson-group/{lesson_group_id}", response_model=LessonGroupReadSchema)
 async def update_lesson_group(

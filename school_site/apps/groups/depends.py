@@ -15,6 +15,7 @@ from .use_cases.delete_group import DeleteGroupUseCaseProtocol, DeleteGroupUseCa
 from .use_cases.list_groups import GetListGroupsUseCaseProtocol, GetListGroupsUseCase
 from .use_cases.add_students import AddStudentsUseCaseProtocol, AddStudentsUseCase
 from .use_cases.delete_student import DeleteStudentUseCaseProtocol, DeleteStudentUseCase
+from .use_cases.get_for_teacher import GetGroupForTeacherUseCaseProtocol, GetGroupForTeacherUseCase
 from school_site.apps.students.services.students import StudentServiceProtocol
 from school_site.apps.students.depends import get_students_services
 from .repositories.group_teachers import GroupTeachersRepositoryProtocol, GroupTeachersRepository
@@ -132,3 +133,10 @@ def get_delete_teacher_use_case(
         teacher_service: GroupTeacherServiceProtocol = Depends(get_group_teacher_service)
 ) -> DeleteTeacherUseCaseProtocol:
     return DeleteTeacherUseCase(auth_service, teacher_service)
+
+def get_group_for_teacher_use_case(
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service),
+        group_service: GroupTeacherServiceProtocol = Depends(get_group_teacher_service),
+        teacher_service: TeacherServiceProtocol = Depends(get_teachers_services)
+) -> GetGroupForTeacherUseCaseProtocol:
+    return GetGroupForTeacherUseCase(group_service, teacher_service, auth_service)

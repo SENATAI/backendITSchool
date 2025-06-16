@@ -93,9 +93,11 @@ class LessonGroup(Base):
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     lesson_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lessons.id"))
     group_id = Column(PostgresUUID(as_uuid=True), ForeignKey("groups.id"))
-    holding_date = Column(DateTime, nullable=False)
+    start_datetime = Column(DateTime, nullable=False)  # Дата и время начала урока
+    end_datetime = Column(DateTime, nullable=False)    # Дата и время окончания урока
     is_opened = Column(Boolean, default=False)
-    
+    auditorium = Column(String, nullable=True)
+
     lesson = relationship("Lesson", back_populates="groups")
     group = relationship("Group", back_populates="lessons")
     students = relationship(
