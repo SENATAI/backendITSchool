@@ -35,6 +35,16 @@ class ScheduleRepositoryProtocol(BaseRepositoryImpl[LessonGroup, ScheduleReadSch
     ) -> List[ScheduleReadSchema]:
         ...
 
+    async def get_all_groups_schedule(self) -> List[ScheduleReadSchema]:
+        ...
+
+    async def get_filtered_all_groups_schedule(
+        self,
+        date_start: datetime,
+        date_end: datetime
+    ) -> List[ScheduleReadSchema]:
+        ...
+
 class ScheduleRepository(ScheduleRepositoryProtocol):
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -181,6 +191,70 @@ class ScheduleRepository(ScheduleRepositoryProtocol):
                 .where(
                     and_(
                         Group.teacher_id == teacher_id,
+                        LessonGroup.start_datetime >= date_start,
+                        LessonGroup.end_datetime <= date_end
+                    )
+                )
+                .order_by(LessonGroup.start_datetime)
+            )
+            result = await session.execute(stmt)
+            lesson_groups = result.scalars().all()
+            
+            return [
+                ScheduleReadSchema(
+                    id=group.id,
+                    lesson_id=group.lesson_id,
+                    group_id=group.group_id,
+                    start_datetime=group.start_datetime,
+                    end_datetime=group.end_datetime,
+                    auditorium=group.auditorium,
+                    is_opened=group.is_opened,
+                    lesson_name=group.lesson.name,
+                    course_name=group.lesson.course.name
+                )
+                for group in lesson_groups
+            ]
+
+    async def get_all_groups_schedule(self) -> List[ScheduleReadSchema]:
+        async with self.session as session:
+            stmt = (
+                select(LessonGroup)
+                .options(
+                    selectinload(LessonGroup.lesson).selectinload(Lesson.course)
+                )
+                .order_by(LessonGroup.start_datetime)
+            )
+            result = await session.execute(stmt)
+            lesson_groups = result.scalars().all()
+            
+            return [
+                ScheduleReadSchema(
+                    id=group.id,
+                    lesson_id=group.lesson_id,
+                    group_id=group.group_id,
+                    start_datetime=group.start_datetime,
+                    end_datetime=group.end_datetime,
+                    auditorium=group.auditorium,
+                    is_opened=group.is_opened,
+                    lesson_name=group.lesson.name,
+                    course_name=group.lesson.course.name
+                )
+                for group in lesson_groups
+            ]
+
+    async def get_filtered_all_groups_schedule(
+        self,
+        date_start: datetime,
+        date_end: datetime
+    ) -> List[ScheduleReadSchema]:
+        async with self.session as session:
+            stmt = (
+                select(LessonGroup)
+                .options(
+                    selectinload(LessonGroup.lesson).selectinload(Lesson.course)
+                )
+                .where(
+                    and_(
                         LessonGroup.start_datetime >= date_start,
                         LessonGroup.end_datetime <= date_end
                     )

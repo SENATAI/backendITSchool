@@ -19,12 +19,12 @@ async def get_schedule(
 @router.get('/lessons', response_model=List[ScheduleReadSchema], status_code=200)
 async def get_filtered_schedule(
     access_token: str = Depends(access_token_schema),
-    date_start: datetime = Query(..., description="Start date for filtering"),
-    date_end: datetime = Query(..., description="End date for filtering"),
+    datetime_start: datetime = Query(..., description="Start date for filtering"),
+    datetime_end: datetime = Query(..., description="End date for filtering"),
     get_filtered_schedule_use_case: GetFilteredScheduleUseCaseProtocol = Depends(get_filtered_schedule_use_case)
 ):
     return await get_filtered_schedule_use_case(
         access_token=access_token,
-        date_start=date_start,
-        date_end=date_end
+        date_start=datetime_start,
+        date_end=datetime_end
     )
