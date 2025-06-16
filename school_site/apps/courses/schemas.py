@@ -211,17 +211,6 @@ class LessonStudentSchema(BaseModel):
     grade_for_homework: Optional[int] = None
 
 
-class LessonGroupSchema(BaseModel):
-    id: UUID
-    holding_date: datetime
-    is_opened: bool
-    students: List[LessonStudentSchema] = []
-
-    class Config:
-        from_attributes = True
-
-
-
 # ====== LESSON HTML FILES SCHEMAS =======
 
 class LessonHTMLBaseSchema(BaseModel):
@@ -314,8 +303,10 @@ class HomeworkReadSchema(HomeworkBaseSchema):
 class LessonGroupBaseSchema(BaseModel):
     lesson_id: UUID
     group_id: UUID
-    holding_date: datetime
+    start_datetime: datetime
+    end_datetime: datetime
     is_opened: bool = False
+    auditorium: str
 
 
 class LessonGroupCreateSchema(CreateBaseModel, LessonGroupBaseSchema):
@@ -329,13 +320,18 @@ class LessonGroupUpdateDBSchema(UpdateBaseModel, LessonGroupBaseSchema):
     pass
 
 
-class LessonGroupReadSchema(LessonGroupBaseSchema, TimestampMixin):
+class LessonGroupReadSchema(LessonGroupBaseSchema):
     id: UUID
 
     class Config:
         from_attributes = True
 
+class LessonGroupReadWithLessonSchema(LessonGroupBaseSchema):
+    id: UUID
+    lesson: LessonReadDBSchema
 
+    class Config:
+        from_attributes = True
 
 # ====== LESSON STUDENT SCHEMAS =======
 

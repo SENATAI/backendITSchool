@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 class AuthAdminServiceProtocol(TokenServiceProtocol):
     async def get_admin_user(self, token: str) -> UserTokenDataReadSchema:
         ...
+    async def get_teacher_user(self, token: str) -> UserTokenDataReadSchema:
+        ...
 
 
 class AuthService(AuthAdminServiceProtocol):
@@ -26,3 +28,10 @@ class AuthService(AuthAdminServiceProtocol):
             logger.error("User is not an admin or superadmin")
             raise PermissionDeniedError()
         return user_data 
+    
+    async def get_teacher_user(self, token: str) -> UserTokenDataReadSchema:
+        user_data = await self.decode_access_token(token)
+        if user_data.role not in [UserRole.TEACHER]:
+            logger.error("User is not a teacher")
+            raise PermissionDeniedError()
+        return user_data
