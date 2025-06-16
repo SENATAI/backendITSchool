@@ -84,9 +84,8 @@ class CourseService(CourseServiceProtocol):
             photo_read = PhotoReadSchema(
                 id=course.photo.id,
                 name=course.photo.name,
-                product_id=course.id,
-                url=image_url,
                 course_id=course.id,
+                url=image_url,
                 created_at=course.photo.created_at,
                 updated_at=course.photo.updated_at
             )
@@ -123,7 +122,7 @@ class CourseService(CourseServiceProtocol):
             photo = await self.photo_service.update(
                 photo_id,
                 PhotoUpdateSchema(
-                    product_id=course_id,
+                    course_id=course_id,
                     name=course.photo.name
                 ),
                 image

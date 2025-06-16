@@ -22,6 +22,17 @@ class NewsRepositoryProtocol(BaseRepositoryImpl[News, NewsReadSchema, NewsCreate
     async def get_with_photo(self, id: str) -> NewsWithPhotoReadDBSchema:
         ...
 
+    async def paginate(
+        self: Self,
+        search: str,
+        search_by: Iterable[str],
+        sorting: Iterable[str],
+        pagination: PaginationSchema,
+        user: Any,
+        policies: list[str],
+    ) -> NewsWithPhotoPaginationResultDBSchema:
+        ...
+
 class NewsRepository(NewsRepositoryProtocol):
     async def get_by_name(self, name: str) -> NewsReadSchema | None:
         async with self.session as session:
@@ -75,7 +86,7 @@ class NewsRepository(NewsRepositoryProtocol):
                 .scalars()
                 .all()
             )
-            objects = [NewsWithPhotoPaginationResultDBSchema.model_validate(model, from_attributes=True) for model in models]
+            objects = [NewsWithPhotoReadDBSchema.model_validate(model, from_attributes=True) for model in models]
             count_statement = statement.with_only_columns(func.count(self.model_type.id))
             count = (await s.execute(count_statement)).scalar_one()
             return NewsWithPhotoPaginationResultDBSchema(count=count, objects=objects)

@@ -1,5 +1,5 @@
 from uuid import uuid4
-from sqlalchemy import Column, String, Boolean
+from sqlalchemy import Column, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 
 from school_site.core.db import Base 
@@ -23,7 +23,11 @@ class PhotoNews(Base, TimestampMixin, FileMixin):
     __tablename__ = 'photo_news'
     
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
-    news_id = Column(PostgresUUID(as_uuid=True), nullable=False)
-    news = relationship("News", back_populates="photo", uselist=False, cascade="all, delete-orphan")
+    news_id = Column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("news.id"),  # ← Добавлен внешний ключ
+        nullable=False,
+    )    
+    news = relationship("News", back_populates="photo")
 
 __all__ = ["News", "PhotoNews"]
