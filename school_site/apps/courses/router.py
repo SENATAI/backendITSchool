@@ -29,6 +29,12 @@ from .use_cases.lessons.get_lesson_info_teacher import GetTeacherLessonInfoUseCa
 from .use_cases.courses_students.get_courses_for_student import GetCoursesForStudentUseCaseProtocol
 from .use_cases.courses_teachers.get_courses_for_teacher import GetCoursesForTeacherUseCaseProtocol
 from .use_cases.lesson_group.get_by_group_id import GetByGroupIdLessonGroupUseCaseProtocol 
+from .use_cases.lesson_students.get_all_by_lesson_group import GetAllLessonStudentsByLessonGroupUseCaseProtocol
+from .use_cases.lesson_students.get_detailed_student import GetDetailedLessonStudentUseCaseProtocol
+from .use_cases.lesson_students.create_ls_and_update_student import CreateLessonStudentsAndUpdateStudentsUseCaseProtocol
+from .use_cases.lesson_students.update_ls_and_update_student import UpdateLessonStudentsAndUpdateStudentsUseCaseProtocol
+from .use_cases.lesson_students.delete_ls_and_update_student import DeleteLessonStudentsAndUpdateStudentsUseCaseProtocol
+
 from .depends import (
     get_course_create_use_case, get_course_update_use_case, get_course_get_use_case,
     get_course_delete_use_case, get_course_get_list_use_case,
@@ -40,7 +46,12 @@ from .depends import (
     get_create_comment_use_case, get_update_comment_use_case, get_delete_comment_use_case,
     get_lesson_group_update_use_case, get_lesson_for_teacher_use_case, get_lesson_for_student_use_case,
     get_courses_for_student_use_case, get_courses_for_teacher_use_case, 
-    get_by_group_id_lesson_group_use_case
+    get_by_group_id_lesson_group_use_case,
+    get_all_lesson_students_by_lesson_group_use_case,
+    get_detailed_lesson_student_use_case,
+    get_create_lesson_students_and_update_students_use_case,
+    get_update_lesson_students_and_update_students_use_case,
+    get_delete_lesson_students_and_update_students_use_case
 )
 from .schemas import (
     CourseWithPhotoReadSchema, CourseWithPhotoPaginationResultSchema,
@@ -50,7 +61,8 @@ from .schemas import (
     LessonGroupReadSchema, LessonGroupCreateSchema, LessonGroupUpdateSchema, LessonHTMLReadSchema, AddHomeworkReadSchema,
     CommentCreateSchema, CommentReadSchema, CommentUpdateSchema, LessonSimpleReadSchema, LessonStudentMaterialDetailReadSchema,
     LessonTeacherMaterialDetailReadSchema, LessonInfoTeacherReadSchema, CourseStudentWithCoursesSchema,
-    LessonGroupReadWithLessonSchema
+    LessonGroupReadWithLessonSchema, LessonStudentReadWithStudentSchema, LessonStudentDetailReadSchema, LessonStudentReadSchema,
+    LessonStudentUpdateSchema
 )
 
 router = APIRouter(prefix='/api/courses', tags=['Courses'])
@@ -86,6 +98,40 @@ async def get_lesson_group_by_id(
 
 ):
     return await get(group_id)
+
+@router.get("/lesson-student", response_model=list[LessonStudentReadWithStudentSchema])
+async def get_lesson_student_by_lesson_group_id(
+    lesson_group_id: UUID = Query(...),
+    get: GetAllLessonStudentsByLessonGroupUseCaseProtocol = Depends(get_all_lesson_students_by_lesson_group_use_case),
+    access_token: str = Depends(access_token_schema)
+
+):
+    return await get(lesson_group_id)
+
+@router.get("/lesson-student/{lesson_student_id}", response_model=LessonStudentDetailReadSchema)
+async def get_lesson_student_by_id(
+    lesson_student_id: UUID = Path(...),
+    get: GetDetailedLessonStudentUseCaseProtocol = Depends(get_detailed_lesson_student_use_case)
+):
+    return await get(lesson_student_id)
+
+@router.put("/lesson-student/{lesson_student_id}", response_model=LessonStudentReadSchema)
+async def update_lesson_student(
+    lesson_student: LessonStudentUpdateSchema,
+    lesson_student_id: UUID = Path(...),
+    access_token: str = Depends(access_token_schema),
+    update: UpdateLessonStudentsAndUpdateStudentsUseCaseProtocol = Depends(get_update_lesson_students_and_update_students_use_case)
+):
+    return await update(lesson_student_id, lesson_student)
+
+@router.delete("/lesson-student/{lesson_student_id}", status_code=204)
+async def delete_lesson_student(
+    lesson_student_id: UUID = Path(...),
+    access_token: str = Depends(access_token_schema),
+    delete: DeleteLessonStudentsAndUpdateStudentsUseCaseProtocol = Depends(get_delete_lesson_students_and_update_students_use_case)
+):
+    await delete(lesson_student_id)
+    return None
 
 @router.post("/", response_model=CourseWithPhotoReadSchema, status_code=201)
 async def create_course(
