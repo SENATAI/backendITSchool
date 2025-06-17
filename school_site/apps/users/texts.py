@@ -5,7 +5,7 @@ HTML_EMAIL_BODY_TEMPLATE = """
     <p>Мы получили запрос на сброс пароля для вашей учетной записи.  
        Для завершения процесса нажмите на кнопку ниже (действует в течение <strong>{duration} часа</strong>):</p>
     
-    <a href="https://{url}/reset-password?token={token}" 
+    <a href="http://{url}/reset-password?token={token}" 
        style="display: inline-block; padding: 12px 24px; background: #007BFF; 
               color: white; text-decoration: none; border-radius: 4px;">
        Сбросить пароль
