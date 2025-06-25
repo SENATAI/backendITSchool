@@ -93,8 +93,8 @@ class LessonGroup(Base):
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     lesson_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lessons.id"))
     group_id = Column(PostgresUUID(as_uuid=True), ForeignKey("groups.id"))
-    start_datetime = Column(DateTime, nullable=False)  # Дата и время начала урока
-    end_datetime = Column(DateTime, nullable=False)    # Дата и время окончания урока
+    start_datetime = Column(DateTime, nullable=False)  
+    end_datetime = Column(DateTime, nullable=False)   
     is_opened = Column(Boolean, default=False)
     auditorium = Column(String, nullable=True)
 

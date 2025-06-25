@@ -222,7 +222,9 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
                 group_schema = LessonGroupDetailBaseSchema(
                     lesson_id=group.lesson_id,
                     group_id=group.group_id,
-                    holding_date=group.holding_date,
+                    auditorium=group.auditorium,
+                    start_datetime=group.start_datetime,
+                    end_datetime=group.end_datetime,
                     is_opened=group.is_opened,
                     students=processed_students
                 )

@@ -55,7 +55,9 @@ class LessonGroupService(LessonGroupServiceProtocol):
             id=lesson_group_id,
             lesson_id=lesson_group.lesson_id,
             group_id=lesson_group.group_id,
-            holding_date=lesson_group.holding_date,
+            start_datetime=lesson_group.start_datetime,
+            end_datetime=lesson_group.end_datetime,
+            auditorium=lesson_group.auditorium,
             is_opened=lesson_group.is_opened
         )
         return await self.lesson_group_repository.update(db_lesson_group)
