@@ -20,5 +20,5 @@ class UpdateLessonUseCase(UpdateLessonUseCaseProtocol):
         self.auth_service = auth_service
 
     async def __call__(self, course_id: UUID, lesson_id: UUID, lesson: LessonUpdateSchema, access_token: str) -> LessonReadSchema:
-        await self.auth_service.get_admin_user(access_token)
+        # await self.auth_service.get_admin_user(access_token)
         return await self.lesson_service.update(course_id, lesson_id, lesson) 

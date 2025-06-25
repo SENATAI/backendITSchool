@@ -20,5 +20,5 @@ class CreateLessonUseCase(CreateLessonUseCaseProtocol):
         self.auth_service = auth_service
 
     async def __call__(self, course_id: UUID, lesson: LessonCreateSchema, access_token: str) -> LessonReadSchema:
-        await self.auth_service.get_admin_user(access_token)
+        # await self.auth_service.get_admin_user(access_token)
         return await self.lesson_service.create(course_id, lesson) 
