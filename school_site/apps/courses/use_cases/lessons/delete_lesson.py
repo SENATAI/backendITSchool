@@ -19,5 +19,5 @@ class DeleteLessonUseCase(DeleteLessonUseCaseProtocol):
         self.auth_service = auth_service
 
     async def __call__(self, course_id: UUID, lesson_id: UUID, access_token: str) -> None:
-        # await self.auth_service.get_admin_user(access_token)
+        await self.auth_service.get_admin_user(access_token)
         await self.lesson_service.delete(course_id, lesson_id) 
