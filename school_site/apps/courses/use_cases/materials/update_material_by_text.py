@@ -7,11 +7,11 @@ from school_site.apps.courses.services.lesson_html_files import LessonHTMLServic
 from school_site.apps.courses.services.auth import AuthAdminServiceProtocol
 from school_site.apps.courses.schemas import LessonHTMLTextUpdateSchema, LessonHTMLReadSchema
 
-class UpdateLessonHTMLFileUseCaseProtocol(UseCaseProtocol[LessonHTMLReadSchema]):
+class UpdateLessonHTMLFileByTextUseCaseProtocol(UseCaseProtocol[LessonHTMLReadSchema]):
     async def __call__(self: Self, file_id: UUID, lesson: LessonHTMLTextUpdateSchema, access_token: str) -> LessonHTMLReadSchema:
         ...
 
-class UpdateLessonHTMLFileUseCase(UpdateLessonHTMLFileUseCaseProtocol):
+class UpdateLessonHTMLFileByTextUseCase(UpdateLessonHTMLFileByTextUseCaseProtocol):
     def __init__(self, lesson_service: LessonHTMLServiceProtocol, auth_service: AuthAdminServiceProtocol):
         self.lesson_service = lesson_service
         self.auth_service = auth_service
@@ -20,4 +20,4 @@ class UpdateLessonHTMLFileUseCase(UpdateLessonHTMLFileUseCaseProtocol):
         user_data = await self.auth_service.decode_access_token(access_token)
         if user_data.role not in [UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPERADMIN]:
             raise PermissionDeniedError()
-        return await self.lesson_service.update(file_id, lesson)
+        return await self.lesson_service.update_by_text(file_id, lesson)

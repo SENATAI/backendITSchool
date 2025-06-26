@@ -52,6 +52,8 @@ from .use_cases.materials.create_material import CreateLessonHTMLFileUseCaseProt
 from .use_cases.materials.update_material import UpdateLessonHTMLFileUseCaseProtocol, UpdateLessonHTMLFileUseCase
 from .use_cases.materials.get_material import GetLessonHTMLFileUseCaseProtocol, GetLessonHTMLFileUseCase
 from .use_cases.materials.delete_material import DeleteLessonHTMLFileUseCaseProtocol, DeleteLessonHTMLFileUseCase
+from .use_cases.materials.create_material_by_text import CreateLessonHTMLFileByTextUseCaseProtocol, CreateLessonHTMLFileByTextUseCase
+from .use_cases.materials.update_material_by_text import UpdateLessonHTMLFileByTextUseCaseProtocol, UpdateLessonHTMLFileByTextUseCase
 from .use_cases.lesson_group_student.create_lesson_group_student import CreateLessonGroupStudentUseCaseProtocol, CreateLessonGroupStudentUseCase
 from .use_cases.lesson_group_student.bulk_create_lesson_group_student import BulkCreateLessonGroupStudentUseCaseProtocol, BulkCreateLessonGroupStudentUseCase
 from .use_cases.file_homeworks.create_file_homework import CreateHomeworkFileUseCaseProtocol, CreateHomeworkFileUseCase
@@ -305,11 +307,20 @@ def get_material_create_use_case(lesson_service: LessonHTMLServiceProtocol = Dep
                                  ) -> CreateLessonHTMLFileUseCaseProtocol:
     return CreateLessonHTMLFileUseCase(lesson_service, auth_service)
 
+def get_material_create_by_text_use_case(lesson_service: LessonHTMLServiceProtocol = Depends(get_lesson_html_service),
+                                        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
+                                        ) -> CreateLessonHTMLFileByTextUseCaseProtocol:
+    return CreateLessonHTMLFileByTextUseCase(lesson_service, auth_service)
+
 def get_material_update_use_case(lesson_service: LessonHTMLServiceProtocol = Depends(get_lesson_html_service),
                                  auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
                                  ) -> UpdateLessonHTMLFileUseCaseProtocol:
     return UpdateLessonHTMLFileUseCase(lesson_service, auth_service)
 
+def get_material_update_by_text_use_case(lesson_service: LessonHTMLServiceProtocol = Depends(get_lesson_html_service),
+                                        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
+                                        ) -> UpdateLessonHTMLFileByTextUseCaseProtocol:
+    return UpdateLessonHTMLFileByTextUseCase(lesson_service, auth_service)
 
 def get_material_get_use_case(lesson_service: LessonHTMLServiceProtocol = Depends(get_lesson_html_service),
                                 auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
