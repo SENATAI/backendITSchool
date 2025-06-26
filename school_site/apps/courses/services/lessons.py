@@ -204,8 +204,6 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
 
                         student_schema = LessonStudentDetailReadSchema(
                             id=student.id,
-                            created_at=student.created_at,
-                            updated_at=student.updated_at,
                             student_id=student.student_id,
                             lesson_group_id=student.lesson_group_id,
                             is_visited=student.is_visited,
