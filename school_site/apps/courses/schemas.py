@@ -184,13 +184,30 @@ class LessonWithMaterialsCreateSchema(CreateBaseModel, LessonWithMaterialsBaseSc
 class LessonWithMaterialsUpdateSchema(CreateBaseModel, LessonWithMaterialsBaseSchema):
     teacher_material_id: Optional[UUID] = None
     student_material_id: Optional[UUID] = None
-    homework_material_id: Optional[UUID] = None
+    homework_id: Optional[UUID] = None
 
 
 class LessonWithMaterialsDeleteSchema(BaseModel):
     teacher_material_id: Optional[UUID] = None
     student_material_id: Optional[UUID] = None 
-    homework_material_id: Optional[UUID] = None
+    homework_id: Optional[UUID] = None
+
+class LessonWithMaterialsTextBaseSchema(BaseModel):
+    name: str
+    teacher_material_text: Optional[str] = None
+    teacher_material_name: Optional[str] = None
+    student_material_text: Optional[str]  = None
+    student_material_name: Optional[str] = None
+    homework_material_text: Optional[str] = None
+    homework_material_name: Optional[str] = None
+
+class LessonWithMaterialsTextCreateSchema(CreateBaseModel, LessonWithMaterialsTextBaseSchema):
+    pass
+
+class LessonWithMaterialsTextUpdateSchema(CreateBaseModel, LessonWithMaterialsTextBaseSchema):
+    teacher_material_id: Optional[UUID] = None
+    student_material_id: Optional[UUID] = None
+    homework_id: Optional[UUID] = None
 
 
 class LessonWithMaterialsReadSchema(LessonReadSchema, LessonBaseSchema):
@@ -221,11 +238,17 @@ class LessonHTMLBaseSchema(BaseModel):
 class LessonHTMLCreateSchema(CreateBaseModel, LessonHTMLBaseSchema):
     file: UploadFile
 
+class LessonHTMLTextCreateSchema(CreateBaseModel, LessonHTMLBaseSchema):
+    html_text: str
+
 class LessonHTMLCreateDBSchema(CreateBaseModel, LessonHTMLBaseSchema):
     path: str
 
 class LessonHTMLUpdateSchema(CreateBaseModel, LessonHTMLBaseSchema):
     file: UploadFile
+
+class LessonHTMLTextUpdateSchema(CreateBaseModel, LessonHTMLBaseSchema):
+    html_text: str
 
 class LessonHTMLUpdateDBSchema(UpdateBaseModel, LessonHTMLBaseSchema):
     pass
