@@ -116,6 +116,11 @@ class CourseDBPaginationResultSchema(PaginationResultSchema[CourseReadDBHeadSche
 class MaterialDataSchema(BaseModel):
     name: str
 
+class MaterialDataWithTextSchema(BaseModel):
+    name: str
+    html_text: str
+
+
 # ====== LESSON SCHEMAS =======
 
 class LessonBaseSchema(BaseModel):

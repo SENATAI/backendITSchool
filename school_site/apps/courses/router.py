@@ -67,7 +67,7 @@ from .schemas import (
     LessonTeacherMaterialDetailReadSchema, LessonInfoTeacherReadSchema, CourseStudentWithCoursesSchema,
     LessonGroupReadWithLessonSchema, LessonStudentReadWithStudentSchema, LessonStudentDetailReadSchema, LessonStudentReadSchema,
     LessonStudentUpdateSchema, MaterialDataSchema, LessonHTMLTextCreateSchema, LessonHTMLTextUpdateSchema, LessonWithMaterialsTextCreateSchema,
-    LessonWithMaterialsTextUpdateSchema
+    LessonWithMaterialsTextUpdateSchema, MaterialDataWithTextSchema
 )
 
 router = APIRouter(prefix='/api/courses', tags=['Courses'])
@@ -512,8 +512,8 @@ async def delete_lesson_with_materials(
         await delete_material(data.teacher_material_id, access_token)
     if data.student_material_id:
         await delete_material(data.student_material_id, access_token)
-    if data.homework_material_id:
-        await delete_material(data.homework_material_id, access_token)
+    if data.homework_id:
+        await delete_material(data.homework_id, access_token)
 
     return None
 
@@ -547,6 +547,13 @@ async def create_material(material: str = Form(...),
     )
     return await material_create_use_case(material_create, access_token_schema)
 
+@router.post("/material-text", response_model=LessonHTMLReadSchema)
+async def create_material_by_text(material: LessonHTMLTextCreateSchema,
+                          access_token_schema: str = Depends(access_token_schema),
+                        material_create_use_case: CreateLessonHTMLFileByTextUseCaseProtocol = Depends(get_material_create_by_text_use_case)
+                          ):
+    return await material_create_use_case(material, access_token_schema)
+
 
 @router.delete("/material/{material_id}", status_code=204)
 async def delete_material(material_id: UUID = Path(...),
@@ -570,6 +577,16 @@ async def update_material(
         file=file
     )
     return await update_material(material_id, material_update, access_token_schema)
+
+@router.put("/material-text/{material_id}")
+async def update_material_by_text(
+                        material: LessonHTMLTextUpdateSchema,
+                        material_id: UUID = Path(...),
+                        access_token_schema: str = Depends(access_token_schema),
+                        update_material: UpdateLessonHTMLFileByTextUseCaseProtocol = Depends(get_material_update_by_text_use_case)
+                          ):
+    return await update_material(material_id, material, access_token_schema)
+
 
 @router.get("/material/{material_id}")
 async def get_material(
