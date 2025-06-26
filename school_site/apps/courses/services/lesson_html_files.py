@@ -1,5 +1,5 @@
 import logging
-from typing import Protocol
+from typing import Protocol, Optional
 from uuid import UUID, uuid4
 from ..schemas import (
    LessonHTMLCreateSchema,
@@ -43,8 +43,8 @@ class LessonHTMLService(LessonHTMLServiceProtocol):
 
 
     async def create(self, file: LessonHTMLCreateSchema) -> LessonHTMLReadSchema:
-        path = self._generate_file_path()
-        is_file_uploaded = await self.file_service.upload_html(path, file.html_text)
+        path = self._generate_file_path(file.file.filename)
+        is_file_uploaded = await self.file_service.upload(path, file.file)
         if not is_file_uploaded:
             raise ImageUploadError()
         
@@ -84,7 +84,7 @@ class LessonHTMLService(LessonHTMLServiceProtocol):
             name=file.name
         )
         updated_file = await self.files_repository.update(db_update_file)
-        is_file_uploaded = await self.file_service.upload_html(updated_file.path, file.html_text)
+        is_file_uploaded = await self.file_service.upload_html(updated_file.path, file.file)
         if not is_file_uploaded:
             raise ImageUploadError()
         updated_file_url = await self.get_file_url(updated_file.path)
@@ -107,12 +107,15 @@ class LessonHTMLService(LessonHTMLServiceProtocol):
         return await self.file_service.delete(path)
 
 
-    def _generate_file_path(self):
-        STANDART_PATH = "lessons/files"
+    def _generate_file_path(self, filename: str) -> str:
+        STANDARD_PATH = "lessons/files"
+        return f"{STANDARD_PATH}/{uuid4()}{self._get_extension(filename)}"
 
-        name = str(uuid4())
-        return f"{STANDART_PATH}/{name}{self._get_extension()}"
-
-
-    def _get_extension(self) -> str:
+    def _get_extension(self, filename: Optional[str]) -> str:
+        if not filename:
+            return ".html"
+        
+        parts = filename.split('.')
+        if len(parts) > 1:
+            return f".{parts[-1].lower()}"
         return ".html"

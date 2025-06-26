@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Path, Query, UploadFile, File, Form
 from school_site.apps.users.depends import access_token_schema
 from uuid import UUID
 from typing import Optional, Union
+import json
 from .use_cases.courses.create_course import CreateCourseUseCaseProtocol
 from .use_cases.courses.update_course import UpdateCourseUseCaseProtocol
 from .use_cases.courses.get_course import GetCourseUseCaseProtocol
@@ -62,7 +63,7 @@ from .schemas import (
     CommentCreateSchema, CommentReadSchema, CommentUpdateSchema, LessonSimpleReadSchema, LessonStudentMaterialDetailReadSchema,
     LessonTeacherMaterialDetailReadSchema, LessonInfoTeacherReadSchema, CourseStudentWithCoursesSchema,
     LessonGroupReadWithLessonSchema, LessonStudentReadWithStudentSchema, LessonStudentDetailReadSchema, LessonStudentReadSchema,
-    LessonStudentUpdateSchema
+    LessonStudentUpdateSchema, MaterialDataSchema
 )
 
 router = APIRouter(prefix='/api/courses', tags=['Courses'])
@@ -242,24 +243,29 @@ async def delete_lesson(
 
 @router.post("/{course_id}/lessons-with-materials", response_model=LessonWithMaterialsReadSchema, status_code=201)
 async def create_lesson_with_materials(
-    data: LessonWithMaterialsCreateSchema,
+    data: str = Form(...),
+    teacher_material_file: Optional[UploadFile] = File(None),
+    student_material_file: Optional[UploadFile] = File(None),
+    homework_material_file: Optional[UploadFile] = File(None),
     course_id: UUID = Path(...),
     lesson_create_use_case: CreateLessonUseCaseProtocol = Depends(get_lesson_create_use_case),
     material_create_use_case: CreateLessonHTMLFileUseCaseProtocol = Depends(get_material_create_use_case),
     access_token: str = Depends(access_token_schema)
 ):
+    
+    validated_data = LessonWithMaterialsCreateSchema(**json.loads(data))
     teacher_material_id, teacher_material_url = await _create_material_if_exists(
-        data.teacher_material_name, data.teacher_material_text, material_create_use_case, access_token
+        validated_data.teacher_material_name, teacher_material_file, material_create_use_case, access_token
     )
     student_material_id, student_material_url = await _create_material_if_exists(
-        data.student_material_name, data.student_material_text, material_create_use_case, access_token
+        validated_data.student_material_name, student_material_file, material_create_use_case, access_token
     )
     homework_id, homework_url = await _create_material_if_exists(
-        data.homework_material_name, data.homework_material_text, material_create_use_case, access_token
+        validated_data.homework_material_name, homework_material_file, material_create_use_case, access_token
     )
 
     lesson = LessonCreateSchema(
-        name=data.name,
+        name=validated_data.name,
         teacher_material_id=teacher_material_id,
         student_material_id=student_material_id,
         homework_id=homework_id
@@ -281,12 +287,12 @@ async def create_lesson_with_materials(
 
 async def _create_material_if_exists(
     name: Optional[str],
-    text: Optional[str],
+    file: Optional[UploadFile],
     material_use_case: CreateLessonHTMLFileUseCaseProtocol,
     access_token: str
 ):
-    if name and text:
-        material = LessonHTMLCreateSchema(name=name, html_text=text)
+    if name and file:
+        material = LessonHTMLCreateSchema(name=name, file=file)
         created = await material_use_case(material, access_token)
         return created.id, created.url
     return None, None
@@ -294,28 +300,32 @@ async def _create_material_if_exists(
 
 @router.put("/{course_id}/lessons-with-materials/{lesson_id}", response_model=LessonWithMaterialsReadSchema, status_code=200)
 async def update_lesson_with_materials(
-    data: LessonWithMaterialsUpdateSchema,
+    data: str = Form(...),
+    teacher_material_file: Optional[UploadFile] = File(None),
+    student_material_file: Optional[UploadFile] = File(None),
+    homework_material_file: Optional[UploadFile] = File(None),
     course_id: UUID = Path(...),
     lesson_id: UUID = Path(...),
     lesson_update_use_case: UpdateLessonUseCaseProtocol = Depends(get_lesson_update_use_case),
     material_update_use_case: UpdateLessonHTMLFileUseCaseProtocol = Depends(get_material_update_use_case),
     access_token: str = Depends(access_token_schema)
 ):
+    validated_data = LessonWithMaterialsUpdateSchema(**json.loads(data))
     updated_teacher_material = await _update_material_if_exists(
-        data.teacher_material_id, data.teacher_material_name, data.teacher_material_text, material_update_use_case, access_token
+        validated_data.teacher_material_id, validated_data.teacher_material_name, teacher_material_file, material_update_use_case, access_token
     )
     updated_student_material = await _update_material_if_exists(
-        data.student_material_id, data.student_material_name, data.student_material_text, material_update_use_case, access_token
+        validated_data.student_material_id, validated_data.student_material_name, student_material_file, material_update_use_case, access_token
     )
     updated_homework_material = await _update_material_if_exists(
-        data.homework_material_id, data.homework_material_name, data.homework_material_text, material_update_use_case, access_token
+        validated_data.homework_material_id, validated_data.homework_material_name, homework_material_file, material_update_use_case, access_token
     )
 
     lesson = LessonUpdateSchema(
-        name=data.name,
-        teacher_material_id=updated_teacher_material.id if updated_teacher_material else data.teacher_material_id,
-        student_material_id=updated_student_material.id if updated_student_material else data.student_material_id,
-        homework_id=updated_homework_material.id if updated_homework_material else data.homework_material_id
+        name=validated_data.name,
+        teacher_material_id=updated_teacher_material.id if updated_teacher_material else validated_data.teacher_material_id,
+        student_material_id=updated_student_material.id if updated_student_material else validated_data.student_material_id,
+        homework_id=updated_homework_material.id if updated_homework_material else validated_data.homework_material_id
     )
     
     updated_lesson = await lesson_update_use_case(course_id, lesson_id, lesson, access_token)
@@ -324,9 +334,9 @@ async def update_lesson_with_materials(
         id=updated_lesson.id,
         course_id=updated_lesson.course_id,
         name=updated_lesson.name,
-        teacher_material_id=updated_teacher_material.id if updated_teacher_material else data.teacher_material_id,
-        student_material_id=updated_student_material.id if updated_student_material else data.student_material_id,
-        homework_id=updated_homework_material.id if updated_homework_material else data.homework_material_id,
+        teacher_material_id=updated_teacher_material.id if updated_teacher_material else validated_data.teacher_material_id,
+        student_material_id=updated_student_material.id if updated_student_material else validated_data.student_material_id,
+        homework_id=updated_homework_material.id if updated_homework_material else validated_data.homework_material_id,
         teacher_material_url=updated_teacher_material.url if updated_teacher_material else None,
         student_material_url=updated_student_material.url if updated_student_material else None,
         homework_material_url=updated_homework_material.url if updated_homework_material else None
@@ -336,12 +346,12 @@ async def update_lesson_with_materials(
 async def _update_material_if_exists(
     material_id: Optional[UUID],
     name: Optional[str],
-    text: Optional[str],
+    file: Optional[UploadFile],
     material_use_case: UpdateLessonHTMLFileUseCaseProtocol,
     access_token: str
 ):
-    if material_id and name and text:
-        material = LessonHTMLUpdateSchema(name=name, html_text=text)
+    if material_id and name and file:
+        material = LessonHTMLUpdateSchema(name=name, file=file)
         return await material_use_case(material_id, material, access_token)
     return None
 
@@ -400,7 +410,6 @@ async def delete_lesson_with_materials(
 
     return None
 
-
 @router.put("/lesson-group/{lesson_group_id}", response_model=LessonGroupReadSchema)
 async def update_lesson_group(
     lesson_group: LessonGroupUpdateSchema,
@@ -419,11 +428,17 @@ async def bulk_create_groups_with_students(
     return await bulk_create(data, access_token)
 
 @router.post("/material", response_model=LessonHTMLReadSchema)
-async def create_material(material: LessonHTMLCreateSchema,
+async def create_material(material: str = Form(...),
+                          file: UploadFile = File(...),
                           access_token_schema: str = Depends(access_token_schema),
                         material_create_use_case: CreateLessonHTMLFileUseCaseProtocol = Depends(get_material_create_use_case)
                           ):
-    return await material_create_use_case(material, access_token_schema)
+    material_data = MaterialDataSchema(**json.loads(material))
+    material_create = LessonHTMLCreateSchema(
+        name=material_data.name,
+        file=file
+    )
+    return await material_create_use_case(material_create, access_token_schema)
 
 
 @router.delete("/material/{material_id}", status_code=204)
@@ -436,12 +451,18 @@ async def delete_material(material_id: UUID = Path(...),
 
 @router.put("/material/{material_id}")
 async def update_material(
-                        material: LessonHTMLUpdateSchema,
+                        material: str = Form(...),
+                        file: UploadFile = File(...),
                         material_id: UUID = Path(...),
                         access_token_schema: str = Depends(access_token_schema),
                         update_material: UpdateLessonHTMLFileUseCaseProtocol = Depends(get_material_update_use_case)
                           ):
-    return await update_material(material_id, material, access_token_schema)
+    material_data = MaterialDataSchema(**json.loads(material))
+    material_update = LessonHTMLUpdateSchema(
+        name=material_data.name,
+        file=file
+    )
+    return await update_material(material_id, material_update, access_token_schema)
 
 @router.get("/material/{material_id}")
 async def get_material(

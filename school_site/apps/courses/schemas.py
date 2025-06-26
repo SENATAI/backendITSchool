@@ -1,3 +1,4 @@
+from fastapi import UploadFile
 from pydantic import BaseModel, Field, HttpUrl
 from typing import Optional, List
 from uuid import UUID
@@ -111,6 +112,10 @@ class CoursePaginationResultSchema(PaginationResultSchema[CourseReadHeadSchema])
 class CourseDBPaginationResultSchema(PaginationResultSchema[CourseReadDBHeadSchema]):
     pass
 
+# ====== MATERIAL SCHEMAS =======
+class MaterialDataSchema(BaseModel):
+    name: str
+
 # ====== LESSON SCHEMAS =======
 
 class LessonBaseSchema(BaseModel):
@@ -169,11 +174,8 @@ class LessonPaginationResultDBSchema(PaginationResultSchema[LessonReadDBHeadSche
 
 class LessonWithMaterialsBaseSchema(BaseModel):
     name: str
-    teacher_material_text: Optional[str] = None
     teacher_material_name: Optional[str] = None
-    student_material_text: Optional[str]  = None
     student_material_name: Optional[str] = None
-    homework_material_text: Optional[str] = None
     homework_material_name: Optional[str] = None
 
 class LessonWithMaterialsCreateSchema(CreateBaseModel, LessonWithMaterialsBaseSchema):
@@ -217,13 +219,13 @@ class LessonHTMLBaseSchema(BaseModel):
     name: str
 
 class LessonHTMLCreateSchema(CreateBaseModel, LessonHTMLBaseSchema):
-    html_text: str
+    file: UploadFile
 
 class LessonHTMLCreateDBSchema(CreateBaseModel, LessonHTMLBaseSchema):
     path: str
 
 class LessonHTMLUpdateSchema(CreateBaseModel, LessonHTMLBaseSchema):
-    html_text: str
+    file: UploadFile
 
 class LessonHTMLUpdateDBSchema(UpdateBaseModel, LessonHTMLBaseSchema):
     pass
