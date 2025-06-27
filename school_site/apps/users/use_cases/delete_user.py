@@ -1,11 +1,8 @@
-from typing import Self, List
+from typing import Self
 from uuid import UUID
 from school_site.core.use_cases import UseCaseProtocol
-from school_site.apps.users.schemas import UserReadSchema
 from school_site.apps.users.services.users import UserServiceProtocol
 from school_site.apps.users.services.auth import AuthServiceProtocol
-from school_site.core.utils.exceptions import PermissionDeniedError
-from school_site.core.enums import UserRole
 from school_site.apps.users.services.permissions import permission_service
 
 class DeleteUserUseCaseProtocol(UseCaseProtocol[bool]):
