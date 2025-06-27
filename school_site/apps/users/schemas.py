@@ -1,10 +1,10 @@
 from fastapi import Request
 from typing import Optional, List, Generic, TypeVar
-from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
+from pydantic import BaseModel, EmailStr, field_validator, ConfigDict, Field, HttpUrl
 import re
 from uuid import UUID
 from datetime import datetime, date
-from school_site.core.schemas import CreateBaseModel, UpdateBaseModel
+from school_site.core.schemas import CreateBaseModel, UpdateBaseModel, TimestampMixin
 from school_site.core.enums import UserRole
 from .exceptions import InvalidTokenError
 
@@ -77,7 +77,7 @@ class UserReadSchema(PhoneValidatedMixin, UserInfoMixin, UsernameRelatedMixin):
     id: UUID
 
 
-class UserReadDBSchema(PhoneValidatedMixin, UserInfoMixin, UsernameRelatedMixin):
+class UserReadDBSchema(PhoneValidatedMixin, UserInfoMixin, UsernameRelatedMixin, TimestampMixin):
     id: UUID
     password_hash: str
 
@@ -113,11 +113,6 @@ class RefreshTokenCreateDBSchema(CreateBaseModel):
     user_id: UUID
     hashed_refresh_token: str
 
-
-class AuthReadSchema(BaseModel):
-    user: UserReadSchema
-    access_token: TokenReadSchema
-    refresh_token: TokenReadSchema
 
 class UserUpdateRequestSchema(PhoneValidatedMixin, UserInfoMixin, BaseModel):  
     ...
@@ -171,3 +166,60 @@ class PaginationResultSchema(BaseModel, Generic[T]):
     model_config = ConfigDict(from_attributes=True)
     count: int  
     objects: List[T]  
+
+# --- Схемы для фото пользователя ---
+class PhotoUserBaseSchema(BaseModel):
+    name: str = Field(..., description="Название фотографии пользователя")
+    user_id: Optional[UUID] = None
+
+class PhotoUserCreateSchema(CreateBaseModel, PhotoUserBaseSchema):
+    pass
+
+class PhotoUserCreateDBSchema(CreateBaseModel, PhotoUserBaseSchema):
+    user_id: UUID
+    path: str
+
+class PhotoUserUpdateSchema(PhotoUserBaseSchema):
+    id: Optional[UUID] = None
+
+class PhotoUserUpdateDBSchema(UpdateBaseModel, PhotoUserBaseSchema):
+    user_id: UUID
+
+class PhotoUserReadDBSchema(PhotoUserBaseSchema, TimestampMixin):
+    id: UUID
+    path: str
+    class Config:
+        from_attributes = True
+
+class PhotoUserReadSchema(PhotoUserBaseSchema, TimestampMixin):
+    id: UUID
+    url: HttpUrl
+
+# --- Схемы для пользователя с фото ---
+class UserWithPhotoReadDBSchema(PhoneValidatedMixin, UserInfoMixin, UsernameRelatedMixin, TimestampMixin):
+    id: UUID
+    photo: Optional[PhotoUserReadDBSchema] = None
+
+class UserWithPhotoReadSchema(PhoneValidatedMixin, UserInfoMixin, UsernameRelatedMixin, TimestampMixin):
+    id: UUID
+    photo: Optional[PhotoUserReadSchema] = None
+
+class UserWithPhotoPaginationResultDBSchema(PaginationResultSchema[UserWithPhotoReadDBSchema]):
+    pass
+
+class UserWithPhotoPaginationResultSchema(PaginationResultSchema[UserWithPhotoReadSchema]):
+    pass
+
+# --- Схемы для создания и обновления пользователей с фото ---
+class UserCreateWithPhotoSchema(PhoneValidatedMixin, UserInfoMixin):
+    password: str
+    photo: Optional[PhotoUserCreateSchema] = Field(None, description="Фотография пользователя (опционально)")
+
+class UserUpdateWithPhotoSchema(PhoneValidatedMixin, UserInfoMixin):
+    photo: Optional[PhotoUserUpdateSchema] = None
+
+# --- Схемы для аутентификации (определены после UserWithPhotoReadSchema) ---
+class AuthReadSchema(BaseModel):
+    user: UserWithPhotoReadSchema
+    access_token: TokenReadSchema
+    refresh_token: TokenReadSchema
