@@ -1,8 +1,8 @@
 """init tables
 
-Revision ID: ca5f57859a4f
+Revision ID: 5b190f38ffca
 Revises: 
-Create Date: 2025-06-11 17:10:56.718343
+Create Date: 2025-06-16 22:25:46.278966
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'ca5f57859a4f'
+revision: str = '5b190f38ffca'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -149,6 +149,16 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id', name=op.f('photo_courses_pkey')),
     sa.UniqueConstraint('course_id', name=op.f('photo_courses_course_id_key'))
     )
+    op.create_table('photo_news',
+    sa.Column('id', sa.UUID(), nullable=False),
+    sa.Column('news_id', sa.UUID(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('name', sa.String(), nullable=False),
+    sa.Column('path', sa.String(), nullable=False),
+    sa.ForeignKeyConstraint(['news_id'], ['news.id'], name=op.f('photo_news_news_id_fkey')),
+    sa.PrimaryKeyConstraint('id', name=op.f('photo_news_pkey'))
+    )
     op.create_table('photo_products',
     sa.Column('product_id', sa.UUID(), nullable=True),
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
@@ -187,7 +197,7 @@ def upgrade() -> None:
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.CheckConstraint('points >= 0', name=op.f('students_positive_price_check_check')),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('students_user_id_fkey')),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('students_user_id_fkey'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('students_pkey')),
     sa.UniqueConstraint('user_id', name=op.f('students_user_id_key'))
     )
@@ -196,9 +206,8 @@ def upgrade() -> None:
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('teachers_user_id_fkey')),
-    sa.PrimaryKeyConstraint('id', name=op.f('teachers_pkey')),
-    sa.UniqueConstraint('user_id', name=op.f('teachers_user_id_key'))
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('teachers_user_id_fkey'), ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id', name=op.f('teachers_pkey'))
     )
     op.create_table('course_students',
     sa.Column('id', sa.UUID(), nullable=False),
@@ -235,8 +244,10 @@ def upgrade() -> None:
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('lesson_id', sa.UUID(), nullable=True),
     sa.Column('group_id', sa.UUID(), nullable=True),
-    sa.Column('holding_date', sa.DateTime(), nullable=False),
+    sa.Column('start_datetime', sa.DateTime(), nullable=False),
+    sa.Column('end_datetime', sa.DateTime(), nullable=False),
     sa.Column('is_opened', sa.Boolean(), nullable=True),
+    sa.Column('auditorium', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['group_id'], ['groups.id'], name=op.f('lesson_groups_group_id_fkey')),
     sa.ForeignKeyConstraint(['lesson_id'], ['lessons.id'], name=op.f('lesson_groups_lesson_id_fkey')),
     sa.PrimaryKeyConstraint('id', name=op.f('lesson_groups_pkey')),
@@ -251,17 +262,21 @@ def upgrade() -> None:
     sa.Column('is_sent_homework', sa.Boolean(), nullable=True),
     sa.Column('is_graded_homework', sa.Boolean(), nullable=True),
     sa.Column('coins_for_visit', sa.Integer(), nullable=True),
+    sa.Column('grade_for_visit', sa.Integer(), nullable=True),
     sa.Column('coins_for_homework', sa.Integer(), nullable=True),
+    sa.Column('grade_for_homework', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['lesson_group_id'], ['lesson_groups.id'], name=op.f('lesson_students_lesson_group_id_fkey')),
     sa.ForeignKeyConstraint(['student_id'], ['students.id'], name=op.f('lesson_students_student_id_fkey')),
-    sa.PrimaryKeyConstraint('id', name=op.f('lesson_students_pkey'))
+    sa.PrimaryKeyConstraint('id', name=op.f('lesson_students_pkey')),
+    sa.UniqueConstraint('student_id', 'lesson_group_id', name='unique_student_lesson_group')
     )
     op.create_table('comments',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('text', sa.String(), nullable=False),
-    sa.Column('date_created', sa.DateTime(), nullable=True),
     sa.Column('lesson_student_id', sa.UUID(), nullable=True),
     sa.Column('teacher_id', sa.UUID(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['lesson_student_id'], ['lesson_students.id'], name=op.f('comments_lesson_student_id_fkey')),
     sa.ForeignKeyConstraint(['teacher_id'], ['teachers.id'], name=op.f('comments_teacher_id_fkey'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('comments_pkey'))
@@ -270,8 +285,8 @@ def upgrade() -> None:
     sa.Column('lesson_student_id', sa.UUID(), nullable=False),
     sa.Column('homework_id', sa.UUID(), nullable=False),
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.ForeignKeyConstraint(['homework_id'], ['homeworks.id'], name=op.f('lesson_student_homework_homework_id_fkey')),
-    sa.ForeignKeyConstraint(['lesson_student_id'], ['lesson_students.id'], name=op.f('lesson_student_homework_lesson_student_id_fkey')),
+    sa.ForeignKeyConstraint(['homework_id'], ['homeworks.id'], name=op.f('lesson_student_homework_homework_id_fkey'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['lesson_student_id'], ['lesson_students.id'], name=op.f('lesson_student_homework_lesson_student_id_fkey'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('lesson_student_id', 'homework_id', 'id', name=op.f('lesson_student_homework_pkey'))
     )
     op.drop_constraint("lesson_students_student_id_fkey", "lesson_students", type_="foreignkey")
@@ -321,6 +336,7 @@ def downgrade() -> None:
     op.drop_table('refresh_tokens')
     op.drop_table('read_status')
     op.drop_table('photo_products')
+    op.drop_table('photo_news')
     op.drop_table('photo_courses')
     op.drop_table('password_reset_tokens')
     op.drop_table('notification_recipients')
