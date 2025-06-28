@@ -59,6 +59,7 @@ from .use_cases.lesson_group_student.bulk_create_lesson_group_student import Bul
 from .use_cases.file_homeworks.create_file_homework import CreateHomeworkFileUseCaseProtocol, CreateHomeworkFileUseCase
 from .use_cases.homeworks.create_homework import CreateHomeworkUseCaseProtocol, CreateHomeworkUseCase
 from .use_cases.add_homework import AddHomeworkUseCaseProtocol, AddHomeworkUseCase
+from .use_cases.homeworks.add_homework_to_lesson_by_text import AddHomeworkToLessonByTextUseCaseProtocol, AddHomeworkToLessonByTextUseCase
 from .use_cases.comments.create_comment import CreateCommentUseCaseProtocol, CreateCommentUseCase
 from .use_cases.comments.update_comment import UpdateCommentUseCaseProtocol, UpdateCommentUseCase
 from .use_cases.comments.delete_comment import DeleteCommentUseCaseProtocol, DeleteCommentUseCase
@@ -71,11 +72,11 @@ from .use_cases.lessons.get_all_lesson_students import GetAllLessonStudentsByLes
 from .use_cases.lessons.get_teacher_lessons import GetTeacherLessonsUseCaseProtocol, GetTeacherLessonsUseCase
 from .use_cases.courses_teachers.get_courses_for_teacher import GetCoursesForTeacherUseCaseProtocol, GetCoursesForTeacherUseCase
 from .use_cases.lesson_group.get_by_group_id import GetByGroupIdLessonGroupUseCaseProtocol, GetByGroupIdLessonGroupUseCase
-from .use_cases.lesson_students.get_all_by_lesson_group import GetAllLessonStudentsByLessonGroupUseCaseProtocol, GetAllLessonStudentsByLessonGroupUseCase
 from .use_cases.lesson_students.get_detailed_student import GetDetailedLessonStudentUseCaseProtocol, GetDetailedLessonStudentUseCase
 from .use_cases.lesson_students.create_ls_and_update_student import CreateLessonStudentsAndUpdateStudentsUseCaseProtocol, CreateLessonStudentsAndUpdateStudentsUseCase
 from .use_cases.lesson_students.update_ls_and_update_student import UpdateLessonStudentsAndUpdateStudentsUseCaseProtocol, UpdateLessonStudentsAndUpdateStudentsUseCase
 from .use_cases.lesson_students.delete_ls_and_update_student import DeleteLessonStudentsAndUpdateStudentsUseCaseProtocol, DeleteLessonStudentsAndUpdateStudentsUseCase
+from .use_cases.homeworks.add_homework_to_lesson import AddHomeworkToLessonUseCaseProtocol, AddHomeworkToLessonUseCase
 
 def get_course_file_service() -> FileServiceProtocol:
     """Зависимость для работы с изображениями продуктов."""
@@ -425,14 +426,15 @@ def get_add_homework_to_lesson_use_case(
         lesson_service: LessonServiceProtocol = Depends(get_lesson_service),
         material_service: LessonHTMLServiceProtocol = Depends(get_lesson_html_service),
         auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
-) -> AddHomeworkUseCaseProtocol:
-    return AddHomeworkUseCase(lesson_service, material_service, auth_service)
+) -> AddHomeworkToLessonUseCaseProtocol:
+    return AddHomeworkToLessonUseCase(lesson_service, material_service, auth_service)
 
-def get_all_lesson_students_by_lesson_group_use_case(
-    lesson_student_service: LessonStudentServiceProtocol = Depends(get_lesson_student_service),
-    auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
-) -> GetAllLessonStudentsByLessonGroupUseCaseProtocol:
-    return GetAllLessonStudentsByLessonGroupUseCase(lesson_student_service, auth_service)
+def get_add_homework_to_lesson_by_text_use_case(
+        lesson_service: LessonServiceProtocol = Depends(get_lesson_service),
+        material_service: LessonHTMLServiceProtocol = Depends(get_lesson_html_service),
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
+) -> AddHomeworkToLessonByTextUseCaseProtocol:
+    return AddHomeworkToLessonByTextUseCase(lesson_service, material_service, auth_service)
 
 def get_teacher_lessons_use_case(
     lesson_service: GetLessonWithMaterialsServiceProtocol = Depends(get_lesson_with_materials_service),
@@ -453,9 +455,10 @@ def get_by_group_id_lesson_group_use_case(
     return GetByGroupIdLessonGroupUseCase(lesson_group_service)
 
 def get_all_lesson_students_by_lesson_group_use_case(
-    lesson_student_service: GetAllLessonStudentsByLessonGroupServiceProtocol = Depends(get_all_lesson_students_by_lesson_group_service)
+    auth_service: AuthAdminServiceProtocol = Depends(get_auth_service),
+    lesson_student_service: LessonStudentServiceProtocol = Depends(get_lesson_student_service)
 ) -> GetAllLessonStudentsByLessonGroupUseCaseProtocol:
-    return GetAllLessonStudentsByLessonGroupUseCase(lesson_student_service)
+    return GetAllLessonStudentsByLessonGroupUseCase(lesson_student_service, auth_service)
 
 def get_detailed_lesson_student_use_case(
     lesson_student_service: GetDetailedLessonStudentByIdServiceProtocol = Depends(get_detailed_lesson_student_service)

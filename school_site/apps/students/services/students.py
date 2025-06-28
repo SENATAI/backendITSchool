@@ -3,7 +3,8 @@ from typing import Protocol, List
 from school_site.core.schemas import PaginationSchema
 from ..repositories.students import StudentRepositoryProtocol
 from ..schemas import StudentCreateSchema, StudentReadSchema, StudentUpdateSchema, \
-    StudentReadWithUserSchema, StudentPaginationWithUserResultSchema
+    StudentReadWithUserAndUsePhotoSchema, StudentPaginationWithUserResultSchema, \
+    StudentPaginationWithUserAndUserPhotoResultSchema
 from ..exceptions import StudentNotExistsExceptions
 from school_site.apps.users.services.users import UserServiceProtocol
 
@@ -11,7 +12,7 @@ class StudentServiceProtocol(Protocol):
     async def create(self, student: StudentCreateSchema) -> StudentReadSchema:
         ...
 
-    async def get(self, student_id: UUID) -> StudentReadWithUserSchema:
+    async def get(self, student_id: UUID) -> StudentReadWithUserAndUsePhotoSchema:
         ...
 
     async def update(self, student_id: UUID, student: StudentUpdateSchema) -> StudentReadSchema:
@@ -23,7 +24,7 @@ class StudentServiceProtocol(Protocol):
     async def list(self, pagination: PaginationSchema) -> StudentPaginationWithUserResultSchema:
         ...
 
-    async def get_by_user_id(self, user_id: UUID) -> StudentReadWithUserSchema:
+    async def get_by_user_id(self, user_id: UUID) -> StudentReadWithUserAndUsePhotoSchema:
         ...
 
 
@@ -35,10 +36,10 @@ class StudentService(StudentServiceProtocol):
     async def create(self, student: StudentCreateSchema) -> StudentReadSchema:
         return await self.student_repository.create(student)
     
-    async def get(self, student_id: UUID) -> StudentReadWithUserSchema:
+    async def get(self, student_id: UUID) -> StudentReadWithUserAndUsePhotoSchema:
         student =  await self.student_repository.get(student_id)
         user = await self.user_service.get_user_by_id(student.user_id)
-        return StudentReadWithUserSchema(
+        return StudentReadWithUserAndUsePhotoSchema(
             id=student.id,
             user_id=student.user_id,
             points=student.points,
@@ -62,7 +63,7 @@ class StudentService(StudentServiceProtocol):
             sorting=["created_at", "id"],
             policies=["can_view"]
         )
-        students_users = [StudentReadWithUserSchema(
+        students_users = [StudentReadWithUserAndUsePhotoSchema(
             id=student.id,
             user_id=student.user_id,
             points=student.points,
@@ -71,14 +72,14 @@ class StudentService(StudentServiceProtocol):
             user=(await self.user_service.get_user_by_id(student.user_id))
         ) for student in students.objects]
 
-        return StudentPaginationWithUserResultSchema(count=students.count, objects=students_users)
+        return StudentPaginationWithUserAndUserPhotoResultSchema(count=students.count, objects=students_users)
     
-    async def get_by_user_id(self, user_id: UUID) -> StudentReadWithUserSchema:
+    async def get_by_user_id(self, user_id: UUID) -> StudentReadWithUserAndUsePhotoSchema:
         student = await self.student_repository.get_by_user_id(user_id)
         if not student:
             raise StudentNotExistsExceptions(user_id)
         user = await self.user_service.get_user_by_id(student.user_id)
-        return StudentReadWithUserSchema(
+        return StudentReadWithUserAndUsePhotoSchema(
             id=student.id,
             user_id=student.user_id,
             points=student.points,
