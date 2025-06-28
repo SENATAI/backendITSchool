@@ -15,6 +15,7 @@ from .use_cases.delete_group import DeleteGroupUseCaseProtocol, DeleteGroupUseCa
 from .use_cases.list_groups import GetListGroupsUseCaseProtocol, GetListGroupsUseCase
 from .use_cases.add_students import AddStudentsUseCaseProtocol, AddStudentsUseCase
 from .use_cases.delete_student import DeleteStudentUseCaseProtocol, DeleteStudentUseCase
+from .use_cases.get_for_teacher import GetGroupForTeacherUseCaseProtocol, GetGroupForTeacherUseCase
 from school_site.apps.students.services.students import StudentServiceProtocol
 from school_site.apps.students.depends import get_students_services
 from .repositories.group_teachers import GroupTeachersRepositoryProtocol, GroupTeachersRepository
@@ -23,6 +24,12 @@ from .use_cases.add_teacher import AddTeacherUseCaseProtocol, AddTeacherUseCase
 from .use_cases.delete_teacher import DeleteTeacherUseCaseProtocol, DeleteTeacherUseCase
 from school_site.apps.teachers.services.teachers import TeacherServiceProtocol
 from school_site.apps.teachers.depends import get_teachers_services
+from school_site.apps.courses.services.lesson_group import LessonGroupServiceProtocol
+from school_site.apps.courses.services.lesson_student import LessonStudentServiceProtocol
+from school_site.apps.courses.services.course_student import CourseStudentServiceProtocol
+from school_site.apps.courses.depends import get_lesson_group_service, get_lesson_student_service, get_course_student_service
+from school_site.apps.courses.services.lessons import LessonServiceProtocol
+from school_site.apps.courses.depends import get_lesson_service
 
 def get_auth_service(
     token_service: TokenServiceProtocol = Depends(get_token_service)
@@ -52,9 +59,21 @@ def get_group_service(
 def get_group_student_service(
     group_students_repository: GroupStudentsRepositoryProtocol = Depends(__get_group_students_repository),
     student_service: StudentServiceProtocol = Depends(get_students_services),
-    group_service: GroupServiceProtocol = Depends(get_group_service)
+    group_service: GroupServiceProtocol = Depends(get_group_service),
+    lesson_group_service: LessonGroupServiceProtocol = Depends(get_lesson_group_service),
+    lesson_student_service: LessonStudentServiceProtocol = Depends(get_lesson_student_service),
+    course_student_service: CourseStudentServiceProtocol = Depends(get_course_student_service),
+    lesson_service: LessonServiceProtocol = Depends(get_lesson_service)
 ) -> GroupStudentServiceProtocol:
-    return GroupStudentService(group_students_repository, group_service, student_service)
+    return GroupStudentService(
+        group_students_repository,
+        group_service,
+        student_service,
+        lesson_group_service,
+        lesson_student_service,
+        course_student_service,
+        lesson_service
+    )
 
 def get_group_teacher_service(
     group_teachers_repository: GroupTeachersRepositoryProtocol = Depends(__get_group_teachers_repository),
@@ -114,3 +133,10 @@ def get_delete_teacher_use_case(
         teacher_service: GroupTeacherServiceProtocol = Depends(get_group_teacher_service)
 ) -> DeleteTeacherUseCaseProtocol:
     return DeleteTeacherUseCase(auth_service, teacher_service)
+
+def get_group_for_teacher_use_case(
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service),
+        group_service: GroupTeacherServiceProtocol = Depends(get_group_teacher_service),
+        teacher_service: TeacherServiceProtocol = Depends(get_teachers_services)
+) -> GetGroupForTeacherUseCaseProtocol:
+    return GetGroupForTeacherUseCase(group_service, teacher_service, auth_service)

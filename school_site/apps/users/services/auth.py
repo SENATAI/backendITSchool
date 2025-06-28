@@ -5,7 +5,7 @@ from school_site.core.enums import UserRole
 from school_site.core.utils.exceptions import PermissionDeniedError
 from ..texts import HTML_EMAIL_BODY_TEMPLATE, HTML_EMAIL_SUBJECT_TEMPLATE
 from ..schemas import (
-    AuthReadSchema, PasswordChangeSchema, UserResetSchema, UserReadSchema, 
+    AuthReadSchema, PasswordChangeSchema, UserResetSchema, UserWithPhotoReadSchema, 
     ResetTokenSchema, ResetPasswordRequest, UserTokenDataReadSchema
 )
 from .users import UserServiceProtocol
@@ -61,14 +61,17 @@ class AuthService(AuthServiceProtocol):
         await self.token_service.delete_all_by_user_id(updated_user.id)
         new_access_token, new_refresh_data = await self._create_tokens(updated_user.id, updated_user.role)
 
-        return AuthReadSchema(user=updated_user,
+        user_with_photo = await self.user_service.get_user_by_id(updated_user.id)
+
+        return AuthReadSchema(user=user_with_photo,
                               access_token=new_access_token,
                               refresh_token=new_refresh_data)
     
     async def login(self: Self, username: int, password: str) -> AuthReadSchema:
         logger.info(f"Login attempt for user: {username}")
         
-        user = await self.user_service.authenticate_user(username, password)
+        user_without_photo = await self.user_service.authenticate_user_without_photo(username, password)
+        user = await self.user_service.get_user_by_id(user_without_photo.id)
         
         access_token, refresh_data = await self._create_tokens(user.id, user.role)
         
@@ -182,7 +185,7 @@ class ResetPasswordService(ResetPasswordServiceProtocol):
         return new_user
 
 
-    def _generate_email_message(self: Self, user: UserReadSchema, token: ResetTokenSchema) -> str:
+    def _generate_email_message(self: Self, user: UserWithPhotoReadSchema, token: ResetTokenSchema) -> str:
         name = user.first_name or user.username
         
         body =  HTML_EMAIL_BODY_TEMPLATE.format(

@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, Response, Query
+from fastapi import APIRouter, Depends, Response, Query, Form, UploadFile, File
 from typing import List, Optional
 from uuid import UUID
 from .schemas import (
-    LoginRequestSchema, UserReadSchema, PasswordChangeSchema, RegisterRequestSchema, 
+    LoginRequestSchema, UserWithPhotoReadSchema, PasswordChangeSchema, RegisterRequestSchema, 
     UserUpdateRequestSchema, UserResetSchema, ResetPasswordRequest, PaginationResultSchema
 )
 from .use_cases.login import LoginUseCaseProtocol
@@ -29,7 +29,7 @@ from school_site.core.enums import UserRole
 
 router = APIRouter(prefix='/api/users', tags=['Users'])
 
-@router.post("/auth", response_model=UserReadSchema)
+@router.post("/auth", response_model=UserWithPhotoReadSchema)
 async def login(
     response: Response,
     user_data: LoginRequestSchema,
@@ -47,7 +47,7 @@ async def login(
     
     return user_tokens_data.user
 
-@router.post("/refresh", response_model=UserReadSchema)
+@router.post("/refresh", response_model=UserWithPhotoReadSchema)
 async def refresh_token(
     response: Response,
     refresh_use_case: RefreshUseCaseProtocol = Depends(get_refresh_use_case),
@@ -77,7 +77,7 @@ async def logout(
     return None
 
 
-@router.post("/change_password", response_model=UserReadSchema, status_code=200)
+@router.post("/change_password", response_model=UserWithPhotoReadSchema, status_code=200)
 async def change_password(
     response: Response,
     password_data: PasswordChangeSchema,  
@@ -103,16 +103,17 @@ async def get_me(
 ):
     return await get_me_by_user_id_use_case(access_token)
 
-@router.post("/", response_model=UserReadSchema, status_code=201)
+@router.post("/", response_model=UserWithPhotoReadSchema, status_code=201)
 async def create_user(
-    user_data: RegisterRequestSchema,
+    user_data: str = Form(...),
+    image: Optional[UploadFile] = File(None),
     access_token: str = Depends(access_token_schema),
     create_user_use_case: CreateUserUseCaseProtocol = Depends(get_create_user_use_case)
 ):
-    return await create_user_use_case(access_token, user_data)
+    return await create_user_use_case(access_token, user_data, image)
     
 
-@router.get("/", response_model=PaginationResultSchema[UserReadSchema], status_code=200)
+@router.get("/", response_model=PaginationResultSchema[UserWithPhotoReadSchema], status_code=200)
 async def get_all_users(
     access_token: str = Depends(access_token_schema),
     role: Optional[UserRole] = Query(None),
@@ -122,22 +123,23 @@ async def get_all_users(
 ):
     return await get_all_users_use_case(access_token, role, limit, offset)
 
-@router.get("/{user_id}", response_model=UserReadSchema, status_code=200)
+@router.get("/{user_id}", response_model=UserWithPhotoReadSchema, status_code=200)
 async def get_user_by_id(
     user_id: UUID,
-    acess_token: str = Depends(access_token_schema),
+    access_token: str = Depends(access_token_schema),
     get_user_by_id_use_case: GetUserByIdUseCaseProtocol = Depends(get_get_user_by_id_use_case)
 ):
-    return await get_user_by_id_use_case(acess_token, user_id)
+    return await get_user_by_id_use_case(access_token, user_id)
 
-@router.put("/{user_id}", response_model=UserReadSchema, status_code=200)
+@router.put("/{user_id}", response_model=UserWithPhotoReadSchema, status_code=200)
 async def update_user(
     user_id: UUID, 
-    user_data: UserUpdateRequestSchema,
+    user_data: str = Form(...),
+    image: Optional[UploadFile] = File(None),
     access_token: str = Depends(access_token_schema),
     update_user_use_case: UpdateUserUseCaseProtocol = Depends(get_update_user_use_case)
 ):
-    return await update_user_use_case(access_token, user_id, user_data)
+    return await update_user_use_case(access_token, user_id, user_data, image)
 
 @router.delete("/{user_id}", status_code=204)
 async def delete_user(

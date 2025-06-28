@@ -18,7 +18,8 @@ class Student(Base, TimestampMixin):
     user_id = Column(
         PostgresUUID, 
         ForeignKey("users.id", ondelete="CASCADE"),  # ← CASCADE на уровне БД
-        nullable=False
+        nullable=False,
+        unique=True  # Уникальность для связи с пользователем
     )
     user = relationship("User", back_populates="student", foreign_keys="[Student.user_id]")
     groups = relationship("Group", secondary="group_student", back_populates="students")

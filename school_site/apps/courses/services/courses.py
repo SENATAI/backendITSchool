@@ -39,6 +39,8 @@ class CourseServiceProtocol(Protocol):
     async def list(self, pagination: PaginationSchema) -> CourseWithPhotoPaginationResultSchema:
         ...
 
+    async def get_courses_by_teacher_id(self, teacher_id: UUID) -> List[CourseWithPhotoReadSchema]:
+        ...
 
 class CourseService(CourseServiceProtocol):
     def __init__(self, course_repository: CourseRepositoryProtocol,
@@ -82,9 +84,8 @@ class CourseService(CourseServiceProtocol):
             photo_read = PhotoReadSchema(
                 id=course.photo.id,
                 name=course.photo.name,
-                product_id=course.id,
-                url=image_url,
                 course_id=course.id,
+                url=image_url,
                 created_at=course.photo.created_at,
                 updated_at=course.photo.updated_at
             )
@@ -121,7 +122,7 @@ class CourseService(CourseServiceProtocol):
             photo = await self.photo_service.update(
                 photo_id,
                 PhotoUpdateSchema(
-                    product_id=course_id,
+                    course_id=course_id,
                     name=course.photo.name
                 ),
                 image
@@ -198,3 +199,8 @@ class CourseService(CourseServiceProtocol):
             )
     
         return await asyncio.gather(*[process_course(p) for p in courses])
+    
+    async def get_courses_by_teacher_id(self, teacher_id: UUID) -> List[CourseWithPhotoReadSchema]:
+        courses = await self.course_repository.get_courses_by_teacher_id(teacher_id)
+        converted_courses = await self._convert_courses_path_to_url(courses)
+        return converted_courses

@@ -1,12 +1,13 @@
 import logging
-from typing import Protocol
+from typing import Protocol, List
 from uuid import UUID
 from ..repositories.lesson_group import LessonGroupRepositoryProtocol
 from ..schemas import (
     LessonGroupCreateSchema,
     LessonGroupUpdateSchema,
     LessonGroupReadSchema,
-    LessonGroupUpdateDBSchema
+    LessonGroupUpdateDBSchema,
+    LessonGroupReadWithLessonSchema
 )
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,9 @@ class LessonGroupServiceProtocol(Protocol):
         ...
 
     async def bulk_create(self, lesson_groups: list[LessonGroupCreateSchema]) -> list[LessonGroupReadSchema]:
+        ...
+
+    async def get_by_group_id(self, group_id: UUID) -> List[LessonGroupReadWithLessonSchema]:
         ...
 
 
@@ -51,7 +55,9 @@ class LessonGroupService(LessonGroupServiceProtocol):
             id=lesson_group_id,
             lesson_id=lesson_group.lesson_id,
             group_id=lesson_group.group_id,
-            holding_date=lesson_group.holding_date,
+            start_datetime=lesson_group.start_datetime,
+            end_datetime=lesson_group.end_datetime,
+            auditorium=lesson_group.auditorium,
             is_opened=lesson_group.is_opened
         )
         return await self.lesson_group_repository.update(db_lesson_group)
@@ -59,3 +65,7 @@ class LessonGroupService(LessonGroupServiceProtocol):
     async def delete(self, lesson_group_id: UUID) -> None:
         logger.info(f"Deleting LessonGroup with ID: {lesson_group_id}")
         await self.lesson_group_repository.delete(lesson_group_id)
+
+    async def get_by_group_id(self, group_id: UUID) -> List[LessonGroupReadWithLessonSchema]:
+        logger.info(f"Fetching LessonGroups for Group ID: {group_id}")
+        return await self.lesson_group_repository.get_by_group_id(group_id)

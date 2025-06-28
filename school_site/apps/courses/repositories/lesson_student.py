@@ -1,9 +1,13 @@
 import sqlalchemy as sa
-from typing import Self, Optional, List
+from sqlalchemy.orm import joinedload, selectinload
+from typing import Self, List
 from uuid import UUID
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
-from ..models import LessonStudent, LessonGroup
-from ..schemas import LessonStudentCreateSchema, LessonStudentUpdateDBSchema, LessonStudentReadSchema, LessonStudentReadWithStudentDBSchema
+from school_site.apps.students.models import Student
+from school_site.core.utils.exceptions import ModelNotFoundException
+from ..models import LessonStudent, LessonGroup, Homework
+from ..schemas import LessonStudentCreateSchema, LessonStudentUpdateDBSchema, LessonStudentReadSchema,\
+    LessonStudentReadWithStudentSchema, LessonStudentDetailReadDBSchema
 
 
 class LessonStudentRepositoryProtocol(BaseRepositoryImpl[
@@ -17,6 +21,14 @@ class LessonStudentRepositoryProtocol(BaseRepositoryImpl[
         ...
     
     async def get_all_by_lesson_group_id(self: Self, lesson_group_id: UUID, is_graded_homework: Optional[bool] = None) -> List[LessonStudentReadWithStudentDBSchema]:
+        ...
+
+    async def get_all_lesson_students_by_lesson_group(
+        self: Self, lesson_group_id: UUID
+    ) -> List[LessonStudentReadWithStudentSchema]:
+        ...
+
+    async def get_detailed_by_id(self, lesson_student_id: UUID) -> LessonStudentDetailReadDBSchema:
         ...
 
 class LessonStudentRepository(LessonStudentRepositoryProtocol):
@@ -33,7 +45,7 @@ class LessonStudentRepository(LessonStudentRepositoryProtocol):
             
             model = (await s.execute(stmt)).scalar_one()
             return LessonStudentReadSchema.model_validate(model, from_attributes=True)
-        
+
     async def get_all_by_lesson_group_id(self, lesson_group_id: UUID, is_graded_homework: Optional[bool] = None) -> List[LessonStudentReadWithStudentDBSchema]:
         async with self.session as s:
             statement = (
@@ -47,3 +59,49 @@ class LessonStudentRepository(LessonStudentRepositoryProtocol):
             
             result = await s.execute(statement)
             return [LessonStudentReadWithStudentDBSchema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
+
+    async def get_all_lesson_students_by_lesson_group(
+        self: Self, lesson_group_id: UUID
+    ) -> List[LessonStudentReadWithStudentSchema]:
+        async with self.session as s:
+            stmt = (
+                sa.select(self.model_type)
+                .where(self.model_type.lesson_group_id == lesson_group_id)
+                .options(
+                    joinedload(self.model_type.student)
+                    .joinedload(Student.user)
+                )
+            )
+            
+            models = (await s.execute(stmt)).scalars().all()
+            return [
+                LessonStudentReadWithStudentSchema.model_validate(model, from_attributes=True)
+                for model in models
+            ]
+        
+    async def get_detailed_by_id(self, lesson_student_id: UUID) -> LessonStudentDetailReadDBSchema:
+        async with self.session as s:
+            stmt = (
+                sa.select(self.model_type)
+                .where(self.model_type.id == lesson_student_id)
+                .options(
+                    joinedload(self.model_type.student)
+                    .joinedload(Student.user),
+                    
+                    selectinload(self.model_type.passed_homeworks)
+                    .joinedload(Homework.file),
+                    
+                    selectinload(self.model_type.comments)
+                )
+            )
+            
+            result = await s.execute(stmt)
+            lesson_student = result.unique().scalar_one_or_none()
+            
+            if lesson_student is None:
+                raise ModelNotFoundException(
+                    model=self.model_type,
+                    model_id=lesson_student_id
+                )
+                
+            return LessonStudentDetailReadDBSchema.model_validate(lesson_student, from_attributes=True)

@@ -19,6 +19,9 @@ class GroupTeacherServiceProtocol(Protocol):
     async def delete_teacher(self, group_id: UUID, teacher_id: UUID) -> bool:
         ...
 
+    async def get_by_teacher_id(self, teacher_id: UUID) -> list[GroupReadTeacherSchema]:
+        ...
+
 
 class GroupTeacherService(GroupTeacherServiceProtocol):
     def __init__(
@@ -59,3 +62,12 @@ class GroupTeacherService(GroupTeacherServiceProtocol):
     async def delete_teacher(self, group_id: UUID, teacher_id: UUID) -> bool:
         await self.group_teachers_repository.delete_teacher(group_id, teacher_id)
         return True
+    
+    async def get_by_teacher_id(self, teacher_id: UUID) -> list[GroupReadTeacherSchema]:
+        groups = await self.group_teachers_repository.get_by_teacher_id(teacher_id)
+        if not groups:
+            raise ModelNotFoundException(
+                model=Group,
+                model_id=teacher_id
+            )
+        return [GroupReadTeacherSchema.model_validate(group, from_attributes=True) for group in groups]

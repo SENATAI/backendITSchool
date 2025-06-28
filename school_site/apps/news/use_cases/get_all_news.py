@@ -1,5 +1,6 @@
 from typing import Self
-from uuid import UUID
+from school_site.core.schemas import PaginationSchema
+
 from school_site.apps.news.schemas import NewsReadSchema
 from school_site.apps.news.services.news import NewsServiceProtocol
 from school_site.core.use_cases import UseCaseProtocol
@@ -15,4 +16,8 @@ class GetAllNewsUseCase(GetAllNewsUseCaseProtocol):
         self.news_service = news_service
 
     async def __call__(self: Self, limit: int = 10, offset: int = 0) -> PaginationResultSchema[NewsReadSchema]:
-        return await self.news_service.get_all_news(limit=limit, offset=offset)
+        pagination_parameters = PaginationSchema(
+            limit=limit,
+            offset=offset
+        )
+        return await self.news_service.list(pagination_parameters)

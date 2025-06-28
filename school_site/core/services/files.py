@@ -82,7 +82,7 @@ class MinioFileService(FileServiceProtocol):
             self.bucket_name,
             path,
             timedelta(minutes=30)
-        )        
+        )    
         new_url = original_url.replace("http://minio:9000", f"http://{settings.frontend_url}/minio")
 
         return new_url

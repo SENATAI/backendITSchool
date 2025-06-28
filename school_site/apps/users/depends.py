@@ -3,12 +3,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from school_site.core.db import get_async_session
 from school_site.apps.emails.depends import get_email_client
 from school_site.apps.emails.clients.emails import EmailClientProtocol
+from school_site.core.depends import get_image_service
+from school_site.core.services.files import FileServiceProtocol
 from .schemas import CookieTokenSchema
 from .repositories.users import UserRepositoryProtocol, UserRepository
 from .repositories.refresh_tokens import RefreshTokenRepositoryProtocol, RefreshTokenRepository
 from .repositories.reset_tokens import ResetTokenRepositoryProtocol, ResetTokenRepository
+from .repositories.photo_user import PhotoUserRepositoryProtocol, PhotoUserRepository
 from .services.passwords import PasswordServiceProtocol, PasswordService
 from .services.users import UserServiceProtocol, UserService
+from .services.photo_user import PhotoUserServiceProtocol, PhotoUserService
 from .services.tokens import TokenServiceProtocol, TokenService, ResetPasswordTokenServiceProtocol, ResetPasswordTokenService
 from .services.auth import AuthServiceProtocol, AuthService, ResetPasswordServiceProtocol, ResetPasswordService
 from .use_cases.login import LoginUseCaseProtocol, LoginUseCase
@@ -40,15 +44,27 @@ def __get_reset_password_repository(
 ) -> ResetTokenRepositoryProtocol:
     return ResetTokenRepository(session)
 
+def __get_photo_user_repository(
+    session: AsyncSession = Depends(get_async_session)
+) -> PhotoUserRepositoryProtocol:
+    return PhotoUserRepository(session)
+
 
 def get_password_service() -> PasswordServiceProtocol:
     return PasswordService()
 
+def get_photo_user_service(
+    photo_repository: PhotoUserRepositoryProtocol = Depends(__get_photo_user_repository),
+    file_service: FileServiceProtocol = Depends(lambda: get_image_service("users-photos"))
+) -> PhotoUserServiceProtocol:
+    return PhotoUserService(photo_repository, file_service)
 
-def get_user_service(user_repository: UserRepositoryProtocol = Depends(__get_user_repository),
-        password_service: PasswordServiceProtocol = Depends(get_password_service)                    
+def get_user_service(
+    user_repository: UserRepositoryProtocol = Depends(__get_user_repository),
+    password_service: PasswordServiceProtocol = Depends(get_password_service),
+    photo_service: PhotoUserServiceProtocol = Depends(get_photo_user_service)
 ) -> UserServiceProtocol:
-    return UserService(user_repository, password_service)
+    return UserService(user_repository, password_service, photo_service)
 
 
 def get_token_service(token_repository: RefreshTokenRepositoryProtocol = Depends(__get_refresh_tokens_repository)) -> \
