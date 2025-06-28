@@ -1,6 +1,6 @@
 import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, contains_eager
-from typing import Self, Union
+from typing import Self, Union, List, Optional
 from uuid import UUID
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
 from school_site.core.schemas import PaginationSchema
@@ -48,6 +48,12 @@ class LessonRepositoryProtocol(BaseRepositoryImpl[
         ...
 
     async def get_lesson_info_for_teacher(self: Self, lesson_id: UUID, teacher_id: UUID) -> LessonInfoTeacherReadDBSchema:
+        ...
+
+    async def add_homework_to_lesson(self: Self, lessson_id: UUID, homework_material_id: UUID) -> LessonReadDBSchema:
+        ...
+
+    async def get_all_teacher_lessons(self: Self, teacher_id: UUID, is_graded_homework: Optional[bool] = None) -> List[LessonInfoTeacherReadDBSchema]:
         ...
 
 class LessonRepository(LessonRepositoryProtocol):
@@ -211,3 +217,33 @@ class LessonRepository(LessonRepositoryProtocol):
                 raise ModelNotFoundException(model=Lesson, model_id=lesson_id)
 
             return LessonInfoTeacherReadDBSchema.model_validate(lesson, from_attributes=True)
+        
+    
+    async def add_homework_to_lesson(self: Self, lesson_id: UUID, homework_material_id: UUID) -> LessonReadDBSchema:
+        async with self.session as s:
+            statement = (
+                sa.update(self.model_type).where(self.model_type.id == lesson_id).values(homework_id=homework_material_id))
+            await s.execute(statement)
+            await s.commit()
+            
+            return await self.get(lesson_id)
+            
+    async def get_all_teacher_lessons(self: Self, teacher_id: UUID, is_graded_homework: Optional[bool] = None) -> List[LessonInfoTeacherReadDBSchema]:
+        async with self.session as s:
+            statement = (
+                sa.select(Lesson)
+                .join(Lesson.groups)
+                .join(LessonGroup.group)
+                .join(LessonGroup.students)
+                .where(Group.teacher_id == teacher_id)
+                .options(
+                    joinedload(Lesson.homework),
+                    joinedload(Lesson.teacher_material)
+                )
+            )
+            
+            if is_graded_homework is not None:
+                statement = statement.where(LessonStudent.is_graded_homework == is_graded_homework)
+            
+            result = await s.execute(statement)
+            return [LessonInfoTeacherReadDBSchema.model_validate(model, from_attributes=True) for model in result.unique().scalars().all()]

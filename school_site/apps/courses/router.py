@@ -27,6 +27,10 @@ from .use_cases.lessons.get_teacher_lesson_with_materials import GetTeacherMater
 from .use_cases.lessons.get_student_lesson_with_material import GetStudentMaterialUseCaseProtocol
 from .use_cases.lessons.get_lesson_info_teacher import GetTeacherLessonInfoUseCaseProtocol
 from .use_cases.courses_students.get_courses_for_student import GetCoursesForStudentUseCaseProtocol
+from .use_cases.homeworks.add_homework_to_lesson import AddHomeworkToLessonUseCaseProtocol
+from .use_cases.lessons.get_all_lesson_students import GetAllLessonStudentsByLessonGroupUseCaseProtocol
+from .use_cases.lessons.get_teacher_lessons import GetTeacherLessonsUseCaseProtocol
+
 from .depends import (
     get_course_create_use_case, get_course_update_use_case, get_course_get_use_case,
     get_course_delete_use_case, get_course_get_list_use_case,
@@ -37,7 +41,7 @@ from .depends import (
     get_add_homework_use_case, get_teacher_lesson_info_use_case,
     get_create_comment_use_case, get_update_comment_use_case, get_delete_comment_use_case,
     get_lesson_group_update_use_case, get_lesson_for_teacher_use_case, get_lesson_for_student_use_case,
-    get_courses_for_student_use_case
+    get_courses_for_student_use_case, get_add_homework_to_lesson_use_case, get_all_lesson_students_by_lesson_group_use_case, get_teacher_lessons_use_case
 )
 from .schemas import (
     CourseWithPhotoReadSchema, CourseWithPhotoPaginationResultSchema,
@@ -46,7 +50,7 @@ from .schemas import (
     LessonHTMLUpdateSchema, LessonWithMaterialsReadSchema, LessonWithMaterialsDeleteSchema,
     LessonGroupReadSchema, LessonGroupCreateSchema, LessonGroupUpdateSchema, LessonHTMLReadSchema, AddHomeworkReadSchema,
     CommentCreateSchema, CommentReadSchema, CommentUpdateSchema, LessonSimpleReadSchema, LessonStudentMaterialDetailReadSchema,
-    LessonTeacherMaterialDetailReadSchema, LessonInfoTeacherReadSchema, CourseStudentWithCoursesSchema
+    LessonTeacherMaterialDetailReadSchema, LessonInfoTeacherReadSchema, CourseStudentWithCoursesSchema, LessonStudentReadWithStudentSchema
 )
 
 router = APIRouter(prefix='/api/courses', tags=['Courses'])
@@ -451,3 +455,44 @@ async def get_lesson_info_for_teacher(
 ):
     return await get_lesson_info(lesson_id, access_token)
 
+@router.post("/{course_id}/lessons/{lesson_id}/homework-material", response_model=LessonReadSchema, status_code=201)
+async def add_homework_material_to_lesson(
+    lesson_id: UUID = Path(...),
+    course_id: UUID = Path(...),
+    homework_material_name: str = Form(...),
+    homework_material_text: str = Form(...),
+    access_token: str = Depends(access_token_schema),
+    add_homework: AddHomeworkToLessonUseCaseProtocol = Depends(get_add_homework_to_lesson_use_case)
+):
+    return await add_homework(lesson_id, homework_material_name, homework_material_text, access_token)
+
+@router.post("/{course_id}/lessons/{lesson_id}/homework-material-file", response_model=LessonReadSchema, status_code=201)
+async def add_homework_material_file_to_lesson(
+    lesson_id: UUID = Path(...),
+    course_id: UUID = Path(...),
+    homework_material_name: str = Form(...),
+    homework_material_file: UploadFile = File(...),
+    access_token: str = Depends(access_token_schema),
+    add_homework: AddHomeworkToLessonUseCaseProtocol = Depends(get_add_homework_to_lesson_use_case)
+):
+    file_content = await homework_material_file.read()
+    homework_material_text = file_content.decode('utf-8')
+    
+    return await add_homework(lesson_id, homework_material_name, homework_material_text, access_token)
+
+@router.get("/lesson-student", response_model=list[LessonStudentReadWithStudentSchema])
+async def get_lesson_student_by_lesson_group_id(
+    lesson_group_id: UUID = Query(...),
+    is_graded_homework: Optional[bool] = Query(None),
+    get: GetAllLessonStudentsByLessonGroupUseCaseProtocol = Depends(get_all_lesson_students_by_lesson_group_use_case),
+    access_token: str = Depends(access_token_schema)
+):
+    return await get(lesson_group_id, is_graded_homework)
+
+@router.get("/teacher-lessons", response_model=list[LessonInfoTeacherReadSchema], status_code=200)
+async def get_all_teacher_lessons(
+    is_graded_homework: Optional[bool] = Query(None),
+    access_token: str = Depends(access_token_schema),
+    get_teacher_lessons: GetTeacherLessonsUseCaseProtocol = Depends(get_teacher_lessons_use_case)
+):
+    return await get_teacher_lessons(access_token, is_graded_homework)

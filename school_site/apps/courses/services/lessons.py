@@ -1,5 +1,5 @@
 import logging
-from typing import Protocol, Self, Union
+from typing import Protocol, Self, Union, List, Optional
 from uuid import UUID
 from school_site.core.schemas import PaginationSchema
 from school_site.core.services.files import FileServiceProtocol
@@ -43,6 +43,9 @@ class LessonServiceProtocol(Protocol):
     async def list(self, course_id: UUID, pagination: PaginationSchema) -> LessonPaginationResultSchema:
         ...
 
+    async def add_homework_to_lesson(self, lesson_id: UUID, homework_material_id: UUID) -> LessonReadSchema:
+        ...
+
 
 class LessonService(LessonServiceProtocol):
     def __init__(self, lesson_repository: LessonRepositoryProtocol):
@@ -76,8 +79,10 @@ class LessonService(LessonServiceProtocol):
         await self.lesson_repository.delete(lesson_id)
 
     async def list(self, course_id: UUID, pagination: PaginationSchema) -> LessonPaginationResultSchema:
-        return await self.lesson_repository.paginate_by_course(course_id, pagination) 
-    
+        return await self.lesson_repository.paginate_by_course(course_id, pagination)
+
+    async def add_homework_to_lesson(self, lesson_id: UUID, homework_material_id: UUID) -> LessonReadSchema:
+        return await self.lesson_repository.add_homework_to_lesson(lesson_id, homework_material_id) 
 
 class GetLessonWithMaterialsServiceProtocol(Protocol):
     async def get_lesson_for_student(self: Self, lesson_id: UUID, student_id: UUID) -> Union[LessonSimpleReadSchema, LessonStudentMaterialDetailReadSchema]:
@@ -89,6 +94,9 @@ class GetLessonWithMaterialsServiceProtocol(Protocol):
         ...
 
     async def get_lesson_info_for_teacher(self: Self, lesson_id: UUID, teacher_id: UUID) -> LessonInfoTeacherReadSchema:
+        ...
+
+    async def get_all_teacher_lessons(self: Self, teacher_id: UUID, is_graded_homework: Optional[bool] = None) -> List[LessonInfoTeacherReadSchema]:
         ...
 
 class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
@@ -229,3 +237,6 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
                 processed_groups.append(group_schema)
 
         return homework_material, processed_groups
+    
+    async def get_all_teacher_lessons(self: Self, teacher_id: UUID, is_graded_homework: Optional[bool] = None) -> List[LessonInfoTeacherReadSchema]:
+        return await self.lesson_repository.get_all_teacher_lessons(teacher_id, is_graded_homework)

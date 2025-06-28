@@ -6,7 +6,7 @@ from .enums import AgeCategory
 from school_site.core.schemas import (
     CreateBaseModel, UpdateBaseModel, TimestampMixin, PaginationResultSchema
 )
-from school_site.apps.students.schemas import StudentReadWithUserSchema
+from school_site.apps.students.schemas import StudentReadWithUserSchema, StudentReadSchema
 
 # ====== PHOTO SCHEMAS =======
 
@@ -361,6 +361,16 @@ class LessonStudentUpdateDBSchema(UpdateBaseModel, LessonStudentBaseSchema):
 class LessonStudentReadSchema(LessonStudentBaseSchema, TimestampMixin):
     id: UUID
 
+    class Config:
+        from_attributes = True
+
+class LessonStudentReadWithStudentSchema(LessonStudentReadSchema):
+    student: StudentReadSchema
+    class Config: 
+        from_attributes = True
+
+class LessonStudentReadWithStudentDBSchema(LessonStudentReadSchema):
+    student: StudentReadSchema
 
     class Config:
         from_attributes = True

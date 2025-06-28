@@ -61,6 +61,8 @@ from .use_cases.lessons.get_student_lesson_with_material import GetStudentMateri
 from .use_cases.lessons.get_teacher_lesson_with_materials import GetTeacherMaterialUseCaseProtocol, GetTeacherMaterialUseCase
 from .use_cases.lessons.get_lesson_info_teacher import GetTeacherLessonInfoUseCaseProtocol, GetTeacherLessonInfoUseCase
 from .use_cases.courses_students.get_courses_for_student import GetCoursesForStudentUseCaseProtocol, GetCoursesForStudentUseCase
+from .use_cases.lessons.get_all_lesson_students import GetAllLessonStudentsByLessonGroupUseCaseProtocol, GetAllLessonStudentsByLessonGroupUseCase
+from .use_cases.lessons.get_teacher_lessons import GetTeacherLessonsUseCaseProtocol, GetTeacherLessonsUseCase
 
 def get_course_file_service() -> FileServiceProtocol:
     """Зависимость для работы с изображениями продуктов."""
@@ -379,3 +381,22 @@ def get_courses_for_student_use_case(
     student_service: StudentServiceProtocol = Depends(get_students_services)
 ) -> GetCoursesForStudentUseCaseProtocol:
     return GetCoursesForStudentUseCase(course_student_service, auth_service, student_service)
+
+def get_add_homework_to_lesson_use_case(
+        lesson_service: LessonServiceProtocol = Depends(get_lesson_service),
+        material_service: LessonHTMLServiceProtocol = Depends(get_lesson_html_service),
+        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
+) -> AddHomeworkUseCaseProtocol:
+    return AddHomeworkUseCase(lesson_service, material_service, auth_service)
+
+def get_all_lesson_students_by_lesson_group_use_case(
+    lesson_student_service: LessonStudentServiceProtocol = Depends(get_lesson_student_service),
+    auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
+) -> GetAllLessonStudentsByLessonGroupUseCaseProtocol:
+    return GetAllLessonStudentsByLessonGroupUseCase(lesson_student_service, auth_service)
+
+def get_teacher_lessons_use_case(
+    lesson_service: GetLessonWithMaterialsServiceProtocol = Depends(get_lesson_with_materials_service),
+    auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
+) -> GetTeacherLessonsUseCaseProtocol:
+    return GetTeacherLessonsUseCase(lesson_service, auth_service)
