@@ -35,6 +35,8 @@ class LessonStudentServiceProtocol(Protocol):
     async def bulk_create(self: Self, lesson_students: list[LessonStudentCreateSchema]) -> list[LessonStudentReadSchema]:
         ...
 
+    async def get_all_by_lesson_group_id(self: Self, lesson_group_id: UUID, is_graded_homework: Optional[bool] = None) -> List[LessonStudentReadWithStudentSchema]:
+        ...
 
 class LessonStudentService(LessonStudentServiceProtocol):
     def __init__(self: Self, lesson_student_repository: LessonStudentRepositoryProtocol):
@@ -70,6 +72,9 @@ class LessonStudentService(LessonStudentServiceProtocol):
     async def delete(self: Self, lesson_student_id: UUID) -> None:
         logger.info(f"Deleting LessonStudent with ID: {lesson_student_id}")
         await self.lesson_student_repository.delete(lesson_student_id)
+
+    async def get_all_by_lesson_group_id(self: Self, lesson_group_id: UUID, is_graded_homework: Optional[bool] = None) -> List[LessonStudentReadWithStudentSchema]:
+        return await self.lesson_student_repository.get_all_by_lesson_group_id(lesson_group_id, is_graded_homework)
 
 
 class LessonStudentWithStudentServiceProtocol(Protocol):
