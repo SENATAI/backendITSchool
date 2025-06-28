@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, Path, Query
 from uuid import UUID
 from .schemas import (
     StudentReadSchema, StudentCreateSchema, StudentUpdateSchema,
-    StudentReadWithUserSchema, StudentPaginationWithUserResultSchema
+    StudentReadWithUserAndUsePhotoSchema,
+    StudentPaginationWithUserAndUserPhotoResultSchema
 )
 from .use_cases.create_student import CreateStudentUseCaseProtocol
 from .use_cases.update_student import UpdateStudentUseCaseProtocol
@@ -46,15 +47,14 @@ async def delete_student(
 
     return None
 
-
-@router.get("/me", response_model=StudentReadWithUserSchema)
+@router.get("/me", response_model=StudentReadWithUserAndUsePhotoSchema)
 async def get_me(
     access_token: str = Depends(access_token_schema),
     get_me: GetMeStudentUseCaseProtocol = Depends(get_student_get_me_use_case)
 ):
     return await get_me(access_token)
 
-@router.get("/{student_id}", response_model=StudentReadWithUserSchema)
+@router.get("/{student_id}", response_model=StudentReadWithUserAndUsePhotoSchema)
 async def get_student(
     student_id: UUID = Path(...),
     access_token: str = Depends(access_token_schema),
@@ -63,7 +63,7 @@ async def get_student(
     return await get(access_token, student_id)
 
 
-@router.get("/", response_model=StudentPaginationWithUserResultSchema)
+@router.get("/", response_model=StudentPaginationWithUserAndUserPhotoResultSchema)
 async def list_students(
     access_token: str = Depends(access_token_schema),
     limit: int = Query(10, ge=1, le=100),
