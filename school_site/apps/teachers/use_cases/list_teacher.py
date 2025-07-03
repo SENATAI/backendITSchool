@@ -3,12 +3,12 @@ from school_site.core.schemas import PaginationSchema
 from school_site.core.use_cases import UseCaseProtocol 
 from ..services.auth import AuthAdminAndTeacherServiceProtocol
 from ..services.teachers import TeacherServiceProtocol
-from ..schemas import TeacherPaginationResultSchema
+from ..schemas import TeacherPaginationWithUserAndUserPhotoResultSchema
 
 
-class GetListTeacherUseCaseProtocol(UseCaseProtocol[TeacherPaginationResultSchema]):
+class GetListTeacherUseCaseProtocol(UseCaseProtocol[TeacherPaginationWithUserAndUserPhotoResultSchema]):
     async def __call__(self, access_token: str, limit: int = 10,
-                       offset: int = 0) -> TeacherPaginationResultSchema:
+                       offset: int = 0) -> TeacherPaginationWithUserAndUserPhotoResultSchema:
         ...
 
 
@@ -18,7 +18,7 @@ class GetListTeacherUseCase(GetListTeacherUseCaseProtocol):
         self.teacher_service = teacher_service
 
     async def __call__(self, access_token: str, limit: int = 10,
-                       offset: int = 0) -> TeacherPaginationResultSchema:
+                       offset: int = 0) -> TeacherPaginationWithUserAndUserPhotoResultSchema:
         await self.auth_service.get_admin_user(access_token)
         pagination = PaginationSchema(
             limit=limit,
