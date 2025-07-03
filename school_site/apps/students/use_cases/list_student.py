@@ -1,4 +1,3 @@
-from uuid import UUID
 from school_site.core.schemas import PaginationSchema
 from school_site.core.use_cases import UseCaseProtocol 
 from ..services.auth import AuthAdminAndStudentServiceProtocol
