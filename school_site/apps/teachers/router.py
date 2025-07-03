@@ -3,7 +3,7 @@ from uuid import UUID
 from school_site.apps.users.depends import access_token_schema
 from .schemas import (
     TeacherReadSchema, TeacherCreateSchema, TeacherUpdateSchema,
-    TeacherReadWithUserSchema, TeacherPaginationWithUserResultSchema
+    TeacherReadWithUserSchema, TeacherPaginationWithUserAndUserPhotoResultSchema
 )
 from .use_cases.create_teacher import CreateTeacherUseCaseProtocol
 from .use_cases.update_teacher import UpdateTeacherUseCaseProtocol
@@ -48,7 +48,7 @@ async def delete_teacher(
 
 
 @router.get("/me", response_model=TeacherReadWithUserSchema)
-async def list_teachers(
+async def get_me(
     access_token: str = Depends(access_token_schema),
     get_me: GetMeTeacherUseCaseProtocol = Depends(get_teacher_get_me_use_case)
 ):
@@ -63,7 +63,7 @@ async def get_teacher(
     return await get(access_token, teacher_id)
 
 
-@router.get("/", response_model=TeacherPaginationWithUserResultSchema)
+@router.get("/", response_model=TeacherPaginationWithUserAndUserPhotoResultSchema)
 async def list_teachers(
     access_token: str = Depends(access_token_schema),
     limit: int = Query(10, ge=1, le=100),

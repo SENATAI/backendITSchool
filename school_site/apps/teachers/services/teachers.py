@@ -2,7 +2,8 @@ from uuid import UUID
 from typing import Protocol
 from school_site.core.schemas import PaginationSchema
 from ..repositories.teachers import TeacherRepositoryProtocol
-from ..schemas import TeacherCreateSchema, TeacherReadSchema, TeacherUpdateSchema, TeacherPaginationResultSchema, \
+from ..schemas import TeacherCreateSchema, TeacherReadSchema, TeacherUpdateSchema, TeacherReadWithUserAndUsePhotoSchema, \
+    TeacherPaginationWithUserAndUserPhotoResultSchema, \
     TeacherReadWithUserSchema, TeacherPaginationWithUserResultSchema
 from ..exceptions import TeacherNotExistsExceptions
 from school_site.apps.users.services.users import UserServiceProtocol
@@ -39,7 +40,7 @@ class TeacherService(TeacherServiceProtocol):
     async def get(self, teacher_id: UUID) -> TeacherReadWithUserSchema:
         teacher = await self.teacher_repository.get(teacher_id)
         user = await self.user_service.get_user_by_id(teacher.user_id)
-        return TeacherReadWithUserSchema(
+        return TeacherReadWithUserAndUsePhotoSchema(
             id=teacher.id,
             user_id=teacher.user_id,
             created_at=teacher.created_at,
@@ -53,7 +54,7 @@ class TeacherService(TeacherServiceProtocol):
     async def delete(self, teacher_id: UUID) -> bool:
         return await self.teacher_repository.delete(teacher_id)
     
-    async def list(self, pagination: PaginationSchema) -> TeacherPaginationWithUserResultSchema:
+    async def list(self, pagination: PaginationSchema) -> TeacherPaginationWithUserAndUserPhotoResultSchema:
         teachers = await self.teacher_repository.paginate(
             search=None,
             search_by=None,
@@ -62,7 +63,7 @@ class TeacherService(TeacherServiceProtocol):
             sorting=["created_at", "id"],
             policies=["can_view"]
         )
-        teachers_users = [TeacherReadWithUserSchema(
+        teachers_users = [TeacherReadWithUserAndUsePhotoSchema(
             id=teacher.id,
             user_id=teacher.user_id,
             created_at=teacher.created_at,
@@ -70,14 +71,14 @@ class TeacherService(TeacherServiceProtocol):
             user=(await self.user_service.get_user_by_id(teacher.user_id))
         ) for teacher in teachers.objects]
 
-        return TeacherPaginationWithUserResultSchema(count=teachers.count, objects=teachers_users)
+        return TeacherPaginationWithUserAndUserPhotoResultSchema(count=teachers.count, objects=teachers_users)
     
     async def get_by_user_id(self, user_id: UUID) -> TeacherReadWithUserSchema:
         teacher = await self.teacher_repository.get_by_user_id(user_id)
         if not teacher:
             raise TeacherNotExistsExceptions(user_id)
         user = await self.user_service.get_user_by_id(teacher.user_id)
-        return TeacherReadWithUserSchema(
+        return TeacherReadWithUserAndUsePhotoSchema(
             id=teacher.id,
             user_id=teacher.user_id,
             created_at=teacher.created_at,
