@@ -14,7 +14,7 @@ from .services.passwords import PasswordServiceProtocol, PasswordService
 from .services.users import UserServiceProtocol, UserService
 from .services.photo_user import PhotoUserServiceProtocol, PhotoUserService
 from .services.tokens import TokenServiceProtocol, TokenService, ResetPasswordTokenServiceProtocol, ResetPasswordTokenService
-from .services.auth import AuthServiceProtocol, AuthService, ResetPasswordServiceProtocol, ResetPasswordService
+from .services.auth import AuthServiceProtocol, AuthService, ResetPasswordServiceProtocol, ResetPasswordService, AuthByAnotherUserServiceProtocol, AuthByAnotherUserService
 from .use_cases.login import LoginUseCaseProtocol, LoginUseCase
 from .use_cases.refresh import RefreshUseCaseProtocol, RefreshUseCase
 from .use_cases.logout import LogoutUseCaseProtocol, LogoutUseCase
@@ -27,6 +27,7 @@ from .use_cases.delete_user import DeleteUserUseCase, DeleteUserUseCaseProtocol
 from .use_cases.reset_password import ResetPasswordUseCaseProtocol, ResetPasswordUseCase
 from .use_cases.confirm_reset_password import ConfirmResetPasswordUseCaseProtocol, ConfirmResetPasswordUseCase
 from .use_cases.get_me import GetMeByUserIdUseCaseProtocol, GetMeByUserIdUseCase 
+from .use_cases.auth_by_another_user import AuthByAnotherUserUseCaseProtocol, AuthByAnotherUserUseCase
 
 def __get_user_repository(
         session: AsyncSession = Depends(get_async_session)
@@ -117,6 +118,12 @@ def get_reset_password_service(user_service: UserServiceProtocol = Depends(get_u
     ResetPasswordServiceProtocol:
     return ResetPasswordService(user_service, mail_sender, reset_password_service, auth_service)
 
+def get_auth_by_another_user_service(
+    user_service: UserServiceProtocol = Depends(get_user_service),
+    token_service: TokenServiceProtocol = Depends(get_token_service)
+) -> AuthByAnotherUserServiceProtocol:
+    return AuthByAnotherUserService(user_service, token_service)
+
 def get_reset_password_use_case(reset_password_service: ResetPasswordServiceProtocol = Depends(get_reset_password_service)) -> \
     ResetPasswordUseCaseProtocol:
     return ResetPasswordUseCase(reset_password_service)
@@ -129,6 +136,12 @@ def get_me_by_user_id_use_case(token_service: TokenServiceProtocol = Depends(get
                                user_service: UserServiceProtocol = Depends(get_user_service)) -> \
     GetMeByUserIdUseCaseProtocol:
     return GetMeByUserIdUseCase(token_service, user_service)
+
+def get_auth_by_another_user_use_case(
+    auth_service: AuthServiceProtocol = Depends(get_auth_service),
+    auth_by_another_user_service: AuthByAnotherUserServiceProtocol = Depends(get_auth_by_another_user_service)
+) -> AuthByAnotherUserUseCaseProtocol:
+    return AuthByAnotherUserUseCase(auth_service, auth_by_another_user_service)
 
 access_token_schema = CookieTokenSchema(cookie_name="access_token")
 refresh_token_schema = CookieTokenSchema(cookie_name="refresh_token")
