@@ -9,6 +9,10 @@ from school_site.core.enums import UserRole
 from .exceptions import InvalidTokenError
 
 
+class UserIdSchema(BaseModel):
+    user_id: UUID
+
+    
 class UsernameRelatedMixin(BaseModel):
     username: str
 

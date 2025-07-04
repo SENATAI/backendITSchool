@@ -6,7 +6,7 @@ from school_site.core.utils.exceptions import PermissionDeniedError
 from ..texts import HTML_EMAIL_BODY_TEMPLATE, HTML_EMAIL_SUBJECT_TEMPLATE
 from ..schemas import (
     AuthReadSchema, PasswordChangeSchema, UserResetSchema, UserWithPhotoReadSchema, 
-    ResetTokenSchema, ResetPasswordRequest, UserTokenDataReadSchema
+    ResetTokenSchema, ResetPasswordRequest, UserTokenDataReadSchema, TokenReadSchema
 )
 from .users import UserServiceProtocol
 from .tokens import TokenServiceProtocol, ResetPasswordTokenServiceProtocol
@@ -202,3 +202,31 @@ class ResetPasswordService(ResetPasswordServiceProtocol):
             body=body,
             subject=subject
         )
+
+
+class AuthByAnotherUserServiceProtocol(Protocol):
+    async def auth_by_another_user(self: Self, user_id: UUID) -> AuthReadSchema:
+        ...
+
+class AuthByAnotherUserService(AuthByAnotherUserServiceProtocol):
+    def __init__(self: Self, user_service: UserServiceProtocol, token_service: TokenServiceProtocol):
+        self.user_service = user_service
+        self.token_service = token_service
+
+    async def auth_by_another_user(self: Self, user_id: UUID) -> AuthReadSchema:
+        user = await self.user_service.get_user_by_id(user_id)
+        access_token, refresh_data = await self._create_tokens(user.id, user.role)
+        
+        return AuthReadSchema(user=user,
+                              access_token=access_token,
+                              refresh_token=refresh_data)
+    
+    async def _create_tokens(self: Self, user_id: UUID, role: UserRole) -> tuple[TokenReadSchema, TokenReadSchema]:
+        access_token = self.token_service.create_access_token(
+            user_id=user_id, 
+            role=role, 
+        )
+        
+        refresh_data = await self.token_service.create_refresh_token(user_id)
+
+        return access_token, refresh_data

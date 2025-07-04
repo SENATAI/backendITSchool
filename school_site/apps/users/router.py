@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Response, Query, Form, UploadFile, File
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 from .schemas import (
-    LoginRequestSchema, UserWithPhotoReadSchema, PasswordChangeSchema, RegisterRequestSchema, 
-    UserUpdateRequestSchema, UserResetSchema, ResetPasswordRequest, PaginationResultSchema
+    LoginRequestSchema, UserWithPhotoReadSchema, PasswordChangeSchema, 
+    UserResetSchema, ResetPasswordRequest, PaginationResultSchema, UserIdSchema
 )
 from .use_cases.login import LoginUseCaseProtocol
 from .use_cases.refresh import RefreshUseCaseProtocol
@@ -14,11 +14,12 @@ from .use_cases.get_all_users import GetAllUsersUseCaseProtocol
 from .use_cases.get_user_by_id import GetUserByIdUseCaseProtocol
 from .use_cases.update_user import UpdateUserUseCaseProtocol
 from .use_cases.delete_user import DeleteUserUseCaseProtocol
+from .use_cases.auth_by_another_user import AuthByAnotherUserUseCaseProtocol
 from .depends import (
     get_login_use_case, get_refresh_use_case, get_logout_use_case, get_change_password_use_case, 
     get_create_user_use_case, get_all_users_use_case, get_get_user_by_id_use_case, get_update_user_use_case, 
     get_delete_user_use_case, get_reset_password_use_case, get_confirm_reset_password_use_case, 
-    get_me_by_user_id_use_case, access_token_schema, refresh_token_schema
+    get_me_by_user_id_use_case, get_auth_by_another_user_use_case, access_token_schema, refresh_token_schema
 )
 from .use_cases.reset_password import ResetPasswordUseCaseProtocol
 from .use_cases.confirm_reset_password import ConfirmResetPasswordUseCaseProtocol
@@ -103,6 +104,23 @@ async def get_me(
 ):
     return await get_me_by_user_id_use_case(access_token)
 
+@router.post("/impersonate", response_model=UserWithPhotoReadSchema, status_code=200)
+async def impersonate_user(
+    response: Response,
+    user_id: UserIdSchema,
+    auth_by_another_user_use_case: AuthByAnotherUserUseCaseProtocol = Depends(get_auth_by_another_user_use_case),
+    access_token: str = Depends(access_token_schema)
+):
+    user_tokens_data = await auth_by_another_user_use_case(access_token, user_id)
+    
+    set_auth_cookies(
+        response, 
+        user_tokens_data.access_token.token, 
+        user_tokens_data.refresh_token.token
+    )
+    
+    return user_tokens_data.user
+
 @router.post("/", response_model=UserWithPhotoReadSchema, status_code=201)
 async def create_user(
     user_data: str = Form(...),
@@ -173,4 +191,5 @@ async def confirm_reset_password(
         user_tokens_data.refresh_token.token
     )
     return user_tokens_data.user
+
 
