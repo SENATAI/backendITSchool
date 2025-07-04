@@ -68,8 +68,9 @@ async def list_students(
     access_token: str = Depends(access_token_schema),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0, le=100),
+    sorting_by: str = Query("created_at", description="Field to sort by, default is 'created_at'"),
     list: GetListStudentUseCaseProtocol = Depends(get_student_list_use_case)
 ):
-    return await list(access_token, limit, offset)
+    return await list(access_token, limit, offset, sorting_by)
 
 
