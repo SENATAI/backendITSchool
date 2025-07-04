@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Protocol, List
+from typing import Protocol, List, Optional
 from school_site.core.schemas import PaginationSchema
 from ..repositories.students import StudentRepositoryProtocol
 from ..schemas import StudentCreateSchema, StudentReadSchema, StudentUpdateSchema, \
@@ -21,7 +21,7 @@ class StudentServiceProtocol(Protocol):
     async def delete(self, student_id: UUID) -> bool:
         ...
 
-    async def list(self, pagination: PaginationSchema) -> StudentPaginationWithUserResultSchema:
+    async def list(self, pagination: PaginationSchema, sorting_by: Optional[str] = None) -> StudentPaginationWithUserResultSchema:
         ...
 
     async def get_by_user_id(self, user_id: UUID) -> StudentReadWithUserAndUsePhotoSchema:
@@ -54,13 +54,16 @@ class StudentService(StudentServiceProtocol):
     async def delete(self, student_id: UUID) -> bool:
         return await self.student_repository.delete(student_id)
     
-    async def list(self, pagination: PaginationSchema) -> StudentPaginationWithUserResultSchema:
+    async def list(self, pagination: PaginationSchema, sorting_by: Optional[str] = None) -> StudentPaginationWithUserResultSchema:
+        sorting_by = sorting_by or "created_at"
+        sorting_by = [sorting_by]
+        print(f"Sorting by: {sorting_by}")
         students = await self.student_repository.paginate(
             search=None,
             search_by=None,
             user=None,
             pagination=pagination,
-            sorting=["created_at", "id"],
+            sorting=sorting_by,
             policies=["can_view"]
         )
         students_users = [StudentReadWithUserAndUsePhotoSchema(
