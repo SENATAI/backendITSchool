@@ -126,7 +126,9 @@ class LessonRepository(LessonRepositoryProtocol):
                 .where(Lesson.id == lesson_id)
                 .options(
                     joinedload(Lesson.homework),
+                    joinedload(Lesson.homework_additional_material),
                     joinedload(Lesson.student_material),
+                    joinedload(Lesson.student_additional_material),
                     joinedload(Lesson.groups)
                     .selectinload(LessonGroup.students)
                     .selectinload(LessonStudent.passed_homeworks)
@@ -175,7 +177,9 @@ class LessonRepository(LessonRepositoryProtocol):
                 )
                 .options(
                     joinedload(Lesson.teacher_material),
+                    joinedload(Lesson.teacher_additional_material),
                     joinedload(Lesson.homework),
+                    joinedload(Lesson.homework_additional_material),
                     contains_eager(Lesson.groups)
                     .contains_eager(LessonGroup.students)
                     .selectinload(LessonStudent.passed_homeworks)
@@ -204,7 +208,9 @@ class LessonRepository(LessonRepositoryProtocol):
                 )
                 .options(
                     joinedload(self.model_type.homework),
+                    joinedload(self.model_type.homework_additional_material),
                     joinedload(self.model_type.teacher_material),
+                    joinedload(self.model_type.teacher_additional_material),
                     joinedload(self.model_type.groups)
                     .selectinload(LessonGroup.students)  # ← Ученики в группе
                 )
@@ -238,7 +244,10 @@ class LessonRepository(LessonRepositoryProtocol):
                 .where(Group.teacher_id == teacher_id)
                 .options(
                     joinedload(Lesson.homework),
-                    joinedload(Lesson.teacher_material)
+                    joinedload(Lesson.homework_additional_material),
+                    joinedload(Lesson.teacher_material),
+                    joinedload(Lesson.teacher_additional_material)
+
                 )
             )
             

@@ -64,14 +64,20 @@ class Lesson(Base, TimestampMixin):
     course_id = Column(PostgresUUID(as_uuid=True), ForeignKey("courses.id"))
     name = Column(String, nullable=False)
     teacher_material_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"), nullable=True)
+    teacher_additional_material_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"), nullable=True)
     student_material_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"), nullable=True)
+    student_additional_material_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"), nullable=True)
     homework_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"), nullable=True)
+    homework_additional_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_html_files.id"), nullable=True)
 
     course = relationship("Course", back_populates="lessons")
     groups = relationship("LessonGroup", back_populates="lesson")
     teacher_material = relationship("LessonHtmlFile", foreign_keys=[teacher_material_id])
+    teacher_additional_material = relationship("LessonHtmlFile", foreign_keys=[teacher_additional_material_id])
     student_material = relationship("LessonHtmlFile", foreign_keys=[student_material_id])
+    student_additional_material = relationship("LessonHtmlFile", foreign_keys=[student_additional_material_id])
     homework = relationship("LessonHtmlFile", foreign_keys=[homework_id])
+    homework_additional_material = relationship("LessonHtmlFile", foreign_keys=[homework_additional_id])
 
 
 class LessonHtmlFile(Base, TimestampMixin, FileMixin):
