@@ -258,51 +258,6 @@ async def delete_lesson(
     await delete(course_id, lesson_id, access_token)
     return None
 
-
-@router.post("/{course_id}/lessons-with-materials", response_model=LessonWithMaterialsReadSchema, status_code=201)
-async def create_lesson_with_materials(
-    data: str = Form(...),
-    teacher_material_file: Optional[UploadFile] = File(None),
-    student_material_file: Optional[UploadFile] = File(None),
-    homework_material_file: Optional[UploadFile] = File(None),
-    course_id: UUID = Path(...),
-    lesson_create_use_case: CreateLessonUseCaseProtocol = Depends(get_lesson_create_use_case),
-    material_create_use_case: CreateLessonHTMLFileUseCaseProtocol = Depends(get_material_create_use_case),
-    access_token: str = Depends(access_token_schema)
-):
-    
-    validated_data = LessonWithMaterialsCreateSchema(**json.loads(data))
-    teacher_material_id, teacher_material_url = await _create_material_if_exists(
-        validated_data.teacher_material_name, teacher_material_file, material_create_use_case, access_token
-    )
-    student_material_id, student_material_url = await _create_material_if_exists(
-        validated_data.student_material_name, student_material_file, material_create_use_case, access_token
-    )
-    homework_id, homework_url = await _create_material_if_exists(
-        validated_data.homework_material_name, homework_material_file, material_create_use_case, access_token
-    )
-
-    lesson = LessonCreateSchema(
-        name=validated_data.name,
-        teacher_material_id=teacher_material_id,
-        student_material_id=student_material_id,
-        homework_id=homework_id
-    )
-    
-    created_lesson = await lesson_create_use_case(course_id, lesson, access_token)
-    
-    return LessonWithMaterialsReadSchema(
-        id=created_lesson.id,
-        course_id=created_lesson.course_id,
-        name=created_lesson.name,
-        teacher_material_id=teacher_material_id,
-        student_material_id=student_material_id,
-        homework_id=homework_id,
-        teacher_material_url=teacher_material_url,
-        student_material_url=student_material_url,
-        homework_material_url=homework_url
-    )
-
 async def _create_material_if_exists(
     name: Optional[str],
     file: Optional[UploadFile],
@@ -315,30 +270,49 @@ async def _create_material_if_exists(
         return created.id, created.url
     return None, None
 
-@router.post("/{course_id}/lessons-with-materials-text", response_model=LessonWithMaterialsReadSchema, status_code=201)
+@router.post("/{course_id}/lessons-with-materials", response_model=LessonWithMaterialsReadSchema, status_code=201)
 async def create_lesson_with_materials_by_text(
-    data: LessonWithMaterialsTextCreateSchema,
+    data: str = Form(...),
+    teacher_additional_material_file: Optional[UploadFile] = File(None),
+    student_additional_material_file: Optional[UploadFile] = File(None),
+    homework_additional_material_file: Optional[UploadFile] = File(None),
     course_id: UUID = Path(...),
     lesson_create_use_case: CreateLessonUseCaseProtocol = Depends(get_lesson_create_use_case),
+    material_create_file_use_case: CreateLessonHTMLFileUseCaseProtocol = Depends(get_material_create_use_case),
     material_create_use_case: CreateLessonHTMLFileByTextUseCaseProtocol = Depends(get_material_create_by_text_use_case),
     access_token: str = Depends(access_token_schema)
 ):
+    validated_data = LessonWithMaterialsCreateSchema(**json.loads(data))
     teacher_material_id, teacher_material_url = await _create_material_by_text_if_exists(
-        data.teacher_material_name, data.teacher_material_text, material_create_use_case, access_token
+        validated_data.teacher_material_name, validated_data.teacher_material_text, material_create_use_case, access_token
     )
+    teacher_additional_material_id, teacher_additional_material_url = await _create_material_if_exists(
+        validated_data.teacher_additional_material_name, teacher_additional_material_file, material_create_file_use_case, access_token
+    )
+    print("teacher_additional_material_id: ", teacher_additional_material_id)
     student_material_id, student_material_url = await _create_material_by_text_if_exists(
-        data.student_material_name, data.student_material_text, material_create_use_case, access_token
+        validated_data.student_material_name, validated_data.student_material_text, material_create_use_case, access_token
+    )
+    student_additional_material_id, student_additional_material_url = await _create_material_if_exists(
+        validated_data.student_additional_material_name, student_additional_material_file, material_create_file_use_case, access_token
     )
     homework_id, homework_url = await _create_material_by_text_if_exists(
-        data.homework_material_name, data.homework_material_text, material_create_use_case, access_token
+        validated_data.homework_material_name, validated_data.homework_material_text, material_create_use_case, access_token
+    )
+    homework_additional_material_id, homework_additional_material_url = await _create_material_if_exists(
+        validated_data.homework_additional_material_name, homework_additional_material_file, material_create_file_use_case, access_token
     )
 
     lesson = LessonCreateSchema(
-        name=data.name,
+        name=validated_data.name,
         teacher_material_id=teacher_material_id,
+        teacher_additional_material_id=teacher_additional_material_id,
         student_material_id=student_material_id,
-        homework_id=homework_id
+        student_additional_material_id=student_additional_material_id,
+        homework_id=homework_id,
+        homework_additional_id=homework_additional_material_id
     )
+    print("Created lesson: ", lesson) 
     
     created_lesson = await lesson_create_use_case(course_id, lesson, access_token)
     
@@ -347,11 +321,17 @@ async def create_lesson_with_materials_by_text(
         course_id=created_lesson.course_id,
         name=created_lesson.name,
         teacher_material_id=teacher_material_id,
+        teacher_additional_material_id=teacher_additional_material_id,
         student_material_id=student_material_id,
+        student_additional_material_id=student_additional_material_id,
         homework_id=homework_id,
+        homework_additional_id=homework_additional_material_id,
         teacher_material_url=teacher_material_url,
+        teacher_additional_material_url=teacher_additional_material_url,
         student_material_url=student_material_url,
-        homework_material_url=homework_url
+        student_additional_material_url=student_additional_material_url,
+        homework_material_url=homework_url,
+        homework_additional_material_url=homework_additional_material_url
     )
 
 async def _create_material_by_text_if_exists(
@@ -367,51 +347,6 @@ async def _create_material_by_text_if_exists(
     return None, None
 
 
-@router.put("/{course_id}/lessons-with-materials/{lesson_id}", response_model=LessonWithMaterialsReadSchema, status_code=200)
-async def update_lesson_with_materials(
-    data: str = Form(...),
-    teacher_material_file: Optional[UploadFile] = File(None),
-    student_material_file: Optional[UploadFile] = File(None),
-    homework_material_file: Optional[UploadFile] = File(None),
-    course_id: UUID = Path(...),
-    lesson_id: UUID = Path(...),
-    lesson_update_use_case: UpdateLessonUseCaseProtocol = Depends(get_lesson_update_use_case),
-    material_update_use_case: UpdateLessonHTMLFileUseCaseProtocol = Depends(get_material_update_use_case),
-    access_token: str = Depends(access_token_schema)
-):
-    validated_data = LessonWithMaterialsUpdateSchema(**json.loads(data))
-    updated_teacher_material = await _update_material_if_exists(
-        validated_data.teacher_material_id, validated_data.teacher_material_name, teacher_material_file, material_update_use_case, access_token
-    )
-    updated_student_material = await _update_material_if_exists(
-        validated_data.student_material_id, validated_data.student_material_name, student_material_file, material_update_use_case, access_token
-    )
-    updated_homework_material = await _update_material_if_exists(
-        validated_data.homework_id, validated_data.homework_material_name, homework_material_file, material_update_use_case, access_token
-    )
-
-    lesson = LessonUpdateSchema(
-        name=validated_data.name,
-        teacher_material_id=updated_teacher_material.id if updated_teacher_material else validated_data.teacher_material_id,
-        student_material_id=updated_student_material.id if updated_student_material else validated_data.student_material_id,
-        homework_id=updated_homework_material.id if updated_homework_material else validated_data.homework_id
-    )
-    
-    updated_lesson = await lesson_update_use_case(course_id, lesson_id, lesson, access_token)
-    
-    return LessonWithMaterialsReadSchema(
-        id=updated_lesson.id,
-        course_id=updated_lesson.course_id,
-        name=updated_lesson.name,
-        teacher_material_id=updated_teacher_material.id if updated_teacher_material else validated_data.teacher_material_id,
-        student_material_id=updated_student_material.id if updated_student_material else validated_data.student_material_id,
-        homework_id=updated_homework_material.id if updated_homework_material else validated_data.homework_id,
-        teacher_material_url=updated_teacher_material.url if updated_teacher_material else None,
-        student_material_url=updated_student_material.url if updated_student_material else None,
-        homework_material_url=updated_homework_material.url if updated_homework_material else None
-    )
-
-
 async def _update_material_if_exists(
     material_id: Optional[UUID],
     name: Optional[str],
@@ -424,30 +359,47 @@ async def _update_material_if_exists(
         return await material_use_case(material_id, material, access_token)
     return None
 
-@router.put("/{course_id}/lessons-with-materials-text/{lesson_id}", response_model=LessonWithMaterialsReadSchema, status_code=200)
+@router.put("/{course_id}/lessons-with-materials/{lesson_id}", response_model=LessonWithMaterialsReadSchema, status_code=200)
 async def update_lesson_with_materials_by_text(
-    data: LessonWithMaterialsTextUpdateSchema,
+    data: str = Form(...),
+    teacher_additional_material_file: Optional[UploadFile] = File(None),
+    student_additional_material_file: Optional[UploadFile] = File(None),
+    homework_additional_material_file: Optional[UploadFile] = File(None),
     course_id: UUID = Path(...),
     lesson_id: UUID = Path(...),
     lesson_update_use_case: UpdateLessonUseCaseProtocol = Depends(get_lesson_update_use_case),
+    material_update_file_use_case: UpdateLessonHTMLFileUseCaseProtocol = Depends(get_material_update_use_case),
     material_update_use_case: UpdateLessonHTMLFileByTextUseCaseProtocol = Depends(get_material_update_by_text_use_case),
     access_token: str = Depends(access_token_schema)
 ):
+    validated_data = LessonWithMaterialsUpdateSchema(**json.loads(data))
     updated_teacher_material = await _update_material_by_text_if_exists(
-        data.teacher_material_id, data.teacher_material_name, data.teacher_material_text, material_update_use_case, access_token
+        validated_data.teacher_material_id, validated_data.teacher_material_name, validated_data.teacher_material_text, material_update_use_case, access_token
+    )
+    updated_additional_teacher_material = await _update_material_if_exists(
+        validated_data.teacher_additional_material_id, validated_data.teacher_additional_material_name, teacher_additional_material_file, material_update_file_use_case, access_token
     )
     updated_student_material = await _update_material_by_text_if_exists(
-        data.student_material_id, data.student_material_name, data.student_material_text, material_update_use_case, access_token
+        validated_data.student_material_id, validated_data.student_material_name, validated_data.student_material_text, material_update_use_case, access_token
+    )
+    updated_additional_stident_material = await _update_material_if_exists(
+        validated_data.student_additional_material_id, validated_data.student_additional_material_name, student_additional_material_file, material_update_file_use_case, access_token
     )
     updated_homework_material = await _update_material_by_text_if_exists(
-        data.homework_id, data.homework_material_name, data.homework_material_text, material_update_use_case, access_token
+        validated_data.homework_id, validated_data.homework_material_name, validated_data.homework_material_text, material_update_use_case, access_token
+    )
+    updated_additional_homework_material = await _update_material_if_exists(
+        validated_data.homework_additional_id, validated_data.homework_additional_material_name, homework_additional_material_file, material_update_file_use_case, access_token
     )
 
     lesson = LessonUpdateSchema(
-        name=data.name,
-        teacher_material_id=updated_teacher_material.id if updated_teacher_material else data.teacher_material_id,
-        student_material_id=updated_student_material.id if updated_student_material else data.student_material_id,
-        homework_id=updated_homework_material.id if updated_homework_material else data.homework_id
+        name=validated_data.name,
+        teacher_material_id=updated_teacher_material.id if updated_teacher_material else validated_data.teacher_material_id,
+        teacher_additional_material_id=updated_additional_teacher_material.id if updated_additional_teacher_material else validated_data.teacher_additional_material_id,
+        student_material_id=updated_student_material.id if updated_student_material else validated_data.student_material_id,
+        student_additional_material_id=updated_additional_stident_material.id if updated_additional_stident_material else validated_data.student_additional_material_id,
+        homework_id=updated_homework_material.id if updated_homework_material else validated_data.homework_id,
+        homework_additional_id=updated_additional_homework_material.id if updated_additional_homework_material else validated_data.homework_additional_id
     )
     
     updated_lesson = await lesson_update_use_case(course_id, lesson_id, lesson, access_token)
@@ -456,12 +408,18 @@ async def update_lesson_with_materials_by_text(
         id=updated_lesson.id,
         course_id=updated_lesson.course_id,
         name=updated_lesson.name,
-        teacher_material_id=updated_teacher_material.id if updated_teacher_material else data.teacher_material_id,
-        student_material_id=updated_student_material.id if updated_student_material else data.student_material_id,
-        homework_id=updated_homework_material.id if updated_homework_material else data.homework_id,
+        teacher_material_id=updated_teacher_material.id if updated_teacher_material else validated_data.teacher_material_id,
+        teacher_additional_material_id=updated_additional_teacher_material.id if updated_additional_teacher_material else validated_data.teacher_additional_material_id,
+        student_material_id=updated_student_material.id if updated_student_material else validated_data.student_material_id,
+        student_additional_material_id=updated_additional_stident_material.id if updated_additional_stident_material else validated_data.student_additional_material_id,
+        homework_id=updated_homework_material.id if updated_homework_material else validated_data.homework_id,
+        homework_additional_id=updated_additional_homework_material.id if updated_additional_homework_material else validated_data.homework_additional_id,
         teacher_material_url=updated_teacher_material.url if updated_teacher_material else None,
+        teacher_additional_material_url=updated_additional_teacher_material.url if updated_additional_teacher_material else None,
         student_material_url=updated_student_material.url if updated_student_material else None,
-        homework_material_url=updated_homework_material.url if updated_homework_material else None
+        student_additional_material_url=updated_additional_stident_material.url if updated_additional_stident_material else None,
+        homework_material_url=updated_homework_material.url if updated_homework_material else None,
+        homework_additional_material_url=updated_additional_homework_material.url if updated_additional_homework_material else None
     )
 
 async def _update_material_by_text_if_exists(
@@ -485,20 +443,30 @@ async def get_lesson_with_materials(
     access_token: str = Depends(access_token_schema)
 ):
     lesson = await get_lesson(course_id, lesson_id)
+    print("Lesson: ", lesson)
     teacher_material = await _get_material_if_exists(lesson.teacher_material_id, get_material, access_token)
+    teacher_additional_material = await _get_material_if_exists(lesson.teacher_additional_material_id, get_material, access_token)
     student_material = await _get_material_if_exists(lesson.student_material_id, get_material, access_token)
+    student_additional_material = await _get_material_if_exists(lesson.student_additional_material_id, get_material, access_token)
     homework_material = await _get_material_if_exists(lesson.homework_id, get_material, access_token)
+    homework_additional_material = await _get_material_if_exists(lesson.homework_additional_id, get_material, access_token)
     
     return LessonWithMaterialsReadSchema(
         id=lesson.id,
         course_id=lesson.course_id,
         name=lesson.name,
         teacher_material_id=teacher_material.id if teacher_material else None,
+        teacher_additional_material_id=teacher_additional_material.id if teacher_additional_material else None,
         student_material_id=student_material.id if student_material else None,
+        student_additional_material_id=student_additional_material.id if student_additional_material else None,
         homework_id=homework_material.id if homework_material else None,
+        homework_additional_id=homework_additional_material.id if homework_additional_material else None,
         teacher_material_url=teacher_material.url if teacher_material else None,
+        teacher_additional_material_url=teacher_additional_material.url if teacher_additional_material else None,
         student_material_url=student_material.url if student_material else None,
-        homework_material_url=homework_material.url if homework_material else None
+        student_additional_material_url=student_additional_material.url if student_additional_material else None,
+        homework_material_url=homework_material.url if homework_material else None,
+        homework_additional_material_url=homework_additional_material.url if homework_additional_material else None
     )
 
 
@@ -524,10 +492,16 @@ async def delete_lesson_with_materials(
     await delete_lesson(course_id, lesson_id, access_token)
     if data.teacher_material_id:
         await delete_material(data.teacher_material_id, access_token)
+    if data.teacher_additional_material_id:
+        await delete_material(data.teacher_additional_material_id, access_token)
     if data.student_material_id:
         await delete_material(data.student_material_id, access_token)
+    if data.student_additional_material_id:
+        await delete_material(data.student_additional_material_id, access_token)
     if data.homework_id:
         await delete_material(data.homework_id, access_token)
+    if data.homework_additional_id:
+        await delete_material(data.homework_additional_id, access_token)
 
     return None
 

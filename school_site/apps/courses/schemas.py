@@ -123,8 +123,11 @@ class MaterialDataSchema(BaseModel):
 class LessonBaseSchema(BaseModel):
     name: str
     teacher_material_id: Optional[UUID] = Field(None, description="ID материала для учителя")
+    teacher_additional_material_id: Optional[UUID] = Field(None, description="ID дополнительного материала для учителя")
     student_material_id: Optional[UUID]  = Field(None, description="ID материала для студента")
+    student_additional_material_id: Optional[UUID] = Field(None, description="ID дополнительного материала для студента")
     homework_id: Optional[UUID]  = Field(None, description="ID домашнего задания")
+    homework_additional_id: Optional[UUID] = Field(None, description="ID дополнительного домашнего задания")
 
 
 class LessonCreateSchema(CreateBaseModel, LessonBaseSchema):
@@ -177,22 +180,35 @@ class LessonPaginationResultDBSchema(PaginationResultSchema[LessonReadDBHeadSche
 class LessonWithMaterialsBaseSchema(BaseModel):
     name: str
     teacher_material_name: Optional[str] = None
+    teacher_material_text: Optional[str] = None
+    teacher_additional_material_name: Optional[str] = None
     student_material_name: Optional[str] = None
+    student_material_text: Optional[str] = None
+    student_additional_material_name: Optional[str] = None
     homework_material_name: Optional[str] = None
+    homework_material_text: Optional[str] = None
+    homework_additional_material_name: Optional[str] = None
+
 
 class LessonWithMaterialsCreateSchema(CreateBaseModel, LessonWithMaterialsBaseSchema):
     pass
 
 class LessonWithMaterialsUpdateSchema(CreateBaseModel, LessonWithMaterialsBaseSchema):
     teacher_material_id: Optional[UUID] = None
+    teacher_additional_material_id: Optional[UUID] = None
     student_material_id: Optional[UUID] = None
+    student_additional_material_id: Optional[UUID] = None
     homework_id: Optional[UUID] = None
+    homework_additional_id: Optional[UUID] = None
 
 
 class LessonWithMaterialsDeleteSchema(BaseModel):
     teacher_material_id: Optional[UUID] = None
+    teacher_additional_material_id: Optional[UUID] = None
     student_material_id: Optional[UUID] = None 
+    student_additional_material_id: Optional[UUID] = None
     homework_id: Optional[UUID] = None
+    homework_additional_id: Optional[UUID] = None
 
 class LessonWithMaterialsTextBaseSchema(BaseModel):
     name: str
@@ -214,8 +230,11 @@ class LessonWithMaterialsTextUpdateSchema(CreateBaseModel, LessonWithMaterialsTe
 
 class LessonWithMaterialsReadSchema(LessonReadSchema, LessonBaseSchema):
     teacher_material_url: Optional[HttpUrl] = None
+    teacher_additional_material_url: Optional[HttpUrl] = None
     student_material_url: Optional[HttpUrl] = None
+    student_additional_material_url: Optional[HttpUrl] = None
     homework_material_url: Optional[HttpUrl] = None
+    homework_additional_material_url: Optional[HttpUrl] = None
 
 class LessonShortSchema(BaseModel):
     id: UUID
@@ -491,6 +510,7 @@ class LessonDetailReadDBSchema(BaseModel):
     name: str
     course_id: UUID
     homework: Optional[LessonHTMLReadDBSchema] = None
+    homework_additional_material: Optional[LessonHTMLReadDBSchema] = None
     groups: List[LessonGroupDetailDBBaseSchema] = []
 
     class Config:
@@ -498,12 +518,14 @@ class LessonDetailReadDBSchema(BaseModel):
 
 class LessonStudentMaterialDetailReadDBSchema(LessonDetailReadDBSchema):
     student_material: Optional[LessonHTMLReadDBSchema] = None
+    student_additional_material: Optional[LessonHTMLReadDBSchema] = None
 
     class Config:
         from_attributes = True
 
 class LessonTeacherMaterialDetailReadDBSchema(LessonDetailReadDBSchema):
     teacher_material: Optional[LessonHTMLReadDBSchema] = None
+    teacher_additional_material: Optional[LessonHTMLReadDBSchema] = None
     
     class Config:
         from_attributes = True
@@ -530,6 +552,7 @@ class LessonDetailReadSchema(BaseModel):
     name: str
     course_id: UUID
     homework: Optional[LessonHTMLReadSchema] = None
+    homework_additional_material: Optional[LessonHTMLReadSchema] = None
     groups: List[LessonGroupDetailBaseSchema] = []
 
     class Config:
@@ -537,7 +560,7 @@ class LessonDetailReadSchema(BaseModel):
 
 class LessonStudentMaterialDetailReadSchema(LessonDetailReadSchema):
     student_material: Optional[LessonHTMLReadSchema] = None
-
+    student_additional_material: Optional[LessonHTMLReadSchema] = None
     class Config:
         from_attributes = True
 
@@ -553,7 +576,9 @@ class LessonInfoTeacherReadDBSchema(BaseModel):
     name: str
     course_id: UUID
     homework: Optional[LessonHTMLReadDBSchema] = None
+    homework_additional_material: Optional[LessonHTMLReadDBSchema] = None
     teacher_material: Optional[LessonHTMLReadDBSchema] = None
+    teacher_additional_material: Optional[LessonHTMLReadDBSchema] = None
 
     class Config:
         from_attributes = True
@@ -563,7 +588,9 @@ class LessonInfoTeacherReadSchema(BaseModel):
     name: str
     course_id: UUID
     homework: Optional[LessonHTMLReadSchema] = None
+    homework_additional_material: Optional[LessonHTMLReadSchema] = None
     teacher_material: Optional[LessonHTMLReadSchema] = None
+    teacher_additional_material: Optional[LessonHTMLReadSchema] = None
 
 
 # ====== COURSE STUDENTS SCHEMAS =======

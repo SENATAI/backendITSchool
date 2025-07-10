@@ -55,8 +55,11 @@ class LessonService(LessonServiceProtocol):
         db_lesson_create = LessonCreateDBSchema(
             name=lesson.name,
             teacher_material_id=lesson.teacher_material_id,
+            teacher_additional_material_id=lesson.teacher_additional_material_id,
             student_material_id=lesson.student_material_id,
+            student_additional_material_id=lesson.student_additional_material_id,
             homework_id=lesson.homework_id,
+            homework_additional_id=lesson.homework_additional_id,
             course_id=course_id
         )
         return await self.lesson_repository.create(db_lesson_create)
@@ -69,8 +72,11 @@ class LessonService(LessonServiceProtocol):
             id=lesson_id,
             name=lesson.name,
             teacher_material_id=lesson.teacher_material_id,
+            teacher_additional_material_id=lesson.teacher_additional_material_id,
             student_material_id=lesson.student_material_id,
+            student_additional_material_id=lesson.student_additional_material_id,
             homework_id=lesson.homework_id,
+            homework_additional_id=lesson.homework_additional_id,
             course_id=course_id
         )
         return await self.lesson_repository.update(db_lesson_update)
@@ -113,7 +119,7 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
         if isinstance(result, LessonSimpleReadSchema):
             return result
 
-        homework_material, groups = await self._process_lesson_data(result)
+        homework_material, homework_additional, groups = await self._process_lesson_data(result)
 
         student_material = None
         if result.student_material:
@@ -124,12 +130,23 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
                 url=student_material_url
             )
 
+        student_additional_material = None
+        if result.student_additional_material:
+            student_additional_url = await self.file_service.get_url(result.student_additional_material.path)
+            student_additional_material = LessonHTMLReadSchema(
+                id=result.student_additional_material.id,
+                name=result.student_additional_material.name,
+                url=student_additional_url
+            )
+
         return LessonStudentMaterialDetailReadSchema(
             id=result.id,
             name=result.name,
             course_id=result.course_id,
             homework=homework_material,
+            homework_additional_material=homework_additional,
             student_material=student_material,
+            student_additional_material=student_additional_material,
             groups=groups
         )
     
@@ -141,7 +158,7 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
         if isinstance(result, LessonSimpleReadSchema):
             return result
 
-        homework_material, groups = await self._process_lesson_data(result)
+        homework_material, homework_additional_material, groups = await self._process_lesson_data(result)
 
         teacher_material = None
         if result.teacher_material:
@@ -152,12 +169,23 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
                 url=teacher_url
             )
 
+        teacher_additional_material = None
+        if result.teacher_additional_material:
+            teacher_additional_url = await self.file_service.get_url(result.teacher_additional_material.path)
+            teacher_additional_material = LessonHTMLReadSchema(
+                id=result.teacher_additional_material.id,
+                name=result.teacher_additional_material.name,
+                url=teacher_additional_url
+            )
+
         return LessonTeacherMaterialDetailReadSchema(
             id=result.id,
             name=result.name,
             course_id=result.course_id,
             homework=homework_material,
+            homework_additional_material=homework_additional_material,
             teacher_material=teacher_material,
+            teacher_additional_material=teacher_additional_material,
             groups=groups
         )
     
@@ -165,7 +193,9 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
         result = await self.lesson_repository.get_lesson_info_for_teacher(lesson_id, teacher_id)
 
         homework_url = await self.file_service.get_url(result.homework.path) if result.homework else None
+        homework_additional_url = await self.file_service.get_url(result.homework_additional_material.path) if result.homework_additional_material else None
         teacher_material_url = await self.file_service.get_url(result.teacher_material.path) if result.teacher_material else None
+        teacher_additional_material_url = await self.file_service.get_url(result.teacher_additional_material.path) if result.teacher_additional_material else None
 
         return LessonInfoTeacherReadSchema(
             id=result.id,
@@ -176,15 +206,25 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
                 name=result.homework.name,
                 url=homework_url
             ) if result.homework else None,
+            homework_additional_material=LessonHTMLReadSchema(
+                id=result.homework_additional_material.id,
+                name=result.homework_additional_material.name,
+                url=homework_additional_url
+            ) if result.homework_additional_material else None,
             teacher_material=LessonHTMLReadSchema(
                 id=result.teacher_material.id,
                 name=result.teacher_material.name,
                 url=teacher_material_url
-            ) if result.teacher_material else None
+            ) if result.teacher_material else None,
+            teacher_additional_material=LessonHTMLReadSchema(
+                id=result.teacher_additional_material.id,
+                name=result.teacher_additional_material.name,
+                url=teacher_additional_material_url
+            ) if result.teacher_additional_material else None,
         )
     
     async def _process_lesson_data(self, lesson: Union[LessonTeacherMaterialDetailReadDBSchema, LessonStudentMaterialDetailReadDBSchema]) -> \
-        tuple[Union[LessonHTMLReadSchema, None], list[LessonGroupDetailBaseSchema]]:
+        tuple[Union[LessonHTMLReadSchema, None], Union[LessonHTMLReadSchema, None], list[LessonGroupDetailBaseSchema]]:
         homework_material = None
         if lesson.homework:
             homework_url = await self.file_service.get_url(lesson.homework.path)
@@ -192,6 +232,14 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
                 id=lesson.homework.id,
                 name=lesson.homework.name,
                 url=homework_url
+            )
+        homework_additional_material = None
+        if lesson.homework_additional_material:
+            homework_additional_url = await self.file_service.get_url(lesson.homework_additional_material.path)
+            homework_additional_material = LessonHTMLReadSchema(
+                id=lesson.homework_additional_material.id,
+                name=lesson.homework_additional_material.name,
+                url=homework_additional_url
             )
 
         processed_groups = []
@@ -237,7 +285,41 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
                 )
                 processed_groups.append(group_schema)
 
-        return homework_material, processed_groups
+        return homework_material, homework_additional_material, processed_groups
     
     async def get_all_teacher_lessons(self: Self, teacher_id: UUID, is_graded_homework: Optional[bool] = None) -> List[LessonInfoTeacherReadSchema]:
-        return await self.lesson_repository.get_all_teacher_lessons(teacher_id, is_graded_homework)
+        lessons = await self.lesson_repository.get_all_teacher_lessons(teacher_id, is_graded_homework)
+        result = []
+        for lesson in lessons:
+            homework_url = await self.file_service.get_url(lesson.homework.path) if lesson.homework else None
+            homework_additional_url = await self.file_service.get_url(lesson.homework_additional_material.path) if lesson.homework_additional_material else None
+            teacher_material_url = await self.file_service.get_url(lesson.teacher_material.path) if lesson.teacher_material else None
+            teacher_additional_material_url = await self.file_service.get_url(lesson.teacher_additional_material.path) if lesson.teacher_additional_material else None
+
+            result.append(LessonInfoTeacherReadSchema(
+                id=lesson.id,
+                name=lesson.name,
+                course_id=lesson.course_id,
+                homework=LessonHTMLReadSchema(
+                    id=lesson.homework.id,
+                    name=lesson.homework.name,
+                    url=homework_url
+                ) if lesson.homework else None,
+                homework_additional_material=LessonHTMLReadSchema(
+                    id=lesson.homework_additional_material.id,
+                    name=lesson.homework_additional_material.name,
+                    url=homework_additional_url
+                ) if lesson.homework_additional_material else None,
+                teacher_material=LessonHTMLReadSchema(
+                    id=lesson.teacher_material.id,
+                    name=lesson.teacher_material.name,
+                    url=teacher_material_url
+                ) if lesson.teacher_material else None,
+                teacher_additional_material=LessonHTMLReadSchema(
+                    id=lesson.teacher_additional_material.id,
+                    name=lesson.teacher_additional_material.name,
+                    url=teacher_additional_material_url
+                ) if lesson.teacher_additional_material else None
+            ))
+
+        return result
