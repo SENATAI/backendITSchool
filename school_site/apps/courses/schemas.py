@@ -45,7 +45,7 @@ class PhotoReadSchema(PhotoBaseSchema, TimestampMixin):
 class CourseBaseSchema(BaseModel):
     name: str = Field(..., description="Название курса")
     description: str = Field(..., description="Описание курса")
-    age_category: AgeCategory = Field(..., description="Возрастная категория курса")
+    age_category: list[AgeCategory] = Field(..., description="Возрастная категория курса")
     price: Optional[int] = Field(None, ge=0, description="Цена курса, целое положительное число или null")
     author_name: Optional[str] = Field(None, description="Имя автора курса")
 
