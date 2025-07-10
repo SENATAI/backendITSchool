@@ -224,6 +224,7 @@ class LessonShortSchema(BaseModel):
 class LessonStudentSchema(BaseModel):
     is_visited: bool
     is_excused_absence: bool
+    is_compensated_skip: bool
     is_sent_homework: bool
     is_graded_homework: bool
     coins_for_visit: Optional[int] = None
@@ -371,6 +372,7 @@ class LessonStudentBaseSchema(BaseModel):
     lesson_group_id: UUID
     is_visited: Optional[bool] = None
     is_excused_absence: Optional[bool] = None
+    is_compensated_skip: Optional[bool] = None
     is_sent_homework: Optional[bool] = None
     is_graded_homework: Optional[bool] = None
     coins_for_visit: Optional[int] = None
@@ -396,10 +398,8 @@ class LessonStudentReadSchema(LessonStudentBaseSchema):
     class Config:
         from_attributes = True
 
-class LessonStudentReadWithStudentSchema(LessonStudentReadSchema):
-    student: StudentReadSchema
-    class Config: 
-        from_attributes = True
+class LessonStudentWithLessonGroupReadSchema(LessonStudentReadSchema):
+    lesson_group: LessonGroupReadSchema
 
 class LessonStudentReadWithStudentDBSchema(LessonStudentReadSchema):
     student: StudentReadSchema

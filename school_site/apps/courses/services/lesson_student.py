@@ -13,7 +13,8 @@ from ..schemas import (
     LessonStudentReadWithStudentSchema,
     LessonStudentDetailReadSchema,
     HomeworkReadSchema,
-    FileHomeworkReadSchema
+    FileHomeworkReadSchema,
+    LessonStudentWithLessonGroupReadSchema
 )
 
 logger = logging.getLogger(__name__)
@@ -62,6 +63,7 @@ class LessonStudentService(LessonStudentServiceProtocol):
             lesson_group_id=lesson_student.lesson_group_id,
             is_visited=lesson_student.is_visited,
             is_excused_absence=lesson_student.is_excused_absence,
+            is_compensated_skip=lesson_student.is_compensated_skip,
             is_sent_homework=lesson_student.is_sent_homework,
             is_graded_homework=lesson_student.is_graded_homework,
             coins_for_visit=lesson_student.coins_for_visit,
@@ -140,6 +142,7 @@ class LessonStudentWithStudentService(LessonStudentWithStudentServiceProtocol):
             is_visited=lesson_student.is_visited,
             is_excused_absence=lesson_student.is_excused_absence,
             is_sent_homework=lesson_student.is_sent_homework,
+            is_compensated_skip=lesson_student.is_compensated_skip,
             is_graded_homework=lesson_student.is_graded_homework,
             coins_for_visit=lesson_student.coins_for_visit,
             coins_for_homework=lesson_student.coins_for_homework
@@ -197,6 +200,7 @@ class GetDetailedLessonStudentByIdService(GetDetailedLessonStudentByIdServicePro
             is_excused_absence=lesson_student.is_excused_absence,
             is_sent_homework=lesson_student.is_sent_homework,
             is_graded_homework=lesson_student.is_graded_homework,
+            is_compensated_skip=lesson_student.is_compensated_skip,
             coins_for_visit=lesson_student.coins_for_visit,
             grade_for_visit=lesson_student.grade_for_visit,
             coins_for_homework=lesson_student.coins_for_homework,
@@ -204,6 +208,17 @@ class GetDetailedLessonStudentByIdService(GetDetailedLessonStudentByIdServicePro
             passed_homeworks=converted_homeworks,
             comments=lesson_student.comments,
         )
+    
+class GetLessonStudentsByStudentServiceProtocol(Protocol):
+    async def get_all_lesson_students_by_student_id(self: Self, student_id: UUID) -> List[LessonStudentReadSchema]:
+        ...
+
+class GetLessonStudentsByStudentService(GetLessonStudentsByStudentServiceProtocol):
+    def __init__(self: Self, repository: LessonStudentRepositoryProtocol):
+        self.repository = repository
+    
+    async def get_all_lesson_students_by_student_id(self: Self, student_id: UUID) -> List[LessonStudentWithLessonGroupReadSchema]:
+        return await self.repository.get_all_lesson_students_by_student_id(student_id)
 
 class GetLessonStudentByStudentAndLessonServiceProtocol(Protocol):
     async def get_lesson_student(self: Self, student_id: UUID, lesson_id: UUID) -> LessonStudentReadSchema:

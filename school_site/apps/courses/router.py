@@ -40,6 +40,7 @@ from .use_cases.lesson_students.get_detailed_student import GetDetailedLessonStu
 from .use_cases.lesson_students.create_ls_and_update_student import CreateLessonStudentsAndUpdateStudentsUseCaseProtocol
 from .use_cases.lesson_students.update_ls_and_update_student import UpdateLessonStudentsAndUpdateStudentsUseCaseProtocol
 from .use_cases.lesson_students.delete_ls_and_update_student import DeleteLessonStudentsAndUpdateStudentsUseCaseProtocol
+from .use_cases.lesson_students.get_all_by_student import GetAllLessonStudentByStudentUseCaseProtocol
 
 from .depends import (
     get_course_create_use_case, get_course_update_use_case, get_course_get_use_case,
@@ -59,7 +60,8 @@ from .depends import (
     get_material_create_by_text_use_case,
     get_material_update_by_text_use_case,
     get_update_lesson_students_and_update_students_use_case,
-    get_delete_lesson_students_and_update_students_use_case
+    get_delete_lesson_students_and_update_students_use_case,
+    get_all_lesson_students_by_student_use_case
 
 )
 from .schemas import (
@@ -72,7 +74,7 @@ from .schemas import (
     LessonTeacherMaterialDetailReadSchema, LessonInfoTeacherReadSchema, CourseStudentWithCoursesSchema, LessonStudentReadWithStudentSchema,
     LessonGroupReadWithLessonSchema, LessonStudentDetailReadSchema, LessonStudentReadSchema,
     LessonStudentUpdateSchema, MaterialDataSchema, LessonHTMLTextCreateSchema, LessonHTMLTextUpdateSchema, LessonWithMaterialsTextCreateSchema,
-    LessonWithMaterialsTextUpdateSchema, LessonWithHomeworkReadSchema
+    LessonWithMaterialsTextUpdateSchema, LessonWithHomeworkReadSchema, LessonStudentWithLessonGroupReadSchema
 )
 
 router = APIRouter(prefix='/api/courses', tags=['Courses'])
@@ -83,6 +85,13 @@ async def get_courses_for_student(
     get_courses_for_student: GetCoursesForStudentUseCaseProtocol = Depends(get_courses_for_student_use_case)
 ):
     return await get_courses_for_student(access_token)
+
+@router.get("/student/lesson-student", response_model=list[LessonStudentWithLessonGroupReadSchema], status_code=200)
+async def get_lesson_students_for_student(
+    access_token: str = Depends(access_token_schema),
+    get_lesson_students: GetAllLessonStudentByStudentUseCaseProtocol = Depends(get_all_lesson_students_by_student_use_case)
+):
+    return await get_lesson_students(access_token)
 
 @router.get("/teacher", response_model=list[CourseWithPhotoReadSchema], status_code=200)
 async def get_courses_for_teacher(

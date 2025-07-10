@@ -61,6 +61,7 @@ class AddHomeworkUseCase(AddHomeworkUseCaseProtocol):
             lesson_group_id=lesson_student.lesson_group_id,
             is_visited=lesson_student.is_visited,
             is_excused_absence=lesson_student.is_excused_absence,
+            is_compensated_skip=lesson_student.is_compensated_skip,
             is_sent_homework=True,
             is_graded_homework=lesson_student.is_graded_homework,
             coins_for_visit=lesson_student.coins_for_visit,

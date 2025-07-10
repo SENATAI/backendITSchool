@@ -216,6 +216,7 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
                             lesson_group_id=student.lesson_group_id,
                             is_visited=student.is_visited,
                             is_excused_absence=student.is_excused_absence,
+                            is_compensated_skip=student.is_compensated_skip,
                             is_sent_homework=student.is_sent_homework,
                             is_graded_homework=student.is_graded_homework,
                             coins_for_visit=student.coins_for_visit,

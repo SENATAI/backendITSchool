@@ -26,7 +26,7 @@ from .services.courses import CourseServiceProtocol, CourseService
 from .services.lessons import LessonServiceProtocol, LessonService, GetLessonWithMaterialsServiceProtocol, GetLessonWithMaterialsService
 from .services.lesson_group import LessonGroupServiceProtocol, LessonGroupService
 from .services.lesson_student import LessonStudentServiceProtocol, LessonStudentService, \
-    GetLessonStudentByStudentAndLessonServiceProtocol, GetLessonStudentByStudentAndLessonService
+    GetLessonStudentByStudentAndLessonServiceProtocol, GetLessonStudentByStudentAndLessonService, GetLessonStudentsByStudentServiceProtocol, GetLessonStudentsByStudentService
 from .services.lesson_html_files import LessonHTMLServiceProtocol, LessonHTMLService
 from .services.homeworks_files import FileHomeworkServiceProtocol, FileHomeworkService
 from .services.homeworks import HomeworkServiceProtocol, HomeworkService
@@ -76,6 +76,7 @@ from .use_cases.lesson_students.get_detailed_student import GetDetailedLessonStu
 from .use_cases.lesson_students.create_ls_and_update_student import CreateLessonStudentsAndUpdateStudentsUseCaseProtocol, CreateLessonStudentsAndUpdateStudentsUseCase
 from .use_cases.lesson_students.update_ls_and_update_student import UpdateLessonStudentsAndUpdateStudentsUseCaseProtocol, UpdateLessonStudentsAndUpdateStudentsUseCase
 from .use_cases.lesson_students.delete_ls_and_update_student import DeleteLessonStudentsAndUpdateStudentsUseCaseProtocol, DeleteLessonStudentsAndUpdateStudentsUseCase
+from .use_cases.lesson_students.get_all_by_student import GetAllLessonStudentByStudentUseCaseProtocol, GetAllLessonStudentByStudentUseCase
 from .use_cases.homeworks.add_homework_to_lesson import AddHomeworkToLessonUseCaseProtocol, AddHomeworkToLessonUseCase
 
 def get_course_file_service() -> FileServiceProtocol:
@@ -266,6 +267,18 @@ def get_all_lesson_students_by_lesson_group_service(
     repository: LessonStudentRepositoryProtocol = Depends(__get_lesson_student_repository)
 ) -> GetAllLessonStudentsByLessonGroupServiceProtocol:
     return GetAllLessonStudentsByLessonGroupService(repository)
+
+def get_all_lesson_students_by_student_service(
+    repository: LessonStudentRepositoryProtocol = Depends(__get_lesson_student_repository)
+) -> GetLessonStudentsByStudentServiceProtocol:
+    return GetLessonStudentsByStudentService(repository)
+
+def get_all_lesson_students_by_student_use_case(
+    auth_service: AuthAdminServiceProtocol = Depends(get_auth_service),
+    student_service: StudentServiceProtocol = Depends(get_students_services),
+    lesson_student_service: GetLessonStudentsByStudentServiceProtocol = Depends(get_all_lesson_students_by_student_service),
+) -> GetAllLessonStudentByStudentUseCaseProtocol:
+    return GetAllLessonStudentByStudentUseCase(auth_service, student_service, lesson_student_service)
 
 def get_lesson_student_with_student_service(
     lesson_student_repository: LessonStudentRepositoryProtocol = Depends(__get_lesson_student_repository),

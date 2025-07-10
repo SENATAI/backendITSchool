@@ -118,6 +118,7 @@ class LessonStudent(Base):
     lesson_group_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_groups.id"))
     is_visited = Column(Boolean, nullable=True)
     is_excused_absence = Column(Boolean, nullable=True)
+    is_compensated_skip = Column(Boolean, nullable=True)
     is_sent_homework = Column(Boolean, nullable=True)
     is_graded_homework = Column(Boolean, nullable=True)
     coins_for_visit = Column(Integer, nullable=True)

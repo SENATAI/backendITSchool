@@ -9,7 +9,8 @@ from ..models import LessonStudent, LessonGroup, Homework
 from ..schemas import (LessonStudentCreateSchema, LessonStudentUpdateDBSchema, LessonStudentReadSchema,\
     LessonStudentReadWithStudentSchema, 
     LessonStudentReadWithStudentDBSchema,
-    LessonStudentDetailReadDBSchema
+    LessonStudentDetailReadDBSchema,
+    LessonStudentWithLessonGroupReadSchema
 )
 
 
@@ -32,6 +33,9 @@ class LessonStudentRepositoryProtocol(BaseRepositoryImpl[
         ...
 
     async def get_detailed_by_id(self, lesson_student_id: UUID) -> LessonStudentDetailReadDBSchema:
+        ...
+    
+    async def get_all_lesson_students_by_student_id(self: Self, student_id: UUID) -> List[LessonStudentReadSchema]:
         ...
 
 class LessonStudentRepository(LessonStudentRepositoryProtocol):
@@ -65,6 +69,19 @@ class LessonStudentRepository(LessonStudentRepositoryProtocol):
             
             result = await s.execute(statement)
             return [LessonStudentReadWithStudentSchema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
+    
+    async def get_all_lesson_students_by_student_id(self: Self, student_id: UUID) -> List[LessonStudentWithLessonGroupReadSchema]:
+        async with self.session as s:
+            stmt = (
+                sa.select(self.model_type)
+                .options(joinedload(self.model_type.lesson_group))  # Подгружаем связь с LessonGroup
+                .where(self.model_type.student_id == student_id)
+            )
+            models = (await s.execute(stmt)).scalars().all()
+            return [
+                LessonStudentWithLessonGroupReadSchema.model_validate(model, from_attributes=True)
+                for model in models
+            ]
 
     async def get_all_lesson_students_by_lesson_group(
         self: Self, lesson_group_id: UUID
