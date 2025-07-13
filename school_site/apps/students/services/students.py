@@ -57,7 +57,6 @@ class StudentService(StudentServiceProtocol):
     async def list(self, pagination: PaginationSchema, sorting_by: Optional[str] = None) -> StudentPaginationWithUserResultSchema:
         sorting_by = sorting_by or "created_at"
         sorting_by = [sorting_by]
-        print(f"Sorting by: {sorting_by}")
         students = await self.student_repository.paginate(
             search=None,
             search_by=None,
