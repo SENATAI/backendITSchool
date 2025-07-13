@@ -289,7 +289,6 @@ async def create_lesson_with_materials_by_text(
     teacher_additional_material_id, teacher_additional_material_url = await _create_material_if_exists(
         validated_data.teacher_additional_material_name, teacher_additional_material_file, material_create_file_use_case, access_token
     )
-    print("teacher_additional_material_id: ", teacher_additional_material_id)
     student_material_id, student_material_url = await _create_material_by_text_if_exists(
         validated_data.student_material_name, validated_data.student_material_text, material_create_use_case, access_token
     )
@@ -312,7 +311,6 @@ async def create_lesson_with_materials_by_text(
         homework_id=homework_id,
         homework_additional_id=homework_additional_material_id
     )
-    print("Created lesson: ", lesson) 
     
     created_lesson = await lesson_create_use_case(course_id, lesson, access_token)
     
@@ -443,7 +441,6 @@ async def get_lesson_with_materials(
     access_token: str = Depends(access_token_schema)
 ):
     lesson = await get_lesson(course_id, lesson_id)
-    print("Lesson: ", lesson)
     teacher_material = await _get_material_if_exists(lesson.teacher_material_id, get_material, access_token)
     teacher_additional_material = await _get_material_if_exists(lesson.teacher_additional_material_id, get_material, access_token)
     student_material = await _get_material_if_exists(lesson.student_material_id, get_material, access_token)
