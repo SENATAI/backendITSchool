@@ -1,11 +1,13 @@
 import sqlalchemy as sa
+from sqlalchemy.orm import joinedload
 from uuid import UUID
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
 from ..models import GroupStudent
 from ..schemas import (
     GroupAddStudentsDBSchema,
     GroupReadStudentsDBSchema,
-    GroupUpdateStudentsDBSchema
+    GroupUpdateStudentsDBSchema,
+    GroupsForStudentReadSchema
 )
 from school_site.apps.courses.models import LessonGroup
 
@@ -25,6 +27,8 @@ class GroupStudentsRepositoryProtocol(BaseRepositoryImpl[
     async def get_lesson_groups_by_group_id(self, group_id: UUID) -> list[LessonGroup]:
         ...
 
+    async def get_groups_by_student_id(self, student_id: UUID) -> list[GroupsForStudentReadSchema]:
+        ...
 
 class GroupStudentsRepository(GroupStudentsRepositoryProtocol):
     async def add_students(self, group_id: UUID, students: GroupAddStudentsDBSchema) -> None:
@@ -53,3 +57,12 @@ class GroupStudentsRepository(GroupStudentsRepositoryProtocol):
             query = sa.select(LessonGroup).where(LessonGroup.group_id == group_id)
             result = await s.execute(query)
             return list(result.scalars().all())
+
+    async def get_groups_by_student_id(self, student_id: UUID) -> list[GroupsForStudentReadSchema]:
+        async with self.session as s:
+            statement = sa.select(self.model_type).where(self.model_type.student_id == student_id).options(
+                joinedload(self.model_type.group)
+            )
+            groups = (await s.execute(statement)).scalars().all()
+
+            return [GroupsForStudentReadSchema.model_validate(gs, from_attributes=True) for gs in groups]
