@@ -11,17 +11,18 @@ from .use_cases.delete_student import DeleteStudentUseCaseProtocol
 from .use_cases.add_teacher import AddTeacherUseCaseProtocol
 from .use_cases.delete_teacher import DeleteTeacherUseCaseProtocol
 from .use_cases.get_for_teacher import GetGroupForTeacherUseCaseProtocol
+from .use_cases.get_for_student import GetGroupForStudentUseCaseProtocol
 from .depends import (
     get_group_create_use_case, get_group_update_use_case, get_group_get_use_case,
     get_group_delete_use_case, get_group_get_list_use_case,
     get_add_students_use_case, get_delete_student_use_case,
     get_add_teacher_use_case, get_delete_teacher_use_case,
-    get_group_for_teacher_use_case
+    get_group_for_teacher_use_case, get_group_for_student_use_case
 )
 from .schemas import (
     GroupReadSchema, GroupPaginationResultSchema, GroupCreateSchema, 
     GroupUpdateSchema, GroupAddStudentsSchema, GroupReadStudentsSchema, GroupReadTeacherSchema,
-    GroupWithStudentsAndTeacherAndCoursesSchema
+    GroupWithStudentsAndTeacherAndCoursesSchema, GroupsForStudentReadSchema
 )
 
 router = APIRouter(prefix='/api/groups', tags=['Groups'])
@@ -43,6 +44,14 @@ async def get_group_for_teacher(
 ):
     group = await get(access_token)
     return group
+
+@router.get("/student", response_model=list[GroupsForStudentReadSchema], status_code=200)
+async def get_group_for_student(
+    access_token: str = Depends(access_token_schema),
+    get: GetGroupForStudentUseCaseProtocol = Depends(get_group_for_student_use_case)
+):
+    groups = await get(access_token)
+    return groups
 
 @router.put("/{group_id}", response_model=GroupReadSchema, status_code=200)
 async def update_group(

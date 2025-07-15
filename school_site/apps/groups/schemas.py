@@ -95,6 +95,13 @@ class GroupReadStudentsDBSchema(GroupReadDBSchema, GroupStudentsBaseSchema):
     pass
 
 
+class GroupsForStudentReadSchema(BaseModel):
+    id: UUID
+    group_id: UUID
+    student_id: UUID
+    group: GroupReadDBSchema
+
+
 class GroupUpdateStudentsSchema(GroupStudentsBaseSchema):
     pass
 

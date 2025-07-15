@@ -5,14 +5,13 @@ from uuid import UUID
 from sqlalchemy.exc import IntegrityError
 from school_site.apps.students.services.students import StudentServiceProtocol
 from ..repositories.group_students import GroupStudentsRepositoryProtocol
-from ..schemas import GroupAddStudentsSchema, GroupAddStudentsDBSchema, GroupReadStudentsSchema
+from ..schemas import GroupAddStudentsSchema, GroupAddStudentsDBSchema, GroupReadStudentsSchema, GroupsForStudentReadSchema
 from school_site.core.utils.exceptions import ModelNotFoundException
 from school_site.apps.students.models import Student
 from school_site.apps.courses.services.lesson_group import LessonGroupServiceProtocol
 from school_site.apps.courses.services.lesson_student import LessonStudentServiceProtocol
 from school_site.apps.courses.services.course_student import CourseStudentServiceProtocol
 from school_site.apps.courses.schemas import LessonStudentCreateSchema, CourseStudentCreateSchema
-from school_site.apps.courses.models import LessonGroup
 from school_site.apps.courses.services.lessons import LessonServiceProtocol
 
 logger = logging.getLogger(__name__)
@@ -25,6 +24,8 @@ class GroupStudentServiceProtocol(Protocol):
     async def delete_student(self, group_id: UUID, student_id: UUID) -> bool:
         ...
 
+    async def get_groups_by_student_id(self, student_id: UUID) -> list[GroupsForStudentReadSchema]:
+        ...
 
 class GroupStudentService(GroupStudentServiceProtocol):
     def __init__(
@@ -96,3 +97,7 @@ class GroupStudentService(GroupStudentServiceProtocol):
     async def delete_student(self, group_id: UUID, student_id: UUID) -> bool:
         await self.group_students_repository.delete_student(group_id, student_id)
         return True
+    
+    async def get_groups_by_student_id(self, student_id: UUID) -> list[GroupsForStudentReadSchema]:
+        groups = await self.group_students_repository.get_groups_by_student_id(student_id)
+        return groups
