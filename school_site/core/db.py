@@ -1,8 +1,10 @@
+from uuid import uuid4, UUID
 from typing import Annotated, AsyncGenerator
 from fastapi import Depends
 from sqlalchemy import MetaData, Integer
 from sqlalchemy.ext.asyncio import AsyncAttrs, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from school_site.settings import settings
 
 __all__ = (
@@ -40,10 +42,10 @@ class Base(AsyncAttrs, DeclarativeBase):
     """Базовый класс для всех моделей"""
     metadata = metadata
 
-    id: Mapped[int] = mapped_column(
-        Integer,
+    id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
         primary_key=True,
-        autoincrement=True,
+        default=uuid4 
     )
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:

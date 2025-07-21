@@ -1,5 +1,5 @@
 from uuid import uuid4
-from sqlalchemy import Column, ForeignKey, String, Integer, CheckConstraint
+from sqlalchemy import Column, ForeignKey, String, Integer, CheckConstraint, Boolean
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import relationship
 from school_site.core.db import Base
@@ -12,6 +12,7 @@ class Product(Base, TimestampMixin):
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
+    is_pinned = Column(Boolean, default=False)
     price = Column(Integer, nullable=False)
 
     __table_args__ = (
@@ -23,6 +24,8 @@ class Product(Base, TimestampMixin):
 
 class Photo(Base, TimestampMixin, FileMixin):
     __tablename__ = "photo_products"
+
+    id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     product_id = Column(PostgresUUID(as_uuid=True), ForeignKey("products.id"), unique=True)
 
