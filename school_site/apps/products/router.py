@@ -26,6 +26,7 @@ router = APIRouter(prefix='/api/products', tags=['Products'])
 
 @router.get("/available", response_model=ProductPaginationResultSchema)
 async def list_available_products(
+    access_token: str = Depends(access_token_schema),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0, le=100),
     price: int = Query(..., ge=0),
@@ -37,6 +38,7 @@ async def list_available_products(
 
 @router.get("/not-available", response_model=ProductPaginationResultSchema)
 async def list_not_available_products(
+    access_token: str = Depends(access_token_schema),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0, le=100),
     price: int = Query(..., ge=0),
@@ -71,6 +73,7 @@ async def update_product(
 
 @router.get("/{product_id}", response_model=ProductReadSchema)
 async def get_product(
+    access_token: str = Depends(access_token_schema),
     product_id: UUID = Path(...),
     get: GetProductUseCaseProtocol = Depends(get_product_get_use_case)
 ):
@@ -80,6 +83,7 @@ async def get_product(
 
 @router.get("/", response_model=ProductPaginationResultSchema)
 async def list_products(
+    access_token: str = Depends(access_token_schema),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0, le=100),
     list: GetListProductUseCaseProtocol = Depends(get_product_get_list_use_case)
@@ -136,6 +140,7 @@ async def delete_photo(
 
 @router.get("/{product_id}/photo/{photo_id}", response_model=PhotoReadSchema)
 async def get_photo(
+    access_token: str = Depends(access_token_schema),
     product_id: UUID = Path(...),
     photo_id: UUID = Path(...),
     get_photo: GetPhotoUseCaseProtocol = Depends(get_photo_get_use_case)

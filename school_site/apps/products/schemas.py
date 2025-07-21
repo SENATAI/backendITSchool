@@ -40,6 +40,7 @@ class ProductBaseSchema(BaseModel):
     name: str = Field(..., description="Название товара")
     description: Optional[str] = Field(None, description="Описание товара")
     price: int = Field(..., ge=0, description="Цена товара, целое положительное число")
+    is_pinned: bool = Field(False, description="Флаг закрепления товара на главной странице")
 
 class ProductCreateDBSchema(CreateBaseModel, ProductBaseSchema):
     pass

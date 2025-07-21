@@ -56,6 +56,7 @@ class ProductService(ProductServiceProtocol):
         product_db = ProductCreateDBSchema(
             name=product.name,
             description=product.description,
+            is_pinned=product.is_pinned,
             price=product.price
         )
 
@@ -73,6 +74,7 @@ class ProductService(ProductServiceProtocol):
             name=new_product.name,
             description=new_product.description,
             price=new_product.price,
+            is_pinned=new_product.is_pinned,
             photo=photo
         )
     
@@ -94,6 +96,7 @@ class ProductService(ProductServiceProtocol):
             id=product.id,
             name=product.name,
             description=product.description,
+            is_pinned=product.is_pinned,
             price=product.price,
             created_at=product.created_at,
             updated_at=product.updated_at,
@@ -111,6 +114,7 @@ class ProductService(ProductServiceProtocol):
             id=product_id,
             name=product.name,
             description=product.description,
+            is_pinned=product.is_pinned,
             price=product.price
         )
         updated_product = await self.product_repository.update(upd_product_db)
@@ -134,6 +138,7 @@ class ProductService(ProductServiceProtocol):
             id=updated_product.id,
             name=updated_product.name,
             description=updated_product.description,
+            is_pinned=updated_product.is_pinned,
             price=updated_product.price,
             created_at=updated_product.created_at,
             photo=photo,
@@ -150,7 +155,7 @@ class ProductService(ProductServiceProtocol):
             search_by=None,
             user=None,
             pagination=pagination,
-            sorting=["created_at", "id"],
+            sorting=["-is_pinned", "created_at", "id"],
             policies=["can_view"]
         )
         converted_products = await self._convert_products_path_to_url(products_paginate.objects)
@@ -167,7 +172,7 @@ class ProductService(ProductServiceProtocol):
             user=None,
             pagination=pagination,
             max_price=max_price,
-            sorting=["created_at", "id"],
+            sorting=["-is_pinned", "created_at", "id"],
             policies=["can_view"]
         )
         
@@ -186,7 +191,7 @@ class ProductService(ProductServiceProtocol):
             user=None,
             pagination=pagination,
             min_price=min_price,
-            sorting=["created_at", "id"],
+            sorting=["-is_pinned", "created_at", "id"],
             policies=["can_view"]
         )
         
@@ -223,6 +228,7 @@ class ProductService(ProductServiceProtocol):
                 id=product.id,
                 name=product.name,
                 description=product.description,
+                is_pinned=product.is_pinned,
                 price=product.price,
                 photo=conv_photo,
                 created_at=product.created_at,
