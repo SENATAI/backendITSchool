@@ -1,9 +1,7 @@
-from typing import List, Protocol, Self
+from typing import Protocol, Self
 from datetime import datetime
-from uuid import UUID
 from school_site.core.enums import UserRole
-from school_site.core.utils.exceptions import ValidationError
-from ..schemas import ScheduleReadSchema
+from ..schemas import AllScheduleReadSchema
 from ..services.schedule import ScheduleServiceProtocol
 from school_site.apps.users.services.auth import AuthServiceProtocol
 
@@ -13,7 +11,7 @@ class GetFilteredScheduleUseCaseProtocol(Protocol):
         access_token: str,
         date_start: datetime,
         date_end: datetime
-    ) -> List[ScheduleReadSchema]:
+    ) -> AllScheduleReadSchema:
         ...
 
 class GetFilteredScheduleUseCase(GetFilteredScheduleUseCaseProtocol):
@@ -26,7 +24,7 @@ class GetFilteredScheduleUseCase(GetFilteredScheduleUseCaseProtocol):
         access_token: str,
         date_start: datetime,
         date_end: datetime
-    ) -> List[ScheduleReadSchema]:
+    ) -> AllScheduleReadSchema:
         token_data = await self.auth_service.decode_acess_token(access_token)
         if token_data.role == UserRole.STUDENT:
             return await self.schedule_service.get_filtered_student_schedule(

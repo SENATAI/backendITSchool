@@ -1,22 +1,24 @@
-from typing import List, Protocol
 from uuid import UUID
 from datetime import datetime
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, exists
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
-from school_site.apps.courses.models import LessonGroup, Lesson, Course
+from school_site.apps.courses.models import LessonGroup, Lesson
 from school_site.apps.students.models import Student
 from school_site.apps.teachers.models import Teacher
+from school_site.apps.events.models import Event, EventsUsers
 from school_site.apps.groups.models import GroupStudent, Group
-from school_site.apps.users.services.auth import AuthServiceProtocol
-from ..schemas import ScheduleReadSchema
+from ..schemas import ScheduleReadSchema, ScheduleEventsSchema
 
 class ScheduleRepositoryProtocol(BaseRepositoryImpl[LessonGroup, ScheduleReadSchema, None, None]):
-    async def get_student_schedule(self, user_id: UUID) -> List[ScheduleReadSchema]:
+    async def get_student_schedule(self, user_id: UUID) -> list[ScheduleReadSchema]:
         ...
     
-    async def get_teacher_schedule(self, user_id: UUID) -> List[ScheduleReadSchema]:
+    async def get_teacher_schedule(self, user_id: UUID) -> list[ScheduleReadSchema]:
+        ...
+
+    async def get_events_schedule(self, user_id: UUID) -> list[ScheduleEventsSchema]:
         ...
 
     async def get_filtered_student_schedule(
@@ -24,7 +26,15 @@ class ScheduleRepositoryProtocol(BaseRepositoryImpl[LessonGroup, ScheduleReadSch
         user_id: UUID,
         date_start: datetime,
         date_end: datetime
-    ) -> List[ScheduleReadSchema]:
+    ) -> list[ScheduleReadSchema]:
+        ...
+
+    async def get_filtered_events_schedule(
+        self,
+        user_id: UUID,
+        date_start: datetime,
+        date_end: datetime
+    ) -> list[ScheduleEventsSchema]:
         ...
 
     async def get_filtered_teacher_schedule(
@@ -32,24 +42,34 @@ class ScheduleRepositoryProtocol(BaseRepositoryImpl[LessonGroup, ScheduleReadSch
         user_id: UUID,
         date_start: datetime,
         date_end: datetime
-    ) -> List[ScheduleReadSchema]:
+    ) -> list[ScheduleReadSchema]:
         ...
 
-    async def get_all_groups_schedule(self) -> List[ScheduleReadSchema]:
+    async def get_all_groups_schedule(self) -> list[ScheduleReadSchema]:
+        ...
+
+    async def get_all_group_events_schedule(self) -> list[ScheduleEventsSchema]:
         ...
 
     async def get_filtered_all_groups_schedule(
         self,
         date_start: datetime,
         date_end: datetime
-    ) -> List[ScheduleReadSchema]:
+    ) -> list[ScheduleReadSchema]:
+        ...
+
+    async def get_filtered_all_groups_events_schedule(
+        self,
+        date_start: datetime,
+        date_end: datetime
+    ) -> list[ScheduleEventsSchema]:
         ...
 
 class ScheduleRepository(ScheduleRepositoryProtocol):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_student_schedule(self, user_id: UUID) -> List[ScheduleReadSchema]:
+    async def get_student_schedule(self, user_id: UUID) -> list[ScheduleReadSchema]:
         async with self.session as session:
             student_stmt = select(Student.id).where(Student.user_id == user_id)
             student_result = await session.execute(student_stmt)
@@ -84,8 +104,31 @@ class ScheduleRepository(ScheduleRepositoryProtocol):
                 )
                 for group in lesson_groups
             ]
+        
+    async def get_events_schedule(self, user_id: UUID) -> list[ScheduleEventsSchema]:
+        async with self.session as session:
+            stmt = select(Event).where(
+                exists().where(
+                    and_(
+                        EventsUsers.event_id == Event.id,
+                        EventsUsers.user_id == user_id
+                    )
+                )
+            )
+            result = await session.execute(stmt)
+            events = result.scalars().all()
+            return [
+                ScheduleEventsSchema(
+                    event_id=event.id,
+                    event_name=event.name,
+                    start_datetime=event.start_datetime,
+                    end_datetime=event.end_datetime,
+                    auditorium=event.auditorium
+                )
+                for event in events
+            ]
 
-    async def get_teacher_schedule(self, user_id: UUID) -> List[ScheduleReadSchema]:
+    async def get_teacher_schedule(self, user_id: UUID) -> list[ScheduleReadSchema]:
         async with self.session as session:
             teacher_stmt = select(Teacher.id).where(Teacher.user_id == user_id)
             teacher_result = await session.execute(teacher_stmt)
@@ -126,7 +169,7 @@ class ScheduleRepository(ScheduleRepositoryProtocol):
         user_id: UUID,
         date_start: datetime,
         date_end: datetime
-    ) -> List[ScheduleReadSchema]:
+    ) -> list[ScheduleReadSchema]:
         async with self.session as session:
             student_stmt = select(Student.id).where(Student.user_id == user_id)
             student_result = await session.execute(student_stmt)
@@ -167,13 +210,47 @@ class ScheduleRepository(ScheduleRepositoryProtocol):
                 )
                 for group in lesson_groups
             ]
+        
+    async def get_filtered_events_schedule(
+        self,
+        user_id: UUID,
+        date_start: datetime,
+        date_end: datetime
+    ) -> list[ScheduleEventsSchema]:
+        async with self.session as session:
+            stmt = select(Event).where(
+                and_(
+                    exists().where(
+                        and_(
+                            EventsUsers.event_id == Event.id,
+                            EventsUsers.user_id == user_id
+                        )
+                    ),
+                    Event.start_datetime <= date_end,
+                    Event.end_datetime >= date_start
+                )
+            ).order_by(Event.start_datetime)
+
+            result = await session.execute(stmt)
+            events = result.scalars().all()
+
+            return [
+                ScheduleEventsSchema(
+                    event_id=event.id,
+                    event_name=event.name,
+                    start_datetime=event.start_datetime,
+                    end_datetime=event.end_datetime,
+                    auditorium=event.auditorium
+                )
+                for event in events
+            ]
 
     async def get_filtered_teacher_schedule(
         self,
         user_id: UUID,
         date_start: datetime,
         date_end: datetime
-    ) -> List[ScheduleReadSchema]:
+    ) -> list[ScheduleReadSchema]:
         async with self.session as session:
             teacher_stmt = select(Teacher.id).where(Teacher.user_id == user_id)
             teacher_result = await session.execute(teacher_stmt)
@@ -215,7 +292,7 @@ class ScheduleRepository(ScheduleRepositoryProtocol):
                 for group in lesson_groups
             ]
 
-    async def get_all_groups_schedule(self) -> List[ScheduleReadSchema]:
+    async def get_all_groups_schedule(self) -> list[ScheduleReadSchema]:
         async with self.session as session:
             stmt = (
                 select(LessonGroup)
@@ -242,11 +319,54 @@ class ScheduleRepository(ScheduleRepositoryProtocol):
                 for group in lesson_groups
             ]
 
+    async def get_all_group_events_schedule(self) -> list[ScheduleEventsSchema]:
+        async with self.session as session:
+            stmt = select(Event).order_by(Event.start_datetime)
+            result = await session.execute(stmt)
+            events = result.scalars().all()
+            return [
+                ScheduleEventsSchema(
+                    event_id=event.id,
+                    event_name=event.name,
+                    start_datetime=event.start_datetime,
+                    end_datetime=event.end_datetime,
+                    auditorium=event.auditorium
+                )
+                for event in events
+            ]
+        
+    async def get_filtered_all_groups_events_schedule(
+        self,
+        date_start: datetime,
+        date_end: datetime
+    ) -> list[ScheduleEventsSchema]:
+        async with self.session as session:
+            stmt = select(Event).where(
+                and_(
+                    Event.start_datetime >= date_start,
+                    Event.end_datetime <= date_end
+                )
+            ).order_by(Event.start_datetime)
+
+            result = await session.execute(stmt)
+            events = result.scalars().all()
+
+            return [
+                ScheduleEventsSchema(
+                    event_id=event.id,
+                    event_name=event.name,
+                    start_datetime=event.start_datetime,
+                    end_datetime=event.end_datetime,
+                    auditorium=event.auditorium
+                )
+                for event in events
+            ]
+
     async def get_filtered_all_groups_schedule(
         self,
         date_start: datetime,
         date_end: datetime
-    ) -> List[ScheduleReadSchema]:
+    ) -> list[ScheduleReadSchema]:
         async with self.session as session:
             stmt = (
                 select(LessonGroup)

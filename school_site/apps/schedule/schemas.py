@@ -1,7 +1,6 @@
 from datetime import datetime
 from uuid import UUID
-from pydantic import BaseModel, Field
-from school_site.core.schemas import TimestampMixin
+from pydantic import BaseModel
 
 class ScheduleReadSchema(BaseModel):
     id: UUID
@@ -16,3 +15,14 @@ class ScheduleReadSchema(BaseModel):
 
     class Config:
         from_attributes = True 
+
+class ScheduleEventsSchema(BaseModel):
+    event_id: UUID
+    event_name: str
+    start_datetime: datetime
+    end_datetime: datetime
+    auditorium: str
+
+class AllScheduleReadSchema(BaseModel):
+    lessons: list[ScheduleReadSchema]
+    events: list[ScheduleEventsSchema]

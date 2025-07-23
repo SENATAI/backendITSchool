@@ -5,3 +5,4 @@ from .products.models import *
 from .students.models import *
 from .teachers.models import *
 from .users.models import *
+from .events.models import *
