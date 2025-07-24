@@ -6,3 +6,4 @@ from .students.models import *
 from .teachers.models import *
 from .users.models import *
 from .events.models import *
+from .points_history.models import *
