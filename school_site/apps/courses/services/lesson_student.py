@@ -5,6 +5,11 @@ from ..repositories.lesson_student import LessonStudentRepositoryProtocol
 from school_site.core.services.files import FileServiceProtocol
 from school_site.apps.students.services.students import StudentServiceProtocol 
 from school_site.apps.students.schemas import StudentUpdateSchema
+from school_site.apps.points_history.services.points_history import PointsHistoryServiceProtocol
+from school_site.apps.points_history.schemas import (
+    PointsHistoryCreateSchema
+)
+from school_site.apps.points_history.enums import Reason
 from ..schemas import (
     LessonStudentCreateSchema,
     LessonStudentUpdateSchema,
@@ -93,11 +98,14 @@ class LessonStudentWithStudentServiceProtocol(Protocol):
 
 class LessonStudentWithStudentService(LessonStudentWithStudentServiceProtocol):
     def __init__(self: Self, lesson_student_repository: LessonStudentRepositoryProtocol,
-                 student_service: StudentServiceProtocol):
+                 student_service: StudentServiceProtocol,
+                 history_service: PointsHistoryServiceProtocol):
+        self.history_service = history_service
         self.student_service = student_service 
         self.lesson_student_repository = lesson_student_repository
 
     async def create_ls_and_update_student(self: Self, lesson_student: LessonStudentCreateSchema) -> LessonStudentReadSchema:
+        # Если это использовать, то надо подтянуть history
         student = await self.student_service.get(lesson_student.student_id)
         lesson_student = await self.lesson_student_repository.create(lesson_student)
         changed_coins = student.points + (lesson_student.coins_for_visit or 0) + (lesson_student.coins_for_homework or 0)
@@ -122,8 +130,31 @@ class LessonStudentWithStudentService(LessonStudentWithStudentServiceProtocol):
 
         updated_lesson_student = await self.lesson_student_repository.update(lesson_student_update_schema)
 
-        changed_coins = student.points - ((old_lesson_student.coins_for_visit or 0) + (old_lesson_student.coins_for_homework or 0)) + \
-            ((updated_lesson_student.coins_for_visit or 0) + (updated_lesson_student.coins_for_homework or 0))
+        add_coins_for_visit = (updated_lesson_student.coins_for_visit or 0) - (old_lesson_student.coins_for_visit or 0)
+        if add_coins_for_visit != 0:
+            logger.info(f"Adding {add_coins_for_visit} coins for visit to student {student.user_id}")
+            history_visit = PointsHistoryCreateSchema(
+                user_id=student.user_id,
+                reason=Reason.VISIT,
+                changed_points=add_coins_for_visit,
+                description=f"Изменение баллов за посещение урока {updated_lesson_student.lesson_group_id} у студента {student.user_id}"
+            )
+            await self.history_service.create_points_history(history_visit)
+
+        add_coins_for_homework = (updated_lesson_student.coins_for_homework or 0) - (old_lesson_student.coins_for_homework or 0)
+        if add_coins_for_homework != 0:
+            logger.info(f"Adding {add_coins_for_homework} coins for homework to student {student.user_id}")
+            history_homework = PointsHistoryCreateSchema(
+                user_id=student.user_id,
+                reason=Reason.HOMEWORK,
+                changed_points=add_coins_for_homework,
+                description=f"Изменение баллов за домашнее задание урока {updated_lesson_student.lesson_group_id} у студента {student.user_id}"
+            )
+            await self.history_service.create_points_history(history_homework)
+        changed_coins = student.points + add_coins_for_visit + add_coins_for_homework
+        if changed_coins < 0:
+            logger.warning(f"Student {student.user_id} has negative points after update of lesson student {lesson_student_id}. Points: {changed_coins}")
+            changed_coins = 0
         student_update = StudentUpdateSchema(
             id=lesson_student.student_id,
             user_id=student.user_id,
@@ -153,7 +184,28 @@ class LessonStudentWithStudentService(LessonStudentWithStudentServiceProtocol):
         coins_for_visit, coins_for_homework = lesson_student.coins_for_visit or 0, lesson_student.coins_for_homework or 0
         await self.lesson_student_repository.delete(lesson_student_id)
         student = await self.student_service.get(lesson_student.student_id)
-        changed_coins = student.points - (coins_for_visit + coins_for_homework)
+        added_coins_visit = -coins_for_visit
+        if coins_for_visit:
+            history_visit = PointsHistoryCreateSchema(
+                user_id=student.user_id,
+                reason=Reason.PENALTY,
+                changed_points=added_coins_visit,
+                description=f"Удаление баллов за посещение урока {lesson_student.lesson_group_id} у студента {student.user_id}"
+            )
+            await self.history_service.create_points_history(history_visit)
+        added_coins_homework = -coins_for_homework
+        if coins_for_homework:
+            history_homework = PointsHistoryCreateSchema(
+                user_id=student.user_id,
+                reason=Reason.PENALTY,
+                changed_points=added_coins_homework,
+                description=f"Удаление баллов за домашнее задание урока {lesson_student.lesson_group_id} у студента {student.user_id}"
+            )
+            await self.history_service.create_points_history(history_homework)
+        changed_coins = student.points + added_coins_visit + added_coins_homework
+        if changed_coins < 0:
+            logger.warning(f"Student {student.user_id} has negative points after deletion of lesson student {lesson_student_id}. Points: {changed_coins}")
+            changed_coins = 0
         student_update = StudentUpdateSchema(
             id=lesson_student.student_id,
             user_id=student.user_id,

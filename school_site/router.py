@@ -14,6 +14,7 @@ from school_site.apps.notification.router import router as notification_router
 from school_site.apps.groups.router import router as groups_router
 from school_site.apps.schedule.router import router as schedule_router
 from school_site.apps.events.router import router as events_router
+from school_site.apps.points_history.router import router as points_history_router
 
 
 def apply_routes(app: FastAPI) -> FastAPI:
@@ -31,5 +32,6 @@ def apply_routes(app: FastAPI) -> FastAPI:
     app.include_router(teacher_router)
     app.include_router(events_router)
     app.include_router(schedule_router)
+    app.include_router(points_history_router)
 
     return app
