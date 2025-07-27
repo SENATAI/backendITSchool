@@ -10,9 +10,9 @@ class PointsHistory(Base, TimestampMixin):
     __tablename__ = "points_history"
 
     id = mapped_column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
-    user_id = mapped_column(
+    student_id = mapped_column(
         PostgresUUID(as_uuid=True), 
-        ForeignKey("users.id", ondelete="CASCADE"), 
+        ForeignKey("students.id", ondelete="CASCADE"), 
         nullable=False
     )
     reason = mapped_column(Enum(Reason), nullable=False)

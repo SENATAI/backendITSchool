@@ -4,7 +4,7 @@ from school_site.core.schemas import CreateBaseModel, UpdateBaseModel, Timestamp
 from .enums import Reason
 
 class PointsHistoryBaseSchema(BaseModel):
-    user_id: UUID = Field(..., description="ID of the user whose points are being changed")
+    student_id: UUID = Field(..., description="ID of the student whose points are being changed")
     reason: Reason = Field(..., description="Reason for the points change")
     changed_points: int = Field(..., description="Number of points changed")
     description: str | None = Field(None, description="Optional description of the points change")

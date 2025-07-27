@@ -59,7 +59,7 @@ class PointsHistoryService(PointsHistoryServiceProtocol):
         self.students_service = students_service
 
     async def create_points_history(self, data: PointsHistoryCreateSchema) -> PointsHistoryReadSchema:
-        students = await self.students_service.get_by_user_id(data.user_id)
+        students = await self.students_service.get(data.student_id)
         
         student_data = students.model_dump()
         student_data['points'] = students.points + data.changed_points
@@ -78,9 +78,10 @@ class PointsHistoryService(PointsHistoryServiceProtocol):
         return await self.repository.get(id)
 
     async def paginate_points_history_by_user_id(self, user_id: UUID, pagination: PaginationSchema) -> PointsHistoryPaginationSchema:
+        student = await self.students_service.get_by_user_id(user_id)
         return await self.repository.paginate(
-            search=str(user_id),
-            search_by=["user_id"],
+            search=str(student.id),
+            search_by=["student_id"],
             sorting=["-created_at"],
             pagination=pagination,
             user=None,
