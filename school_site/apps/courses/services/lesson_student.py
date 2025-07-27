@@ -132,23 +132,23 @@ class LessonStudentWithStudentService(LessonStudentWithStudentServiceProtocol):
 
         add_coins_for_visit = (updated_lesson_student.coins_for_visit or 0) - (old_lesson_student.coins_for_visit or 0)
         if add_coins_for_visit != 0:
-            logger.info(f"Adding {add_coins_for_visit} coins for visit to student {student.user_id}")
+            logger.info(f"Adding {add_coins_for_visit} coins for visit to student {student.id}")
             history_visit = PointsHistoryCreateSchema(
-                user_id=student.user_id,
+                student_id=student.id,
                 reason=Reason.VISIT,
                 changed_points=add_coins_for_visit,
-                description=f"Изменение баллов за посещение урока {updated_lesson_student.lesson_group_id} у студента {student.user_id}"
+                description=f"Изменение баллов за посещение урока {updated_lesson_student.lesson_group_id} у студента {student.id}"
             )
             await self.history_service.create_points_history(history_visit)
 
         add_coins_for_homework = (updated_lesson_student.coins_for_homework or 0) - (old_lesson_student.coins_for_homework or 0)
         if add_coins_for_homework != 0:
-            logger.info(f"Adding {add_coins_for_homework} coins for homework to student {student.user_id}")
+            logger.info(f"Adding {add_coins_for_homework} coins for homework to student {student.id}")
             history_homework = PointsHistoryCreateSchema(
-                user_id=student.user_id,
+                student_id=student.id,
                 reason=Reason.HOMEWORK,
                 changed_points=add_coins_for_homework,
-                description=f"Изменение баллов за домашнее задание урока {updated_lesson_student.lesson_group_id} у студента {student.user_id}"
+                description=f"Изменение баллов за домашнее задание урока {updated_lesson_student.lesson_group_id} у студента {student.id}"
             )
             await self.history_service.create_points_history(history_homework)
         changed_coins = student.points + add_coins_for_visit + add_coins_for_homework
@@ -187,24 +187,24 @@ class LessonStudentWithStudentService(LessonStudentWithStudentServiceProtocol):
         added_coins_visit = -coins_for_visit
         if coins_for_visit:
             history_visit = PointsHistoryCreateSchema(
-                user_id=student.user_id,
+                student_id=student.id,
                 reason=Reason.PENALTY,
                 changed_points=added_coins_visit,
-                description=f"Удаление баллов за посещение урока {lesson_student.lesson_group_id} у студента {student.user_id}"
+                description=f"Удаление баллов за посещение урока {lesson_student.lesson_group_id} у студента {student.id}"
             )
             await self.history_service.create_points_history(history_visit)
         added_coins_homework = -coins_for_homework
         if coins_for_homework:
             history_homework = PointsHistoryCreateSchema(
-                user_id=student.user_id,
+                student_id=student.id,
                 reason=Reason.PENALTY,
                 changed_points=added_coins_homework,
-                description=f"Удаление баллов за домашнее задание урока {lesson_student.lesson_group_id} у студента {student.user_id}"
+                description=f"Удаление баллов за домашнее задание урока {lesson_student.lesson_group_id} у студента {student.id}"
             )
             await self.history_service.create_points_history(history_homework)
         changed_coins = student.points + added_coins_visit + added_coins_homework
         if changed_coins < 0:
-            logger.warning(f"Student {student.user_id} has negative points after deletion of lesson student {lesson_student_id}. Points: {changed_coins}")
+            logger.warning(f"Student {student.id} has negative points after deletion of lesson student {lesson_student_id}. Points: {changed_coins}")
             changed_coins = 0
         student_update = StudentUpdateSchema(
             id=lesson_student.student_id,
