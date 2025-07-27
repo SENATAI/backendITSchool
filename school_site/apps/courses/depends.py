@@ -9,6 +9,8 @@ from school_site.apps.teachers.depends import get_teachers_services
 from school_site.apps.teachers.services.teachers import TeacherServiceProtocol 
 from school_site.apps.users.services.auth import TokenServiceProtocol
 from school_site.apps.users.depends import get_token_service
+from school_site.apps.points_history.services.points_history import PointsHistoryServiceProtocol
+from school_site.apps.points_history.depends import get_points_history_service
 from .repositories.photo_courses import PhotoRepositoryProtocol, PhotoRepository
 from .repositories.courses import CourseRepositoryProtocol, CourseRepository
 from .repositories.lessons import LessonRepositoryProtocol, LessonRepository
@@ -282,9 +284,10 @@ def get_all_lesson_students_by_student_use_case(
 
 def get_lesson_student_with_student_service(
     lesson_student_repository: LessonStudentRepositoryProtocol = Depends(__get_lesson_student_repository),
-    student_service: StudentServiceProtocol = Depends(get_students_services)
+    student_service: StudentServiceProtocol = Depends(get_students_services),
+    history_service: PointsHistoryServiceProtocol = Depends(get_points_history_service)
 ) -> LessonStudentWithStudentServiceProtocol:
-    return LessonStudentWithStudentService(lesson_student_repository, student_service)
+    return LessonStudentWithStudentService(lesson_student_repository, student_service, history_service)
 
 def get_comment_service(
     comment_repository: CommentRepositoryProtocol = Depends(__get_comment_repository)
