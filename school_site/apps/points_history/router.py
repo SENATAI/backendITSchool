@@ -22,7 +22,7 @@ async def create_points_history(
 ) -> PointsHistoryReadSchema:
     return await use_case(history, access_token)
 
-@router.get('/user', response_model=PointsHistoryPaginationSchema)
+@router.get('/student', response_model=PointsHistoryPaginationSchema)
 async def get_points_history_by_user(
     limit: int = Query(10, ge=1, le=100, description="Number of points history to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
