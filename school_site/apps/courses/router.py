@@ -272,6 +272,7 @@ async def _create_material_if_exists(
 
 @router.post("/{course_id}/lessons-with-materials", response_model=LessonWithMaterialsReadSchema, status_code=201)
 async def create_lesson_with_materials_by_text(
+    access_token: str = Depends(access_token_schema),
     data: str = Form(...),
     teacher_additional_material_file: Optional[UploadFile] = File(None),
     student_additional_material_file: Optional[UploadFile] = File(None),
@@ -280,7 +281,6 @@ async def create_lesson_with_materials_by_text(
     lesson_create_use_case: CreateLessonUseCaseProtocol = Depends(get_lesson_create_use_case),
     material_create_file_use_case: CreateLessonHTMLFileUseCaseProtocol = Depends(get_material_create_use_case),
     material_create_use_case: CreateLessonHTMLFileByTextUseCaseProtocol = Depends(get_material_create_by_text_use_case),
-    access_token: str = Depends(access_token_schema)
 ):
     validated_data = LessonWithMaterialsCreateSchema(**json.loads(data))
     teacher_material_id, teacher_material_url = await _create_material_by_text_if_exists(

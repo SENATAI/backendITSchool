@@ -14,7 +14,6 @@ class RefreshTokenRepositoryProtocol(BaseRepositoryImpl[
 ]):
     async def count_by_user_id(self: Self, user_id: UUID) -> int:
         ...
-    
 
     async def get_oldest_by_user_id(self: Self, user_id: UUID) -> RefreshTokenReadDBSchema:
         ...

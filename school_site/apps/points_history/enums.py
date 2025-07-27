@@ -5,3 +5,5 @@ class Reason(str, Enum):
     VISIT = "Visit"
     BONUS = "Bonus"
     PENALTY = "Penalty"
+    BUY = "Buy"
+    OTHER = "Other"
