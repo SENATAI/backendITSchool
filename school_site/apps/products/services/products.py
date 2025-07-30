@@ -146,7 +146,8 @@ class ProductService(ProductServiceProtocol):
 
     async def delete(self, product_id: UUID) -> bool:
         product = await self.get_with_photo(product_id)
-        await self.photo_service.delete(product.photo.id)
+        if product.photo:
+            await self.photo_service.delete(product.photo.id)
         return await self.product_repository.delete(product_id)
     
     async def list(self, pagination: PaginationSchema) -> ProductPaginationResultSchema:
