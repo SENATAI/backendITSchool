@@ -31,5 +31,6 @@ class Student(Base, TimestampMixin):
         cascade="all, delete" 
     )
     courses = relationship("CourseStudent", back_populates="student")
+    comments_students = relationship("CommentStudent", back_populates="student")
 
 __all__ = ["Student"]

@@ -259,6 +259,7 @@ class GetDetailedLessonStudentByIdService(GetDetailedLessonStudentByIdServicePro
             grade_for_homework=lesson_student.grade_for_homework,
             passed_homeworks=converted_homeworks,
             comments=lesson_student.comments,
+            comments_students=lesson_student.comments_students
         )
     
 class GetLessonStudentsByStudentServiceProtocol(Protocol):
