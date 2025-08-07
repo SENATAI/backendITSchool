@@ -293,13 +293,14 @@ class FileHomeworkBaseSchema(BaseModel):
     name: str
 
 class FileHomeworkCreateSchema(CreateBaseModel, FileHomeworkBaseSchema):
-    pass
+    text: Optional[str] = None
 
 class FileHomeworkCreateDBSchema(CreateBaseModel, FileHomeworkBaseSchema):
     path: str
 
 class FileHomeworkUpdateSchema(CreateBaseModel, FileHomeworkBaseSchema):
-    pass
+    text: Optional[str] = None
+
 
 class FileHomeworkUpdateDBSchema(UpdateBaseModel, FileHomeworkBaseSchema):
     pass
@@ -438,6 +439,7 @@ class LessonStudentReadWithStudentSchema(LessonStudentBaseSchema):
 class LessonStudentHomeworkBaseSchema(BaseModel):
     lesson_student_id: UUID
     homework_id: UUID
+    student_comment_id: Optional[UUID] = None
 
 class LessonStudentHomeworkCreateSchema(CreateBaseModel, LessonStudentHomeworkBaseSchema):
     pass
@@ -457,6 +459,7 @@ class AddHomeworkReadSchema(BaseModel):
     lesson_id: UUID
     homework: FileHomeworkReadSchema
     lesson_student_homework: LessonStudentHomeworkReadSchema
+    student_comment: Optional[str] = None
 
 
 # ====== COMENTS SCHEMAS =======
@@ -485,6 +488,32 @@ class CommentReadSchema(CommentBaseSchema, TimestampMixin):
     class Config:
         from_attributes = True
 
+
+# ====== COMENTS STUDENTS SCHEMAS =======
+class CommentStudentBaseSchema(BaseModel):
+    text: Optional[str] = None
+    lesson_student_id: UUID
+    student_id: UUID
+
+
+class CommentStudentCreateSchema(CreateBaseModel, CommentStudentBaseSchema):
+    pass
+
+class CommentStudentCreateDBSchema(CreateBaseModel, CommentStudentBaseSchema):
+    pass
+
+class CommentStudentUpdateSchema(CreateBaseModel, CommentStudentBaseSchema):
+    pass
+
+class CommentStudentUpdateDBSchema(UpdateBaseModel, CommentStudentBaseSchema):
+    pass
+
+class CommentStudentReadSchema(CommentStudentBaseSchema, TimestampMixin):
+    id: UUID
+
+    class Config:
+        from_attributes = True
+
 class LessonSimpleReadSchema(BaseModel):
     id: UUID
     name: str
@@ -495,6 +524,7 @@ class LessonSimpleReadSchema(BaseModel):
 class LessonStudentDetailReadDBSchema(LessonStudentReadSchema):
     passed_homeworks: Optional[List[HomeworkReadWithFileDBSchema]] = None
     comments: Optional[List[CommentReadSchema]] = None
+    comments_students: Optional[List[CommentStudentReadSchema]] = None
 
     class Config:
         from_attributes = True
@@ -537,7 +567,8 @@ class LessonTeacherMaterialDetailReadDBSchema(LessonDetailReadDBSchema):
 class LessonStudentDetailReadSchema(LessonStudentReadSchema):
     passed_homeworks: Optional[List[HomeworkReadSchema]] = None
     comments: Optional[List[CommentReadSchema]] = None
-
+    comments_students: Optional[List[CommentStudentReadSchema]] = None
+    
     class Config:
         from_attributes = True
 

@@ -22,6 +22,8 @@ from .repositories.homeworks import HomeworkRepositoryProtocol, HomeworkReposito
 from .repositories.lesson_student_homework import LessonStudentHomeworkRepositoryProtocol, LessonStudentHomeworkRepository
 from .repositories.comments import CommentRepositoryProtocol, CommentRepository
 from .repositories.course_student import CourseStudentRepositoryProtocol, CourseStudentRepository
+from .repositories.comments_students import CommentStudentRepositoryProtocol, CommentStudentRepository
+from .services.comments_students import CommentStudentServiceProtocol, CommentStudentService
 from .services.lesson_group_student import CombinedLessonGroupStudentServiceProtocol, CombinedLessonGroupStudentService
 from .services.photo_courses import PhotoServiceProtocol, PhotoService
 from .services.courses import CourseServiceProtocol, CourseService
@@ -138,6 +140,11 @@ def __get_comment_repository(
 ) -> CommentRepositoryProtocol:
     return CommentRepository(session)
 
+def __get_comment_student_repository(
+    session: AsyncSession = Depends(get_async_session)
+) -> CommentStudentRepositoryProtocol:
+    return CommentStudentRepository(session)
+
 def __get_course_student_repository(
     session: AsyncSession = Depends(get_async_session)
 ) -> CourseStudentRepositoryProtocol:   
@@ -170,6 +177,11 @@ def get_lesson_service(
         lesson_repository: LessonRepositoryProtocol = Depends(__get_lesson_repository)
 ) -> LessonServiceProtocol:
     return LessonService(lesson_repository)
+
+def get_comment_student_service(
+    comment_student_repository: CommentStudentRepositoryProtocol = Depends(__get_comment_student_repository)
+) -> CommentStudentServiceProtocol:
+    return CommentStudentService(comment_student_repository)
 
 def get_detailed_lesson_student_service(
         repository: LessonStudentRepositoryProtocol = Depends(__get_lesson_student_repository),
@@ -405,10 +417,11 @@ def get_add_homework_use_case(
     lesson_student_service: LessonStudentServiceProtocol = Depends(get_lesson_student_service),
     lesson_student_homework_service: LessonStudentHomeworkServiceProtocol = Depends(get_lesson_student_homework_service),
     student_service: StudentServiceProtocol = Depends(get_students_services),
+    comment_student_service: CommentStudentServiceProtocol = Depends(get_comment_student_service),
     auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
 ) -> AddHomeworkUseCaseProtocol:
-    return AddHomeworkUseCase(file_homework_service, homework_service, lesson_student_service_by_student_and_lesson, 
-                              lesson_student_service, lesson_student_homework_service, student_service, auth_service)
+    return AddHomeworkUseCase(file_homework_service, homework_service, lesson_student_service_by_student_and_lesson,
+                              lesson_student_service, lesson_student_homework_service, student_service, comment_student_service, auth_service)
 
 def get_lesson_for_teacher_use_case(
     lesson_with_materials_service: GetLessonWithMaterialsServiceProtocol = Depends(get_lesson_with_materials_service),

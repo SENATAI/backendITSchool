@@ -57,6 +57,21 @@ class Comment(Base, TimestampMixin):
     teacher = relationship("Teacher", back_populates="comments")
 
 
+class CommentStudent(Base, TimestampMixin):
+    __tablename__ = "comments_students"
+
+    id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
+    text = Column(String, nullable=False)
+    lesson_student_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lesson_students.id"))
+    student_id = Column(
+        PostgresUUID(as_uuid=True), 
+        ForeignKey("students.id", ondelete="CASCADE"), 
+        nullable=False
+    )
+    lesson_student = relationship("LessonStudent", back_populates="comments_students")
+    student = relationship("Student", back_populates="comments_students")
+
+
 class Lesson(Base, TimestampMixin):
     __tablename__ = "lessons"
 
@@ -136,6 +151,7 @@ class LessonStudent(Base):
     lesson_group = relationship("LessonGroup", back_populates="students")
     passed_homeworks = relationship("Homework", secondary="lesson_student_homework", back_populates="students")
     comments = relationship("Comment", back_populates="lesson_student")
+    comments_students = relationship("CommentStudent", back_populates="lesson_student")
 
     __table_args__ = (
         UniqueConstraint('student_id', 'lesson_group_id', name='unique_student_lesson_group'),
@@ -155,6 +171,7 @@ class LessonStudentHomework(Base):
         ForeignKey("homeworks.id", ondelete="CASCADE"),  # И здесь тоже
         primary_key=True
     )
+    student_comment_id = Column(PostgresUUID(as_uuid=True), ForeignKey("comments_students.id", ondelete="SET NULL"), nullable=True)
 
 class CourseStudent(Base):
     __tablename__ = "course_students"

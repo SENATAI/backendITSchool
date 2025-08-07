@@ -114,7 +114,8 @@ class LessonStudentRepository(LessonStudentRepositoryProtocol):
                     selectinload(self.model_type.passed_homeworks)
                     .joinedload(Homework.file),
                     
-                    selectinload(self.model_type.comments)
+                    selectinload(self.model_type.comments),
+                    selectinload(self.model_type.comments_students)
                 )
             )
             
