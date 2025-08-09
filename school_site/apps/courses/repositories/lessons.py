@@ -135,7 +135,10 @@ class LessonRepository(LessonRepositoryProtocol):
                     .selectinload(Homework.file),
                     joinedload(Lesson.groups)
                     .selectinload(LessonGroup.students)
-                    .selectinload(LessonStudent.comments)
+                    .selectinload(LessonStudent.comments),
+                    joinedload(Lesson.groups)
+                    .selectinload(LessonGroup.students)
+                    .selectinload(LessonStudent.comments_students)
                 )
             )
 
@@ -186,7 +189,10 @@ class LessonRepository(LessonRepositoryProtocol):
                     .selectinload(Homework.file),
                     contains_eager(Lesson.groups)
                     .contains_eager(LessonGroup.students)
-                    .selectinload(LessonStudent.comments)
+                    .selectinload(LessonStudent.comments),
+                    contains_eager(Lesson.groups)  # <<< НОВОЕ
+                    .contains_eager(LessonGroup.students)
+                    .selectinload(LessonStudent.comments_students)
                 )
             )
 
@@ -212,7 +218,8 @@ class LessonRepository(LessonRepositoryProtocol):
                     joinedload(self.model_type.teacher_material),
                     joinedload(self.model_type.teacher_additional_material),
                     joinedload(self.model_type.groups)
-                    .selectinload(LessonGroup.students)  # ← Ученики в группе
+                    .selectinload(LessonGroup.students),
+                    
                 )
             )
 
