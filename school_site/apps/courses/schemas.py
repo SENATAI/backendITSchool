@@ -561,9 +561,6 @@ class LessonTeacherMaterialDetailReadDBSchema(LessonDetailReadDBSchema):
         from_attributes = True
 
 
-
-
-
 class LessonStudentDetailReadSchema(LessonStudentReadSchema):
     passed_homeworks: Optional[List[HomeworkReadSchema]] = None
     comments: Optional[List[CommentReadSchema]] = None

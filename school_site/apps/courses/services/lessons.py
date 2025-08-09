@@ -115,7 +115,6 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
     self, lesson_id: UUID, student_id: UUID
 ) -> Union[LessonSimpleReadSchema, LessonStudentMaterialDetailReadSchema]:
         result = await self.lesson_repository.get_lesson_for_student(lesson_id, student_id)
-
         if isinstance(result, LessonSimpleReadSchema):
             return result
 
@@ -139,7 +138,7 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
                 url=student_additional_url
             )
 
-        return LessonStudentMaterialDetailReadSchema(
+        new_result =  LessonStudentMaterialDetailReadSchema(
             id=result.id,
             name=result.name,
             course_id=result.course_id,
@@ -149,6 +148,7 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
             student_additional_material=student_additional_material,
             groups=groups
         )
+        return new_result
     
     async def get_lesson_for_teacher(
     self, lesson_id: UUID, student_id: UUID, teacher_id: UUID
@@ -270,7 +270,8 @@ class GetLessonWithMaterialsService(GetLessonWithMaterialsServiceProtocol):
                             coins_for_visit=student.coins_for_visit,
                             coins_for_homework=student.coins_for_homework,
                             passed_homeworks=processed_passed_homeworks,
-                            comments=comment_schemas
+                            comments=comment_schemas,
+                            comments_students=student.comments_students
                         )
                         processed_students.append(student_schema)
 
