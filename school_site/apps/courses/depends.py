@@ -28,7 +28,7 @@ from .services.lesson_group_student import CombinedLessonGroupStudentServiceProt
 from .services.photo_courses import PhotoServiceProtocol, PhotoService
 from .services.courses import CourseServiceProtocol, CourseService
 from .services.lessons import LessonServiceProtocol, LessonService, GetLessonWithMaterialsServiceProtocol, GetLessonWithMaterialsService
-from .services.lesson_group import LessonGroupServiceProtocol, LessonGroupService
+from .services.lesson_group import LessonGroupServiceProtocol, LessonGroupService, DeleteLessonGroupServiceProtocol, DeleteLessonGroupService
 from .services.lesson_student import LessonStudentServiceProtocol, LessonStudentService, \
     GetLessonStudentByStudentAndLessonServiceProtocol, GetLessonStudentByStudentAndLessonService, GetLessonStudentsByStudentServiceProtocol, GetLessonStudentsByStudentService
 from .services.lesson_html_files import LessonHTMLServiceProtocol, LessonHTMLService
@@ -68,6 +68,8 @@ from .use_cases.comments.create_comment import CreateCommentUseCaseProtocol, Cre
 from .use_cases.comments.update_comment import UpdateCommentUseCaseProtocol, UpdateCommentUseCase
 from .use_cases.comments.delete_comment import DeleteCommentUseCaseProtocol, DeleteCommentUseCase
 from .use_cases.lesson_group.update_lesson_group import UpdateLessonGroupUseCaseProtocol, UpdateLessonGroupUseCase
+from .use_cases.lesson_group.detach_group_from_lesson import DeleteLessonGroupByLessonAndGroupUseCaseProtocol, DeleteLessonGroupByLessonAndGroupUseCase
+from .use_cases.lesson_group.detach_group_from_course import DeleteLessonGroupByLessonAndCourseUseCaseProtocol, DeleteLessonGroupByLessonAndCourseUseCase
 from .use_cases.lessons.get_student_lesson_with_material import GetStudentMaterialUseCase, GetStudentMaterialUseCaseProtocol
 from .use_cases.lessons.get_teacher_lesson_with_materials import GetTeacherMaterialUseCaseProtocol, GetTeacherMaterialUseCase
 from .use_cases.lessons.get_lesson_info_teacher import GetTeacherLessonInfoUseCaseProtocol, GetTeacherLessonInfoUseCase
@@ -373,6 +375,21 @@ def get_lesson_group_update_use_case(
     auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
 ) -> UpdateLessonGroupUseCaseProtocol:
     return UpdateLessonGroupUseCase(lesson_group_service, auth_service)
+
+def get_delete_lesson_group_service(
+       repository: LessonGroupRepositoryProtocol = Depends(__get_lesson_group_repository) 
+) -> DeleteLessonGroupServiceProtocol:
+    return DeleteLessonGroupService(repository)
+
+def get_delete_lesson_group_by_lesson_and_group_use_case(service: DeleteLessonGroupServiceProtocol = Depends(get_delete_lesson_group_service),
+                                                        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
+                                                         ) -> DeleteLessonGroupByLessonAndGroupUseCaseProtocol:
+    return DeleteLessonGroupByLessonAndGroupUseCase(service, auth_service)
+
+def get_delete_lesson_group_by_course_and_group_use_case(service: DeleteLessonGroupServiceProtocol = Depends(get_delete_lesson_group_service),
+                                                        auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
+                                                         ) -> DeleteLessonGroupByLessonAndCourseUseCaseProtocol:
+    return DeleteLessonGroupByLessonAndCourseUseCase(service, auth_service)
 
 def get_lesson_student_service(repository: LessonStudentRepositoryProtocol = Depends(__get_lesson_student_repository)
                                ) -> LessonStudentServiceProtocol:
