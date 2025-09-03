@@ -1,5 +1,5 @@
 import logging
-from typing import Protocol, List
+from typing import Protocol, List, Self
 from uuid import UUID
 from ..repositories.lesson_group import LessonGroupRepositoryProtocol
 from ..schemas import (
@@ -69,3 +69,21 @@ class LessonGroupService(LessonGroupServiceProtocol):
     async def get_by_group_id(self, group_id: UUID) -> List[LessonGroupReadWithLessonSchema]:
         logger.info(f"Fetching LessonGroups for Group ID: {group_id}")
         return await self.lesson_group_repository.get_by_group_id(group_id)
+
+
+class DeleteLessonGroupServiceProtocol(Protocol):
+    async def detach_group_from_lesson(self: Self, lesson_id: UUID, group_id: UUID) -> bool:
+        ...
+    
+    async def detach_group_from_course(self: Self, group_id: UUID, course_id: UUID) -> bool:
+        ...
+
+class DeleteLessonGroupService(DeleteLessonGroupServiceProtocol):
+    def __init__(self: Self, repository: LessonGroupRepositoryProtocol):
+        self.repository = repository
+
+    async def detach_group_from_lesson(self: Self, lesson_id: UUID, group_id: UUID) -> bool:
+        return await self.repository.detach_group_from_lesson(lesson_id, group_id)
+    
+    async def detach_group_from_course(self: Self, group_id: UUID, course_id: UUID) -> bool:
+        return await self.repository.detach_group_from_course(group_id, course_id)

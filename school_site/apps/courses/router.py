@@ -36,6 +36,8 @@ from .use_cases.lessons.get_all_lesson_students import GetAllLessonStudentsByLes
 from .use_cases.lessons.get_teacher_lessons import GetTeacherLessonsUseCaseProtocol
 from .use_cases.courses_teachers.get_courses_for_teacher import GetCoursesForTeacherUseCaseProtocol
 from .use_cases.lesson_group.get_by_group_id import GetByGroupIdLessonGroupUseCaseProtocol 
+from .use_cases.lesson_group.detach_group_from_course import DeleteLessonGroupByLessonAndCourseUseCaseProtocol
+from .use_cases.lesson_group.detach_group_from_lesson import DeleteLessonGroupByLessonAndGroupUseCaseProtocol
 from .use_cases.lesson_students.get_detailed_student import GetDetailedLessonStudentUseCaseProtocol
 from .use_cases.lesson_students.create_ls_and_update_student import CreateLessonStudentsAndUpdateStudentsUseCaseProtocol
 from .use_cases.lesson_students.update_ls_and_update_student import UpdateLessonStudentsAndUpdateStudentsUseCaseProtocol
@@ -61,7 +63,9 @@ from .depends import (
     get_material_update_by_text_use_case,
     get_update_lesson_students_and_update_students_use_case,
     get_delete_lesson_students_and_update_students_use_case,
-    get_all_lesson_students_by_student_use_case
+    get_all_lesson_students_by_student_use_case,
+    get_delete_lesson_group_by_lesson_and_group_use_case,
+    get_delete_lesson_group_by_course_and_group_use_case
 
 )
 from .schemas import (
@@ -678,3 +682,24 @@ async def get_all_teacher_lessons(
     get_teacher_lessons: GetTeacherLessonsUseCaseProtocol = Depends(get_teacher_lessons_use_case)
 ):
     return await get_teacher_lessons(access_token, is_graded_homework)
+
+@router.delete('/{course_id}/groups/{group_id}', response_model=None, status_code=204)
+async def delete_lesson_group_by_course_and_group(
+    course_id: UUID = Path(...),
+    group_id: UUID = Path(...),
+    access_token: str = Depends(access_token_schema),
+    delete_lesson_group: DeleteLessonGroupByLessonAndCourseUseCaseProtocol = Depends(get_delete_lesson_group_by_course_and_group_use_case)
+) -> None:
+    await delete_lesson_group(group_id, course_id, access_token)
+    return None
+
+
+@router.delete('/lessons/{lesson_id}/groups/{group_id}', response_model=None, status_code=204)
+async def delete_lesson_group_by_lesson_and_group(
+    lesson_id: UUID = Path(...),
+    group_id: UUID = Path(...),
+    access_token: str = Depends(access_token_schema),
+    delete_lesson_group: DeleteLessonGroupByLessonAndGroupUseCaseProtocol = Depends(get_delete_lesson_group_by_lesson_and_group_use_case)
+) -> None:
+    await delete_lesson_group(lesson_id, group_id, access_token)
+    return None

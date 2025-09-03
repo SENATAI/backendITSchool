@@ -5,8 +5,8 @@ from uuid import UUID
 from school_site.core.repositories.base_repository import BaseRepositoryImpl
 from school_site.apps.students.models import Student
 from school_site.core.utils.exceptions import ModelNotFoundException
-from ..models import LessonStudent, LessonGroup, Homework
-from ..schemas import (LessonStudentCreateSchema, LessonStudentUpdateDBSchema, LessonStudentReadSchema,\
+from ..models import LessonStudent, LessonGroup, Homework, Lesson
+from ..schemas import (LessonStudentCreateSchema, LessonStudentUpdateDBSchema, LessonStudentReadSchema,
     LessonStudentReadWithStudentSchema, 
     LessonStudentReadWithStudentDBSchema,
     LessonStudentDetailReadDBSchema,
@@ -37,6 +37,8 @@ class LessonStudentRepositoryProtocol(BaseRepositoryImpl[
     
     async def get_all_lesson_students_by_student_id(self: Self, student_id: UUID) -> List[LessonStudentReadSchema]:
         ...
+    
+   
 
 class LessonStudentRepository(LessonStudentRepositoryProtocol):
     async def get_lesson_student(self: Self, student_id: UUID, lesson_id: UUID) -> LessonStudentReadSchema:
