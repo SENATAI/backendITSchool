@@ -145,7 +145,7 @@ async def update_lesson_student(
     access_token: str = Depends(access_token_schema),
     update: UpdateLessonStudentsAndUpdateStudentsUseCaseProtocol = Depends(get_update_lesson_students_and_update_students_use_case)
 ):
-    return await update(lesson_student_id, lesson_student)
+    return await update(lesson_student_id, lesson_student, access_token)
 
 @router.delete("/lesson-student/{lesson_student_id}", status_code=204)
 async def delete_lesson_student(
@@ -153,7 +153,7 @@ async def delete_lesson_student(
     access_token: str = Depends(access_token_schema),
     delete: DeleteLessonStudentsAndUpdateStudentsUseCaseProtocol = Depends(get_delete_lesson_students_and_update_students_use_case)
 ):
-    await delete(lesson_student_id)
+    await delete(lesson_student_id, access_token)
     return None
 
 @router.post("/", response_model=CourseWithPhotoReadSchema, status_code=201)
