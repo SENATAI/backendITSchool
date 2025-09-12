@@ -517,12 +517,14 @@ def get_create_lesson_students_and_update_students_use_case(
     return CreateLessonStudentsAndUpdateStudentsUseCase(lesson_student_service)
 
 def get_update_lesson_students_and_update_students_use_case(
-    lesson_student_service: LessonStudentWithStudentServiceProtocol = Depends(get_lesson_student_with_student_service)
+    lesson_student_service: LessonStudentWithStudentServiceProtocol = Depends(get_lesson_student_with_student_service),
+    auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
 ) -> UpdateLessonStudentsAndUpdateStudentsUseCaseProtocol:
-    return UpdateLessonStudentsAndUpdateStudentsUseCase(lesson_student_service)
+    return UpdateLessonStudentsAndUpdateStudentsUseCase(lesson_student_service, auth_service)
 
 def get_delete_lesson_students_and_update_students_use_case(
-    lesson_student_service: LessonStudentWithStudentServiceProtocol = Depends(get_lesson_student_with_student_service)
+    lesson_student_service: LessonStudentWithStudentServiceProtocol = Depends(get_lesson_student_with_student_service),
+    auth_service: AuthAdminServiceProtocol = Depends(get_auth_service)
 ) -> DeleteLessonStudentsAndUpdateStudentsUseCaseProtocol:
-    return DeleteLessonStudentsAndUpdateStudentsUseCase(lesson_student_service)
+    return DeleteLessonStudentsAndUpdateStudentsUseCase(lesson_student_service, auth_service)
 

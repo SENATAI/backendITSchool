@@ -2,6 +2,8 @@ from school_site.core.use_cases import UseCaseProtocol
 from ..services.points_history import PointsHistoryServiceProtocol
 from ..services.auth import AuthAdminServiceProtocol
 from ..schemas import PointsHistoryCreateSchema, PointsHistoryReadSchema
+from school_site.core.utils.exceptions import PermissionDeniedError
+from school_site.core.enums import UserRole
 
 
 class CreatePointsHistoryUseCaseProtocol(UseCaseProtocol):
@@ -23,5 +25,7 @@ class CreatePointsHistoryUseCase(CreatePointsHistoryUseCaseProtocol):
     async def __call__(
         self,  history: PointsHistoryCreateSchema, access_token: str
     ) -> PointsHistoryReadSchema:
-        await self.auth_service.get_admin_user(access_token)
+        user = await self.auth_service.decode_access_token(access_token)
+        if  user.role not in [UserRole.TEACHER, UserRole.ADMIN, UserRole.SUPERADMIN]:
+            raise PermissionDeniedError()
         return await self.history_service.create_points_history(history)
