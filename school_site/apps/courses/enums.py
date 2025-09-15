@@ -2,6 +2,6 @@ from enum import Enum
 
 class AgeCategory(str, Enum):
     ALL_AGES = "All"
-    FIVE_TO_SEVEN = "5-7"
-    EIGHT_TO_TEN = "8-10"
-    TWELVE_TO_FOURTEEN = "12-14"
+    FIVE_TO_EIGHT = "5-8"
+    NINE_TO_ELEVEN = "9-11"
+    TWELVE_TO_FIFTEEN = "12-15"

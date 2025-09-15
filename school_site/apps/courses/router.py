@@ -43,6 +43,7 @@ from .use_cases.lesson_students.create_ls_and_update_student import CreateLesson
 from .use_cases.lesson_students.update_ls_and_update_student import UpdateLessonStudentsAndUpdateStudentsUseCaseProtocol
 from .use_cases.lesson_students.delete_ls_and_update_student import DeleteLessonStudentsAndUpdateStudentsUseCaseProtocol
 from .use_cases.lesson_students.get_all_by_student import GetAllLessonStudentByStudentUseCaseProtocol
+from .use_cases.lessons.get_lesson_info_by_teacher_id import GetTeacherLessonInfoByTeacherIdUseCaseProtocol
 
 from .depends import (
     get_course_create_use_case, get_course_update_use_case, get_course_get_use_case,
@@ -65,8 +66,8 @@ from .depends import (
     get_delete_lesson_students_and_update_students_use_case,
     get_all_lesson_students_by_student_use_case,
     get_delete_lesson_group_by_lesson_and_group_use_case,
-    get_delete_lesson_group_by_course_and_group_use_case
-
+    get_delete_lesson_group_by_course_and_group_use_case,
+    get_teacher_lesson_info_by_teacher_id_use_case
 )
 from .schemas import (
     CourseWithPhotoReadSchema, CourseWithPhotoPaginationResultSchema,
@@ -650,6 +651,16 @@ async def get_lesson_info_for_teacher(
     get_lesson_info: GetTeacherLessonInfoUseCaseProtocol = Depends(get_teacher_lesson_info_use_case)
 ):
     return await get_lesson_info(lesson_id, access_token)
+
+@router.get("/{course_id}/lessons/{lesson_id}/teachers/{teacher_id}/info", response_model=LessonInfoTeacherReadSchema, status_code=200)
+async def get_lesson_info_for_teacher_id(
+    course_id: UUID = Path(...),
+    lesson_id: UUID = Path(...),
+    teacher_id: UUID = Path(...),
+    access_token: str = Depends(access_token_schema),
+    get_lesson_info: GetTeacherLessonInfoByTeacherIdUseCaseProtocol = Depends(get_teacher_lesson_info_by_teacher_id_use_case)
+):
+    return await get_lesson_info(lesson_id, teacher_id, access_token)
 
 @router.post("/{course_id}/lessons/{lesson_id}/homework-material-text", response_model=LessonWithHomeworkReadSchema, status_code=201)
 async def add_homework_material_to_lesson(

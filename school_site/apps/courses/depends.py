@@ -84,6 +84,7 @@ from .use_cases.lesson_students.update_ls_and_update_student import UpdateLesson
 from .use_cases.lesson_students.delete_ls_and_update_student import DeleteLessonStudentsAndUpdateStudentsUseCaseProtocol, DeleteLessonStudentsAndUpdateStudentsUseCase
 from .use_cases.lesson_students.get_all_by_student import GetAllLessonStudentByStudentUseCaseProtocol, GetAllLessonStudentByStudentUseCase
 from .use_cases.homeworks.add_homework_to_lesson import AddHomeworkToLessonUseCaseProtocol, AddHomeworkToLessonUseCase
+from .use_cases.lessons.get_lesson_info_by_teacher_id import GetTeacherLessonInfoByTeacherIdUseCaseProtocol, GetTeacherLessonInfoByTeacherIdUseCase
 
 def get_course_file_service() -> FileServiceProtocol:
     """Зависимость для работы с изображениями продуктов."""
@@ -460,6 +461,13 @@ def get_teacher_lesson_info_use_case(
     teacher_service: TeacherServiceProtocol = Depends(get_teachers_services)
 ) -> GetTeacherLessonInfoUseCaseProtocol:
     return GetTeacherLessonInfoUseCase(lesson_with_materials_service, auth_service, teacher_service)
+
+def get_teacher_lesson_info_by_teacher_id_use_case(
+    lesson_with_materials_service: GetLessonWithMaterialsServiceProtocol = Depends(get_lesson_with_materials_service),
+    auth_service: AuthAdminServiceProtocol = Depends(get_auth_service),
+) -> GetTeacherLessonInfoByTeacherIdUseCaseProtocol:
+    return GetTeacherLessonInfoByTeacherIdUseCase(lesson_with_materials_service, auth_service)
+
 
 def get_courses_for_student_use_case(
     course_student_service: GetCoursesByStudentServiceProtocol = Depends(get_courses_by_student_service),
