@@ -112,8 +112,8 @@ class LessonGroup(Base):
     __tablename__ = "lesson_groups"
 
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
-    lesson_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lessons.id"))
-    group_id = Column(PostgresUUID(as_uuid=True), ForeignKey("groups.id"))
+    lesson_id = Column(PostgresUUID(as_uuid=True), ForeignKey("lessons.id", ondelete="CASCADE"))
+    group_id = Column(PostgresUUID(as_uuid=True), ForeignKey("groups.id", ondelete="CASCADE"))
     start_datetime = Column(DateTime, nullable=False)  
     end_datetime = Column(DateTime, nullable=False)   
     is_opened = Column(Boolean, default=False)
