@@ -137,7 +137,7 @@ class LessonStudentWithStudentService(LessonStudentWithStudentServiceProtocol):
                 student_id=student.id,
                 reason=Reason.VISIT,
                 changed_points=add_coins_for_visit,
-                description=f"Изменение баллов за посещение урока {updated_lesson_student.lesson_group_id} у студента {student.id}"
+                description="Изменение баллов за посещение урока у студента"
             )
             await self.history_service.create_points_history(history_visit)
 
@@ -148,7 +148,7 @@ class LessonStudentWithStudentService(LessonStudentWithStudentServiceProtocol):
                 student_id=student.id,
                 reason=Reason.HOMEWORK,
                 changed_points=add_coins_for_homework,
-                description=f"Изменение баллов за домашнее задание урока {updated_lesson_student.lesson_group_id} у студента {student.id}"
+                description="Изменение баллов за домашнее задание урока у студента"
             )
             await self.history_service.create_points_history(history_homework)
         changed_coins = student.points + add_coins_for_visit + add_coins_for_homework
@@ -190,7 +190,7 @@ class LessonStudentWithStudentService(LessonStudentWithStudentServiceProtocol):
                 student_id=student.id,
                 reason=Reason.PENALTY,
                 changed_points=added_coins_visit,
-                description=f"Удаление баллов за посещение урока {lesson_student.lesson_group_id} у студента {student.id}"
+                description="Удаление баллов за посещение урока у студента"
             )
             await self.history_service.create_points_history(history_visit)
         added_coins_homework = -coins_for_homework
@@ -199,7 +199,7 @@ class LessonStudentWithStudentService(LessonStudentWithStudentServiceProtocol):
                 student_id=student.id,
                 reason=Reason.PENALTY,
                 changed_points=added_coins_homework,
-                description=f"Удаление баллов за домашнее задание урока {lesson_student.lesson_group_id} у студента {student.id}"
+                description="Удаление баллов за домашнее задание урока у студента"
             )
             await self.history_service.create_points_history(history_homework)
         changed_coins = student.points + added_coins_visit + added_coins_homework
