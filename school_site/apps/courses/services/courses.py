@@ -15,7 +15,8 @@ from ..schemas import (
     PhotoCreateSchema,
     PhotoUpdateSchema,
     PhotoReadSchema,
-    PhotoReadDBSchema
+    PhotoReadDBSchema,
+    CourseReadDBSchema
 )
 from ..repositories.courses import CourseRepositoryProtocol
 from .photo_courses import PhotoServiceProtocol
@@ -116,17 +117,33 @@ class CourseService(CourseServiceProtocol):
         )
         updated_course = await self.course_repository.update(upd_course_db)
         photo = None
+        is_updated = False
 
         if course.photo and image:
-            photo_id = course.photo.id or ((await self.get_with_photo(course_id)).photo.id)
-            photo = await self.photo_service.update(
-                photo_id,
-                PhotoUpdateSchema(
-                    course_id=course_id,
-                    name=course.photo.name
-                ),
-                image
-            )
+            if not course.photo.id:
+                course_with_photo = await self.get_with_photo(course_id)
+                if not course_with_photo.photo:
+                    photo_create = PhotoCreateSchema(
+                        name=course.photo.name,
+                        course_id=course_id
+                    )
+                    photo = await self.photo_service.create(photo_create, image)
+                    is_updated = True
+                else:
+                    photo_id = course_with_photo.photo.id
+
+            else:
+                photo_id = course.photo.id
+
+            if not is_updated:
+                photo = await self.photo_service.update(
+                    photo_id,
+                    PhotoUpdateSchema(
+                        course_id=course_id,
+                        name=course.photo.name
+                    ),
+                    image
+                )
         else:
             return await self.get(course_id)
 

@@ -62,7 +62,7 @@ class CourseUpdateSchema(CourseBaseSchema):
     photo: Optional[PhotoUpdateSchema] = None
 
 
-class CourseUpdateDBSchema(UpdateBaseModel, CourseBaseSchema):
+class CourseUpdateDBSchema(CourseBaseSchema, UpdateBaseModel):
     pass
 
 
