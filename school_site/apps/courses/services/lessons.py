@@ -46,6 +46,9 @@ class LessonServiceProtocol(Protocol):
     async def add_homework_to_lesson(self, lesson_id: UUID, homework_material_id: UUID) -> LessonReadSchema:
         ...
 
+    async def add_additional_homework_to_lesson(self: Self, lesson_id: UUID, homework_material_id: UUID) -> LessonReadSchema:
+        ...
+
 
 class LessonService(LessonServiceProtocol):
     def __init__(self, lesson_repository: LessonRepositoryProtocol):
@@ -89,6 +92,9 @@ class LessonService(LessonServiceProtocol):
 
     async def add_homework_to_lesson(self, lesson_id: UUID, homework_material_id: UUID) -> LessonReadSchema:
         return await self.lesson_repository.add_homework_to_lesson(lesson_id, homework_material_id) 
+
+    async def add_additional_homework_to_lesson(self: Self, lesson_id: UUID, homework_material_id: UUID) -> LessonReadSchema:
+        return await self.lesson_repository.add_additional_homework_to_lesson(lesson_id, homework_material_id)
 
 class GetLessonWithMaterialsServiceProtocol(Protocol):
     async def get_lesson_for_student(self: Self, lesson_id: UUID, student_id: UUID) -> Union[LessonSimpleReadSchema, LessonStudentMaterialDetailReadSchema]:

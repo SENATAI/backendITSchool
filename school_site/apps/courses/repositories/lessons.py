@@ -53,6 +53,9 @@ class LessonRepositoryProtocol(BaseRepositoryImpl[
     async def add_homework_to_lesson(self: Self, lessson_id: UUID, homework_material_id: UUID) -> LessonReadDBSchema:
         ...
 
+    async def add_additional_homework_to_lesson(self: Self, lesson_id: UUID, homework_material_id: UUID) -> LessonReadDBSchema:
+        ...
+
     async def get_all_teacher_lessons(self: Self, teacher_id: UUID, is_graded_homework: Optional[bool] = None) -> List[LessonInfoTeacherReadDBSchema]:
         ...
 
@@ -233,13 +236,35 @@ class LessonRepository(LessonRepositoryProtocol):
         
     
     async def add_homework_to_lesson(self: Self, lesson_id: UUID, homework_material_id: UUID) -> LessonReadDBSchema:
-        async with self.session as s:
+        async with self.session as s, s.begin():
             statement = (
-                sa.update(self.model_type).where(self.model_type.id == lesson_id).values(homework_id=homework_material_id))
-            await s.execute(statement)
-            await s.commit()
+                sa.update(self.model_type)
+                .where(self.model_type.id == lesson_id)
+                .values(homework_id=homework_material_id)
+                .returning(self.model_type)
+                )
+            model = (await s.execute(statement)).scalar_one_or_none()
+
+            if model is None:
+                raise ModelNotFoundException(model=self.model_type, model_id=lesson_id)
+
             
-            return await self.get(lesson_id)
+            return self.read_schema_type.model_validate(model, from_attributes=True)
+        
+    async def add_additional_homework_to_lesson(self: Self, lesson_id: UUID, homework_material_id: UUID) -> LessonReadDBSchema:
+        async with self.session as s, s.begin():
+            statement = (
+                sa.update(self.model_type)
+                .where(self.model_type.id == lesson_id)
+                .values(homework_additional_id=homework_material_id)
+                .returning(self.model_type)
+                )
+            model = (await s.execute(statement)).scalar_one_or_none()
+            
+            if model is None:
+                raise ModelNotFoundException(model=self.model_type, model_id=lesson_id)
+
+            return self.read_schema_type.model_validate(model, from_attributes=True)
             
     async def get_all_teacher_lessons(self: Self, teacher_id: UUID, is_graded_homework: Optional[bool] = None) -> List[LessonInfoTeacherReadDBSchema]:
         async with self.session as s:

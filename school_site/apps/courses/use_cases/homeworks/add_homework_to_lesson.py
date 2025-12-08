@@ -31,7 +31,7 @@ class AddHomeworkToLessonUseCase(AddHomeworkToLessonUseCaseProtocol):
         )
         created_material = await self.material_service.create(homework_material)
 
-        created_lesson = await self.lesson_service.add_homework_to_lesson(lesson_id, created_material.id)
+        created_lesson = await self.lesson_service.add_additional_homework_to_lesson(lesson_id, created_material.id)
 
         return LessonWithHomeworkReadSchema(
             **created_lesson.model_dump(),
